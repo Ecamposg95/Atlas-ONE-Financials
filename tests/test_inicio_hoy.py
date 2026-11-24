@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 from decimal import Decimal
 
 from tests.helpers import auth_headers, register
 
-TODAY = date.today()
+# El tablero usa el día de la zona de la empresa, no el del servidor: de 18:00 a
+# medianoche en México el servidor (UTC) ya va un día adelante.
+TODAY = datetime.now(ZoneInfo("America/Mexico_City")).date()
 MONDAY = TODAY - timedelta(days=TODAY.weekday())
 SUNDAY = MONDAY + timedelta(days=6)
 
