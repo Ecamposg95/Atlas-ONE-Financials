@@ -1,4 +1,4 @@
-/** Tokens semánticos ARCA — cero colores crudos en componentes (convención Atlas). */
+/** Tokens semánticos Atlas Financials — cero colores crudos en componentes (convención Atlas). */
 export default {
   darkMode: 'class',
   content: ['./index.html', './src/**/*.{ts,tsx}'],
@@ -25,14 +25,14 @@ export default {
         warn: 'hsl(var(--warn) / <alpha-value>)',
       },
       fontFamily: {
-        display: ['Geist', 'system-ui', 'sans-serif'],
-        body: ['Geist', 'system-ui', 'sans-serif'],
-        mono: ['"Geist Mono"', 'ui-monospace', 'monospace'],
+        display: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Arial', 'sans-serif'],
+        body: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Arial', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       boxShadow: {
         card: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
         float: '0 10px 40px -10px rgba(0,0,0,0.12)',
-        accent: '0 0 20px rgba(31, 138, 91, 0.15)',
+        accent: '0 0 20px hsl(var(--accent) / 0.2)',
       },
       borderRadius: {
         DEFAULT: '8px',

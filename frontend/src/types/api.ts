@@ -985,3 +985,82 @@ export interface AnalyticsSeries {
   historical_available: boolean
   historical_note: string | null
 }
+
+/** Conciliación bancaria. Los importes llevan signo: entrada positiva, salida negativa. */
+export interface BankTransactionBrief {
+  id: string
+  date: string
+  description: string
+  reference: string | null
+  transaction_type: string
+  amount: string
+  status: string
+}
+
+export interface BankLine {
+  id: string
+  row_number: number
+  date: string
+  description: string
+  reference: string | null
+  amount: string
+  status: 'PENDING' | 'MATCHED' | 'IGNORED'
+  difference: string | null
+  note: string | null
+  matches: BankTransactionBrief[]
+  suggestions: { kind: 'EXACT' | 'GROUP'; transactions: BankTransactionBrief[] }[]
+}
+
+export interface BankStatement {
+  id: string
+  financial_account_id: string
+  account_name: string | null
+  filename: string
+  period_start: string
+  period_end: string
+  status: 'OPEN' | 'CLOSED' | 'CANCELLED'
+  closing_balance: string | null
+  closed_at: string | null
+  created_at: string
+  lines_count: number
+  pending_count: number
+  differences_count: number
+}
+
+export interface BankStatementDetail {
+  statement: BankStatement
+  summary: {
+    lines_count: number
+    deposits: string
+    withdrawals: string
+    pending_count: number
+    matched_count: number
+    ignored_count: number
+    differences_count: number
+    differences_total: string
+    ignored_total: string
+    book_balance: string | null
+    closing_balance: string | null
+    in_transit_in: string
+    in_transit_out: string
+    unexplained: string | null
+    alerts: { kind: string; count: number; amount: string | null; message: string }[]
+  }
+  lines: BankLine[]
+  in_transit: BankTransactionBrief[]
+}
+
+export interface BankStatementPreview {
+  columns: string[]
+  sheets: string[]
+  sheet: string | null
+  mapping: Record<string, string>
+  problem: string | null
+  total_rows: number
+  skipped_count: number
+  period_start: string | null
+  period_end: string | null
+  deposits: string
+  withdrawals: string
+  rows: { row_number: number; date: string; description: string; reference: string | null; amount: string }[]
+}

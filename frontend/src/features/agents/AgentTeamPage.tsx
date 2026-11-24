@@ -78,7 +78,7 @@ function AgentCard({ agentId, monthlyCost }: { agentId: string; monthlyCost: str
           <p className="figures text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
             {brief?.name ?? agentId}
           </p>
-          <h2 className="font-display text-[15px] font-bold leading-snug tracking-tight">
+          <h2 className="font-display text-[15px] font-semibold leading-snug tracking-tight">
             {brief?.question ?? '…'}
           </h2>
         </div>

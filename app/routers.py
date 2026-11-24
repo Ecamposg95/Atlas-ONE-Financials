@@ -34,6 +34,7 @@ from app.domains.attachments.router import router as attachments_router
 from app.domains.history.router import router as history_router
 from app.domains.opening.router import router as opening_router
 from app.domains.analytics.router import router as analytics_router
+from app.domains.bank_reconciliation.router import router as bank_reconciliation_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router)
@@ -69,3 +70,4 @@ api_router.include_router(attachments_router)
 api_router.include_router(history_router)
 api_router.include_router(opening_router)
 api_router.include_router(analytics_router)
+api_router.include_router(bank_reconciliation_router)

@@ -61,7 +61,7 @@ No tocan el libro ni el esquema.
 - *Dependencias:* adjuntos (existe), propuestas (existe), investigación de la especificación vigente.
 - *Riesgo:* afirmar validación fiscal que no se hace. La primera versión lee y estructura; no valida vigencia ante el SAT.
 
-**E-02 · Conciliación bancaria** (L)
+**E-02 · Conciliación bancaria** (L) — primera versión hecha el 2026-11-24 (`docs/MVP_STATUS.md`); falta crear la operación faltante como propuesta desde el renglón
 
 - *Historia:* como responsable de tesorería, importo mi estado de cuenta y ligo cada renglón con un movimiento, para saber que el saldo en libros es real.
 - *Criterios de aceptación:*

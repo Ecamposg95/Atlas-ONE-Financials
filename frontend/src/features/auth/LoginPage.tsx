@@ -46,13 +46,13 @@ export function LoginPage() {
       footer={
         <>
           ¿Primera vez aquí?{' '}
-          <Link to="/registro" className="font-medium text-rail-ink hover:text-accent">
+          <Link to="/registro" className="font-medium text-ink hover:text-accent">
             Crea tu empresa
           </Link>
         </>
       }
     >
-      <h1 className="font-display text-lg font-bold tracking-tight">Entra a tu empresa</h1>
+      <h1 className="font-display text-lg font-semibold tracking-tight">Entra a tu empresa</h1>
 
       <form onSubmit={onSubmit} className="mt-5 space-y-4">
         <TextInput

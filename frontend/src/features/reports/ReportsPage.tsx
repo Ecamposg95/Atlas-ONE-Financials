@@ -552,7 +552,7 @@ export function ReportsPage() {
                 {agingKind === 'receivable' ? 'Te pagan en' : 'Pagas en'}
               </p>
               <div className="mt-1 flex flex-wrap items-baseline gap-3">
-                <p className="figures text-4xl font-bold tracking-tight">
+                <p className="figures text-4xl font-semibold tracking-tight">
                   {agingQuery.data.average_days}
                   <span className="ml-1.5 text-base font-normal text-muted">días</span>
                 </p>
@@ -707,8 +707,8 @@ export function ReportsPage() {
                     type="monotone"
                     dataKey="net_worth"
                     name="Patrimonio"
-                    stroke="#1f8a5b"
-                    fill="#1f8a5b"
+                    stroke="var(--color-accent)"
+                    fill="var(--color-accent)"
                     fillOpacity={0.14}
                     strokeWidth={2}
                     isAnimationActive={false}

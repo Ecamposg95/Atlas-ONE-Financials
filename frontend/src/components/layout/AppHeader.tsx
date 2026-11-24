@@ -113,7 +113,7 @@ export function AppHeader({
           className="flex items-center gap-2 rounded-lg py-1 pl-1 pr-1.5 transition-colors hover:bg-surface-2"
           aria-label="Menú de usuario"
         >
-          <span className="figures flex h-7 w-7 items-center justify-center rounded-full bg-accent-soft text-[11px] font-bold text-accent">
+          <span className="figures flex h-7 w-7 items-center justify-center rounded-full bg-accent-soft text-[11px] font-semibold text-accent">
             {initials}
           </span>
           <ChevronDown className="h-3.5 w-3.5 text-muted" />
