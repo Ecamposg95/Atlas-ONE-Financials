@@ -33,7 +33,7 @@ interface MissionAgent {
 }
 
 const AGENTS: MissionAgent[] = [
-  { id: 'cfo', name: 'CFO Agent', role: 'Runway & escenarios', icon: Compass, color: '#1f8a5b' },
+  { id: 'cfo', name: 'CFO Agent', role: 'Runway & escenarios', icon: Compass, color: '#f2622a' },
   { id: 'treasury', name: 'Treasury Agent', role: 'Pagos & prioridad', icon: Vault, color: '#c9a24b' },
   { id: 'collections', name: 'Collections Agent', role: 'Cartera & cobranza', icon: HandCoins, color: '#d76f8e' },
   { id: 'accounting', name: 'Accounting Agent', role: 'Variaciones & margen', icon: BookOpenCheck, color: '#7b6ef0' },
@@ -391,7 +391,7 @@ export function MissionPanel() {
                       {entry.time}
                     </span>
                     <span
-                      className="figures shrink-0 rounded px-1.5 text-[10px] font-bold"
+                      className="figures shrink-0 rounded px-1.5 text-[10px] font-semibold"
                       style={{
                         color: agent.color,
                         background: `color-mix(in srgb, ${agent.color} 12%, transparent)`,
@@ -411,7 +411,7 @@ export function MissionPanel() {
           {/* ── Compuerta humana ── */}
           {phase === 'awaiting' && cfoBrief ? (
             <div className="mission-feed-in mt-3 rounded-xl border-2 p-3" style={{ borderColor: 'hsl(var(--warn))' }}>
-              <p className="figures text-[10px] font-bold uppercase tracking-[0.16em] text-warn">
+              <p className="figures text-[10px] font-semibold uppercase tracking-[0.16em] text-warn">
                 Requiere aprobación humana
               </p>
               <p className="mt-1 text-sm font-semibold">
@@ -460,14 +460,14 @@ export function MissionPanel() {
           <div className="mt-3 grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
             {AGENTS.map((agent) => (
               <div key={agent.id} className="rounded-lg bg-surface-2/60 p-3">
-                <p className="figures text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: agent.color }}>
+                <p className="figures text-[9px] font-semibold uppercase tracking-[0.14em]" style={{ color: agent.color }}>
                   {agent.name}
                 </p>
                 <p className="mt-0.5 text-[12.5px] leading-snug">{briefs[agent.id]?.headline}</p>
               </div>
             ))}
             <div className="rounded-lg border border-dashed border-border p-3">
-              <p className="figures text-[9px] font-bold uppercase tracking-[0.14em] text-muted">
+              <p className="figures text-[9px] font-semibold uppercase tracking-[0.14em] text-muted">
                 La regla de la casa
               </p>
               <p className="mt-0.5 text-[12.5px] leading-snug text-muted">

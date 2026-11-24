@@ -2,27 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Tokens Atlas Financials — base Atlas Cortex con acento verde (finanzas), HSL con canal separado para permitir alpha (bg-surface/60).
-   Fuente de los valores: atlas-cortex frontend/tailwind.config.js (brand.* / dark.*). */
+/* Tokens Atlas Financials: marca Atlas Tech (skill atlas-tech-brand). Claro = Niebla
+   (niebla + tinta índigo), oscuro = Horizon (negro cálido). Acento ember; el índigo
+   es el segundo color. HSL con canal separado para permitir alpha (bg-surface/60).
+   Pos/neg/warn son semánticos de estado, no de marca. */
 :root {
-  --bg: 140 20% 97%; /* #f6f9f7 casi blanco verdoso */
+  --bg: 240 12% 93%; /* #ececf0 niebla */
   --surface: 0 0% 100%; /* #ffffff */
-  --surface-2: 144 17% 94%; /* #eef3f0 */
-  --ink: 157 22% 7%; /* #0e1613 */
-  --ink-soft: 154 11% 28%; /* #3f4f48 */
-  --muted: 156 7% 45%; /* #6b7a74 */
-  --border: 142 13% 88%; /* #dde5e0 */
-  --accent: 154 63% 33%; /* #1f8a5b verde Atlas Financials */
-  --accent-strong: 154 66% 26%; /* #176e48 */
+  --surface-2: 240 14% 90%; /* #e3e3ea */
+  --ink: 243 32% 13%; /* #17162b tinta índigo */
+  --ink-soft: 243 12% 37%; /* #55546b */
+  --muted: 242 11% 43%; /* #62617a */
+  --border: 240 12% 84%; /* #d0d0da */
+  --accent: 17 91% 37%; /* #b53a09 ember para texto y botones: 5:1 sobre niebla */
+  --accent-strong: 17 92% 29%; /* #8f2d06 */
   --on-accent: 0 0% 100%; /* texto sobre el acento */
-  --accent-soft: 152 45% 95%; /* #edf7f2 */
-  --rail: 154 18% 8%; /* #101714 */
-  --rail-ink: 143 17% 91%; /* #e4ece7 */
-  --rail-muted: 148 10% 69%; /* #a9b8b0 */
+  --accent-soft: 20 72% 94%; /* #fbede6 */
+  --rail: 243 32% 13%; /* #17162b */
+  --rail-ink: 240 22% 96%; /* #f4f4f8 */
+  --rail-muted: 243 13% 68%; /* #a3a2b8 */
   --rail-hi: 0 0% 100%; /* realce del menú: elemento activo y hover */
-  --pos: 154 55% 36%; /* #2a8f63 */
-  --neg: 5 57% 51%; /* #c9453a */
-  --warn: 37 63% 44%; /* #b8822a */
+  --pos: 153 61% 30%; /* #1e7a50 */
+  --neg: 4 65% 48%; /* #c9352b */
+  --warn: 46 100% 27%; /* #8a6a00 */
+  --color-accent: #f2622a; /* ember vivo: sólo trazos y rellenos, nunca texto */
+  --color-accent-2: #7b86c6; /* lavanda: serie de apoyo */
 }
 
 /* Alias en formato color: recharts y estilos inline no pueden usar las
@@ -37,7 +41,6 @@
   --color-muted: hsl(var(--muted));
   --color-ink: hsl(var(--ink));
   --color-ink-soft: hsl(var(--ink-soft));
-  --color-accent: hsl(var(--accent));
   --color-accent-strong: hsl(var(--accent-strong));
   --color-warn: hsl(var(--warn));
   --color-neg: hsl(var(--neg));
@@ -45,23 +48,25 @@
 }
 
 .dark {
-  --bg: 160 20% 6%; /* #0c1210 */
-  --surface: 158 18% 9%; /* #121a17 panel */
-  --surface-2: 156 17% 11%; /* #18221e panel elevado */
-  --ink: 143 17% 91%; /* #e4ece7 */
-  --ink-soft: 148 10% 69%; /* #a9b8b0 */
-  --muted: 155 7% 47%; /* #6f8079 */
-  --border: 154 17% 16%; /* #22302a */
-  --accent: 151 50% 53%; /* #4cc38a */
-  --accent-strong: 154 55% 36%; /* #2a8f63 */
-  --on-accent: 160 20% 6%; /* en oscuro el acento aclara: el texto va oscuro */
-  --accent-soft: 154 22% 13%;
-  --rail: 156 22% 5%; /* #090e0c */
-  --rail-ink: 143 17% 91%;
-  --rail-muted: 155 7% 47%;
-  --pos: 151 50% 53%; /* #4cc38a */
-  --neg: 5 75% 64%; /* #e86a5e */
-  --warn: 36 72% 59%; /* #e2a54a */
+  --bg: 0 0% 2%; /* #050505 */
+  --surface: 30 7% 5%; /* #0f0e0d panel */
+  --surface-2: 30 9% 9%; /* #181614 panel elevado */
+  --ink: 34 26% 95%; /* #f5f2ee blanco cálido */
+  --ink-soft: 34 7% 63%; /* #a8a29a */
+  --muted: 32 6% 51%; /* #8a837b */
+  --border: 30 8% 15%; /* #282522 */
+  --accent: 20 100% 56%; /* #ff6a1f ember */
+  --accent-strong: 29 100% 65%; /* #ffa14a: en oscuro el realce aclara */
+  --on-accent: 0 0% 2%; /* el texto sobre ember va negro (7:1) */
+  --accent-soft: 21 68% 10%; /* #2a1408 */
+  --rail: 30 10% 4%; /* #0b0a09 */
+  --rail-ink: 34 26% 95%;
+  --rail-muted: 32 6% 51%;
+  --pos: 150 51% 58%; /* #5fcb95 */
+  --neg: 4 82% 68%; /* #f0736a */
+  --warn: 41 77% 60%; /* #e8b64c */
+  --color-accent: #ff6a1f;
+  --color-accent-2: #565c8f; /* índigo de apoyo, apagado para no ganarle al ember */
 }
 
 /* Marca por empresa (organizations.brand → <html data-brand>). Sólo cambian
@@ -85,8 +90,13 @@
   --rail-ink: 0 0% 20%;
   --rail-muted: 0 0% 45%;
   --rail-hi: 120 100% 21%;
+  --surface: 0 0% 100%;
+  --on-accent: 0 0% 100%;
   --pos: 120 100% 27%;
+  --neg: 5 57% 51%;
+  --warn: 37 63% 44%;
   --color-accent: #00b800;
+  --color-accent-2: #6b6b6b;
 }
 
 :root[data-brand='lafe'] .app-rail {
@@ -110,7 +120,10 @@
   --rail-muted: 0 0% 50%;
   --rail-hi: 0 0% 100%;
   --pos: 120 100% 39%;
+  --neg: 5 75% 64%;
+  --warn: 36 72% 59%;
   --color-accent: #00c800;
+  --color-accent-2: #8a8a8a;
 }
 
 html,
@@ -130,16 +143,74 @@ body {
   @apply bg-bg text-ink font-body antialiased;
 }
 
-/* Pantallas de acceso: tinta profunda con rayado de libro contable, casi subliminal. */
+/* Pantallas de acceso. Claro: Niebla con velo ember-índigo. Oscuro: Horizon con
+   el arco de luz. Una sola composición de luz, siempre detrás del formulario. */
 .auth-bg {
-  background-color: hsl(var(--rail));
-  background-image: repeating-linear-gradient(
-    to bottom,
-    hsl(var(--rail-ink) / 0.035) 0px,
-    hsl(var(--rail-ink) / 0.035) 1px,
-    transparent 1px,
-    transparent 28px
-  );
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: hsl(var(--bg));
+}
+.auth-bg::before,
+.auth-bg::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 50%;
+}
+.auth-bg::before {
+  right: -14%;
+  top: -22%;
+  width: min(1100px, 90vw);
+  height: min(1300px, 120vh);
+  transform: rotate(18deg);
+  filter: blur(90px);
+  background: radial-gradient(40% 50% at 55% 40%, rgba(46, 43, 95, 0.7), rgba(123, 134, 198, 0.4) 55%, rgba(191, 208, 230, 0) 80%);
+}
+.auth-bg::after {
+  right: 6%;
+  top: 4%;
+  width: min(520px, 50vw);
+  height: min(640px, 60vh);
+  transform: rotate(18deg);
+  filter: blur(70px);
+  background: radial-gradient(45% 50% at 50% 50%, rgba(242, 98, 42, 0.8), rgba(229, 72, 77, 0.4) 50%, rgba(242, 98, 42, 0) 75%);
+}
+.dark .auth-bg::before {
+  left: 50%;
+  right: auto;
+  top: auto;
+  bottom: -820px;
+  width: 2600px;
+  height: 900px;
+  transform: translateX(-50%);
+  filter: none;
+  border-top: 2px solid #ffb27a;
+  box-shadow: 0 -6px 40px rgba(255, 140, 60, 0.9), 0 -30px 140px rgba(255, 106, 31, 0.55);
+  background: radial-gradient(50% 30% at 50% 0%, rgba(255, 140, 60, 0.55), rgba(122, 36, 10, 0.35) 45%, rgba(5, 5, 5, 0) 75%);
+}
+.dark .auth-bg::after {
+  left: -10%;
+  right: auto;
+  top: -20%;
+  width: min(1200px, 90vw);
+  height: 700px;
+  transform: none;
+  filter: blur(50px);
+  background: radial-gradient(50% 50% at 50% 50%, rgba(91, 88, 184, 0.45), rgba(91, 88, 184, 0));
+}
+
+/* Tarjeta de vidrio de las pantallas de acceso. */
+.auth-card {
+  border-radius: 22px;
+  border: 1px solid hsl(var(--ink) / 0.12);
+  background: hsl(var(--surface) / 0.74);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+.dark .auth-card {
+  background: hsl(var(--bg) / 0.6);
 }
 
 /* Una sola secuencia de entrada; el bloque global de reduced-motion la neutraliza. */
@@ -162,22 +233,22 @@ body {
   animation-delay: 90ms;
 }
 
-/* Cifras: Geist con dígitos tabulares — la misma familia que la interfaz,
+/* Cifras: Inter con dígitos tabulares — la misma familia que la interfaz,
    alineada en columnas. La firma tipográfica es la cifra, no una monoespaciada. */
 .figures {
-  font-family: Geist, system-ui, sans-serif;
+  font-family: Inter, system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
 
-/* Cifra protagonista: 40px, peso medio, tracking apretado. */
+/* Cifra protagonista: 40px, peso ligero (marca Atlas), tracking apretado. */
 .figure-hero {
-  font-family: Geist, system-ui, sans-serif;
+  font-family: Inter, system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
   font-size: 40px;
   line-height: 1;
-  font-weight: 500;
-  letter-spacing: -0.03em;
+  font-weight: 300;
+  letter-spacing: -0.045em;
 }
 
 /* Panel: radio 10px, borde de 1px, sin sombra. */

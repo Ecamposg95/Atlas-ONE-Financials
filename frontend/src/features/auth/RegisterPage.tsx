@@ -162,7 +162,7 @@ export function RegisterPage() {
           <p className="figures text-[10px] uppercase tracking-[0.2em] text-accent">
             {form.business_name}
           </p>
-          <h1 className="mt-2 font-display text-xl font-bold tracking-tight">
+          <h1 className="mt-2 font-display text-xl font-semibold tracking-tight">
             Tu contabilidad ya existe
           </h1>
           <p className="mt-2 text-sm text-muted">
@@ -202,7 +202,7 @@ export function RegisterPage() {
       footer={
         <>
           ¿Ya tienes cuenta?{' '}
-          <Link to="/login" className="font-medium text-rail-ink hover:text-accent">
+          <Link to="/login" className="font-medium text-ink hover:text-accent">
             Entra aquí
           </Link>
         </>
@@ -224,7 +224,7 @@ export function RegisterPage() {
         </span>
       </div>
 
-      <h1 className="mt-5 font-display text-lg font-bold tracking-tight">{current.title}</h1>
+      <h1 className="mt-5 font-display text-lg font-semibold tracking-tight">{current.title}</h1>
       {step === 0 ? (
         <p className="mt-1 text-sm text-muted">
           Registras lo que pasa en tu negocio; Atlas Financials lleva las finanzas y la contabilidad.

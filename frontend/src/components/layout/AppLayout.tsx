@@ -157,9 +157,11 @@ export function AppLayout() {
           </div>
         ) : (
           <div className="flex items-center gap-2.5 px-5 pb-5 pt-5">
-            <BrandMark />
+            <BrandMark className="h-7 w-auto shrink-0 text-rail-ink" />
             <div className="min-w-0">
-              <div className="font-display text-base font-bold leading-none tracking-tight">Atlas ONE Financials</div>
+              <div className="font-display text-base font-light leading-none tracking-tight">
+                <span className="font-medium">Atlas</span> <span className="text-rail-muted">ONE Financials</span>
+              </div>
               <div className="figures mt-1 text-[9px] uppercase tracking-[0.2em] text-rail-muted">
                 Finanzas y contabilidad
               </div>
@@ -200,7 +202,7 @@ export function AppLayout() {
                           />
                           <span className="flex-1 truncate">{item.label}</span>
                           {item.to === '/propuestas' && (pendingProposals ?? 0) > 0 ? (
-                            <span className="figures rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-on-accent">
+                            <span className="figures rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-semibold text-on-accent">
                               {pendingProposals}
                             </span>
                           ) : null}
