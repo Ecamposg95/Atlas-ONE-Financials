@@ -12,10 +12,11 @@ from app.domains.auth.schemas import (
     RegisterRequest,
     UserRead,
 )
-from app.domains.auth.service import authenticate_user, register_user
+from app.domains.auth.service import AccountLocked, authenticate_user, register_user
 from app.models.organization import Organization, OrganizationMember
 from app.models.user import User
 from app.security.deps import get_current_user
+from app.security.rate_limit import limit_by_ip
 from app.services import approvals
 from app.security.tokens import TokenError, create_access_token, create_refresh_token, decode_token
 
@@ -31,7 +32,12 @@ def _auth_response(user: User, organization: Organization | None) -> AuthRespons
     )
 
 
-@router.post("/auth/register", response_model=AuthResponse, status_code=201)
+@router.post(
+    "/auth/register",
+    response_model=AuthResponse,
+    status_code=201,
+    dependencies=[Depends(limit_by_ip("register", limit=10, window_seconds=3600))],
+)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     user, organization = register_user(
         db,
@@ -45,9 +51,23 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     return _auth_response(user, organization)
 
 
-@router.post("/auth/login", response_model=AuthResponse)
+@router.post(
+    "/auth/login",
+    response_model=AuthResponse,
+    dependencies=[Depends(limit_by_ip("login", limit=20, window_seconds=60))],
+)
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
-    user = authenticate_user(db, payload.email, payload.password)
+    try:
+        user = authenticate_user(db, payload.email, payload.password)
+    except AccountLocked as locked:
+        raise HTTPException(
+            status_code=429,
+            detail=(
+                "Demasiados intentos fallidos. La cuenta está bloqueada; "
+                f"vuelve a intentar en {locked.minutes} min."
+            ),
+            headers={"Retry-After": str(locked.minutes * 60)},
+        )
     if user is None:
         raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos.")
     membership = (
@@ -60,7 +80,11 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     return _auth_response(user, organization)
 
 
-@router.post("/auth/refresh", response_model=AuthResponse)
+@router.post(
+    "/auth/refresh",
+    response_model=AuthResponse,
+    dependencies=[Depends(limit_by_ip("refresh", limit=60, window_seconds=60))],
+)
 def refresh(payload: RefreshRequest, db: Session = Depends(get_db)):
     try:
         user_id = decode_token(payload.refresh_token, expected_type="refresh")

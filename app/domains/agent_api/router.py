@@ -17,8 +17,9 @@ from app.agents.tools import TOOLS
 from app.database import get_db
 from app.models.agent import AgentActionLog, AgentProposal
 from app.security.agent import AgentContext, get_agent_context
+from app.security.rate_limit import limit_agent_key
 
-router = APIRouter(prefix="/agent", tags=["agent"])
+router = APIRouter(prefix="/agent", tags=["agent"], dependencies=[Depends(limit_agent_key)])
 
 
 class InvokeRequest(BaseModel):

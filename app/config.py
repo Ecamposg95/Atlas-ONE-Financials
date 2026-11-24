@@ -35,6 +35,11 @@ class Settings:
     access_token_expire_minutes: int
     refresh_token_expire_days: int
     docs_enabled: bool
+    # Perímetro: límite de intentos (en memoria) y bloqueo de cuenta (durable).
+    rate_limit_enabled: bool
+    login_max_failures: int
+    login_lock_minutes: int
+    agent_rate_per_minute: int
     # Asistente sobre Claude (spec 2026-11-02). La llave NO vive aquí: se lee
     # en el momento de construir el cliente, para que aparezca sin reiniciar nada.
     ai_model: str
@@ -79,6 +84,11 @@ def _build_settings() -> Settings:
         access_token_expire_minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "720")),
         refresh_token_expire_days=int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "30")),
         docs_enabled=os.getenv("DOCS_ENABLED", "false" if is_production else "true").lower() == "true",
+        # En pruebas se apaga: toda la suite sale de la misma IP.
+        rate_limit_enabled=os.getenv("RATE_LIMIT_ENABLED", "false" if env == "test" else "true").lower() == "true",
+        login_max_failures=int(os.getenv("LOGIN_MAX_FAILURES", "5")),
+        login_lock_minutes=int(os.getenv("LOGIN_LOCK_MINUTES", "15")),
+        agent_rate_per_minute=int(os.getenv("AGENT_RATE_PER_MINUTE", "120")),
         ai_model=os.getenv("AI_MODEL", "claude-opus-5-5"),
         ai_effort=os.getenv("AI_EFFORT", "medium"),
         ai_max_tokens=int(os.getenv("AI_MAX_TOKENS", "16000")),
