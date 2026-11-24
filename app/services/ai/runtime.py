@@ -33,7 +33,7 @@ from app.services.ai.prompt import context_block, step_label, system_prompt
 from app.services.ai.toolset import tool_specs, validate_input
 from app.services.ai.pricing import cost_usd, usage_tokens
 
-logger = logging.getLogger("arca.assistant")
+logger = logging.getLogger("financials.assistant")
 
 MAX_ITERATIONS = 12
 HISTORY_ROWS = 40

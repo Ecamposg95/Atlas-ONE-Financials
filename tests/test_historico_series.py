@@ -1,4 +1,4 @@
-"""Serie de ventas: histórico antes del corte, lo registrado en ONE Finance después."""
+"""Serie de ventas: histórico antes del corte, lo registrado en Atlas Financials después."""
 
 from __future__ import annotations
 

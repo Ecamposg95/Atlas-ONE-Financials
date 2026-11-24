@@ -55,7 +55,7 @@ EXPENSE_MIX = (
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Escenario para el demo de foro")
-    parser.add_argument("--url", default="http://localhost:8000", help="ARCA base URL")
+    parser.add_argument("--url", default="http://localhost:8000", help="Atlas Financials base URL")
     parser.add_argument("--password", default="demoforo2026")
     args = parser.parse_args()
 
@@ -209,7 +209,7 @@ def main() -> None:
         "financial_account_id": bbva["id"],
     })
     # Se corren sólo los meses ya cerrados: depreciar el mes en curso asentaría
-    # una póliza con fecha futura y ARCA lo rechaza, con razón.
+    # una póliza con fecha futura y Atlas Financials lo rechaza, con razón.
     for months_ago in range(2, 0, -1):
         index = today.year * 12 + (today.month - 1) - months_ago
         year, month = divmod(index, 12)

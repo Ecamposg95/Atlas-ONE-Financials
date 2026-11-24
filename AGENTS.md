@@ -1,8 +1,8 @@
-# AGENTS.md — Reglas para agentes que trabajan en Atlas ONE Finance (motor ARCA)
+# AGENTS.md — Reglas para agentes que trabajan en Atlas ONE Financials (antes ARCA)
 
-## Qué es Atlas ONE Finance
+## Qué es Atlas ONE Financials
 
-Atlas ONE Finance es la suite de administración financiera y contable del ecosistema Atlas ONE (Atlas Tech); ARCA es su motor financiero-contable (`app/services/accounting/`). Visión de producto: `docs/ATLAS_ONE_FINANCE_VISION.md`. Un emprendedor registra operaciones en su lenguaje ("vendí", "gasté", "me deben") y ONE Finance produce por debajo finanzas y contabilidad formales. **North Star:** que el usuario entienda su negocio sin saber contabilidad, con un ledger de partida doble correcto y auditable debajo de cada cifra.
+Atlas ONE Financials (nombre corto: Atlas Financials) es la suite financiera del ecosistema Atlas ONE (Atlas Tech). ARCA es su nombre anterior y queda como alias histórico del motor contable (`app/services/accounting/`). Estrategia, arquitectura y roadmap: `docs/financials/`; decisiones: `docs/decisions/` (006 nomenclatura, 007 entidad legal, 008 estrategia). En copy visible se escribe "Atlas ONE Financials" o "Atlas Financials", nunca "ARCA" ni "ONE Finance". Un emprendedor registra operaciones en su lenguaje ("vendí", "gasté", "me deben") y Atlas Financials produce por debajo finanzas y contabilidad formales. **North Star:** que el usuario entienda su negocio sin saber contabilidad, con un ledger de partida doble correcto y auditable debajo de cada cifra.
 
 ```text
 OPERACIÓN → EVENTO FINANCIERO → MOVIMIENTO → CONTABILIDAD → ESTADOS FINANCIEROS

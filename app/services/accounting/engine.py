@@ -24,7 +24,7 @@ from app.models.accounting import (
 from app.services.accounting.coa import get_account_by_code
 from app.services.accounting.folios import next_folio
 
-logger = logging.getLogger("arca.accounting")
+logger = logging.getLogger("financials.accounting")
 
 TWO_PLACES = Decimal("0.01")
 

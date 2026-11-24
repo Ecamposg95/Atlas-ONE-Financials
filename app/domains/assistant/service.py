@@ -228,7 +228,7 @@ def usage(db: Session, organization: Organization, month: str | None) -> dict:
     by_day: dict[str, dict] = {}
     for r in rows:
         ukey = r.user_id or "sistema"
-        by_user.setdefault(ukey, {"key": ukey, "label": names.get(r.user_id, "ONE Finance"), "calls": 0, "cost_usd": Decimal("0")})
+        by_user.setdefault(ukey, {"key": ukey, "label": names.get(r.user_id, "Atlas Financials"), "calls": 0, "cost_usd": Decimal("0")})
         by_user[ukey]["calls"] += 1
         by_user[ukey]["cost_usd"] += Decimal(r.cost_usd)
         day = _aware(r.created_at).astimezone(budget_service.MEXICO).date().isoformat()

@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/authStore'
 import lafeLogoColor from '@/assets/brands/lafe/logo-color.webp'
 import lafeLogoBlanco from '@/assets/brands/lafe/logo-blanco.webp'
 
-/** Marca propia de una empresa sobre ONE Finance: su logotipo aquí, sus colores
+/** Marca propia de una empresa sobre Atlas Financials: su logotipo aquí, sus colores
  *  en `index.css` bajo `[data-brand='<clave>']`. La clave la guarda el backend
  *  (`organizations.brand`, `VALID_BRANDS`). */
 export interface Brand {
@@ -19,7 +19,7 @@ const BRANDS: Record<string, Brand> = {
   },
 }
 
-/** Marca de la empresa activa; null = ONE Finance. Una clave que este front no
+/** Marca de la empresa activa; null = Atlas Financials. Una clave que este front no
  *  conoce se trata como sin marca. */
 export function useBrand(): Brand | null {
   const key = useAuthStore((state) => state.organization?.brand ?? null)

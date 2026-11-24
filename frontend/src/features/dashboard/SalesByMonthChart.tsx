@@ -67,14 +67,14 @@ function buildRows(series: AnalyticsSeries): Row[] {
 function openingLabel(iso: string): string {
   const [year, month, day] = iso.split('-').map(Number)
   const date = new Date(year, month - 1, day)
-  return `${date.getDate()} ${MONTHS[date.getMonth()]} · inicia ONE Finance`
+  return `${date.getDate()} ${MONTHS[date.getMonth()]} · inicia Atlas Financials`
 }
 
 function SeriesTooltip({ active, payload, year }: { active?: boolean; payload?: { payload: Row }[]; year: number }) {
   if (!active || !payload?.length) return null
   const row = payload[0].payload
   const current = row.live ?? row.hist
-  const originLabel = row.partial ? 'en curso' : row.origin === 'historical' ? 'histórico' : row.origin === 'live' ? 'en ONE Finance' : null
+  const originLabel = row.partial ? 'en curso' : row.origin === 'historical' ? 'histórico' : row.origin === 'live' ? 'en Atlas Financials' : null
   const delta = current !== null && row.prev ? ((current - row.prev) / row.prev) * 100 : null
   return (
     <div className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs shadow-none">
@@ -183,7 +183,7 @@ export function SalesByMonthChart({
         </div>
         <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1">
           {hasHist ? <LegendKey kind="hist" label={`${year} histórico`} /> : null}
-          {hasLive ? <LegendKey kind="live" label={`${year} en ONE Finance`} /> : null}
+          {hasLive ? <LegendKey kind="live" label={`${year} en Atlas Financials`} /> : null}
           {rows.some((row) => row.prev !== null) ? <LegendKey kind="prev" label={String(year - 1)} /> : null}
           {rows.some((row) => row.target !== null) ? <LegendKey kind="target" label="Meta" /> : null}
         </div>

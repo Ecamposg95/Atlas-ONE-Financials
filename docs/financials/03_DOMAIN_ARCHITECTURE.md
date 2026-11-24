@@ -61,7 +61,7 @@ Hechos relevantes del modelo:
 - `JournalEntryLine` no tiene `organization_id` propio: hereda el tenant de su póliza.
 - `debit` y `credit` son `Numeric(14,2)`.
 - No hay `CheckConstraint` en la base; el cuadre se garantiza en la aplicación.
-- No hay restricción única sobre `(organization_id, source_type, source_id)`.
+- No hay restricción única sobre `(organization_id, source_type, source_id)`, y no puede haberla: el alta de un documento, cada uno de sus pagos y sus reversos comparten el mismo origen.
 
 ## Comparación con el modelo conceptual del task pack (§7.1)
 
@@ -156,7 +156,7 @@ Principio: todo lo que llega de fuera entra como **propuesta** o como operación
 
 **Contrato de eventos entrantes (propuesta):** identificador único del evento en el origen, firma HMAC con ventana de tiempo, referencia externa única por empresa y origen, respuesta distinta para aceptado, duplicado y rechazado. `docs/ARCHITECTURE.md` §8 ya lo describe; **no está implementado**. Se retoma tal cual como diseño.
 
-**Idempotencia:** agregar restricción única en base sobre la referencia externa del evento. Hoy la idempotencia de procesos periódicos descansa en `source_id` sin restricción única.
+**Idempotencia:** la restricción única en base va sobre la referencia externa del evento entrante, en su propia tabla. No va sobre `source_type` / `source_id` de las pólizas: se revisó en el sprint 1 y ese par se repite por diseño (alta, pagos y reversos de un mismo documento). La idempotencia de los procesos periódicos sigue validándose en la aplicación.
 
 **Errores:** un evento que falla una regla contable queda guardado con su motivo y se puede reprocesar; nunca se pierde ni se asienta a medias. Reconciliación periódica contra el origen por rango de fechas.
 
@@ -171,7 +171,7 @@ Principio: todo lo que llega de fuera entra como **propuesta** o como operación
 | Contabilización atómica y concurrencia | Cumplida | `lock_organization` con `with_for_update`; `tests/test_bloqueo_postgres.py` |
 | Registros inmutables, corrección por reverso | Cumplida | `app/services/reversals.py`, `tests/test_reversos.py` |
 | Periodos cerrados protegidos | Cumplida | Candado dentro del motor; reapertura con motivo |
-| Idempotencia | Parcial | Sin restricción única en BD |
+| Idempotencia | Parcial | Validada en aplicación; la restricción en BD llega con la tabla de eventos entrantes |
 | Trazabilidad origen → asiento → reporte | Cumplida | `source_type` / `source_id`; `tests/test_movimientos_origen.py` |
 | Reportes reproducibles a fecha de corte | Cumplida | Derivados del libro en cada consulta |
 | Aislamiento por tenant | Cumplida | `tests/test_tenant_isolation.py` |
@@ -182,11 +182,11 @@ Principio: todo lo que llega de fuera entra como **propuesta** o como operación
 
 | Tipo | Hoy | Agregar |
 |---|---|---|
-| Partida doble | `test_ledger.py`, `test_polizas_manuales.py` | Prueba de propiedad: cualquier secuencia de operaciones deja la balanza cuadrada |
+| Partida doble | `test_ledger.py`, `test_polizas_manuales.py`, `test_propiedad_balanza.py` (sprint 1: secuencias al azar; cada póliza y la balanza cuadran) | — |
 | Tenant | `test_tenant_isolation.py` (5 pruebas) | Barrido automático: cada endpoint con recurso de otra organización responde 404 |
 | Concurrencia | `test_bloqueo_postgres.py` | Dos pagos simultáneos al mismo documento |
 | Idempotencia | Recurrentes, depreciación, importación | Mismo evento entrante dos veces |
-| Conciliación auxiliar–mayor | Parcial en `test_reports.py` | Suma de CxC y CxP abiertas igual al saldo de sus cuentas de control |
+| Conciliación auxiliar–mayor | `test_propiedad_balanza.py` (sprint 1: CxC = 1200, CxP = 2100, caja = 1100 tras cada operación) | Extender a tarjetas, activos y préstamos |
 | Migraciones | Un solo head en CI | Upgrade sobre copia anonimizada de producción |
 
 ## Decisiones pendientes

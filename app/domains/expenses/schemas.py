@@ -20,7 +20,7 @@ class ExpenseCreate(BaseModel):
     # la entidad fiscal nunca se infiere.
     business_unit_id: str | None = None
     fiscal_entity_id: str | None = None
-    # Retenciones al proveedor. Se capturan; ONE Finance sugiere pero no impone.
+    # Retenciones al proveedor. Se capturan; Atlas Financials sugiere pero no impone.
     retention_isr: Decimal = Field(default=Decimal("0"), ge=0, allow_inf_nan=False)
     retention_iva: Decimal = Field(default=Decimal("0"), ge=0, allow_inf_nan=False)
     financial_account_id: str | None = None

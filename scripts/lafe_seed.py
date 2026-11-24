@@ -47,7 +47,7 @@ CAJA_CENTRAL = "Caja central"
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Unidades, contribuyentes y cajas de LaFe")
-    parser.add_argument("--url", default="http://localhost:8000", help="ARCA base URL")
+    parser.add_argument("--url", default="http://localhost:8000", help="Atlas Financials base URL")
     parser.add_argument("--email", required=True, help="Correo de un OWNER o ADMIN de la empresa")
     parser.add_argument("--password", required=True)
     parser.add_argument("--organization-id", default=None, help="Si el usuario tiene varias empresas")

@@ -3,7 +3,7 @@ mensual (04), gasto por cuenta × contribuyente × unidad (03) y avance de la
 revisión (03, 17, 18) como foto.
 
 El libro exporta todo como texto ('824764.74', '2026-01-01 00:00:00'); se
-convierte aquí. Nunca se cargan las pólizas al libro de ONE Finance: esto es
+convierte aquí. Nunca se cargan las pólizas al libro de Atlas Financials: esto es
 análisis.
 """
 

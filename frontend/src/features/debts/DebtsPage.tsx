@@ -602,7 +602,7 @@ export function DebtsPage({ config }: { config: Config }) {
       <JournalEntryModal
         sourceType={config.kind === 'receivables' ? 'receivable' : 'payable'}
         sourceId={entryFor?.id ?? null}
-        title={`Así lo registró ONE Finance · ${entryFor?.description ?? ''}`}
+        title={`Así lo registró Atlas Financials · ${entryFor?.description ?? ''}`}
         open={entryFor !== null}
         onClose={() => setEntryFor(null)}
       />

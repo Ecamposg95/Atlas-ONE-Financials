@@ -12,7 +12,7 @@ from app.models.user import User
 from app.security.passwords import hash_password, verify_password
 from app.services.onboarding import provision_organization
 
-logger = logging.getLogger("arca.auth")
+logger = logging.getLogger("financials.auth")
 
 
 class AccountLocked(Exception):

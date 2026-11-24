@@ -1,6 +1,8 @@
 # ATLAS ONE FINANCE
 ## Enterprise Financial Management & Intelligence Suite
 
+> **Nomenclatura superada (2026-11-23, ADR-006):** el producto se llama **Atlas ONE Financials** y los módulos llevan nombres descriptivos, sin las submarcas "ONE Accounting", "ONE Treasury", etc. El contenido funcional de este documento sigue siendo referencia; la estrategia vigente está en `docs/financials/`.
+
 _Documento de visión recibido de Emmanuel el 2026-10-31. Es la referencia de producto y de marca; el plan de construcción vigente sigue en `MEGA_PLAN_MVP.md` y el estado en `MVP_STATUS.md`._
 
 **Producto:** Atlas ONE Finance  

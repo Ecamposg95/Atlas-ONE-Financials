@@ -1,4 +1,4 @@
-"""Modelos SQLAlchemy de ONE Finance.
+"""Modelos SQLAlchemy de Atlas Financials.
 
 Importar aquí cada módulo de modelos: Base.metadata solo conoce las tablas
 cuyos módulos fueron importados (crítico para create_all en tests y para

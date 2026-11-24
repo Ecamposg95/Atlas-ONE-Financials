@@ -1,6 +1,6 @@
 import { splitMoney } from '@/lib/format'
 
-/** Cifra estilo ledger: enteros grandes, centavos discretos. La firma visual de ONE Finance. */
+/** Cifra estilo ledger: enteros grandes, centavos discretos. La firma visual de Atlas Financials. */
 export function Money({
   value,
   size = 'md',

@@ -33,7 +33,7 @@ class ImportBatch(Base, UUIDPKMixin, TenantMixin, AuditMixin):
 class ImportRow(Base, UUIDPKMixin, TenantMixin, AuditMixin):
     """Una fila del archivo, ya leída y clasificada.
 
-    `external_id` identifica la fila fuera de ONE Finance (folio de Toronja o
+    `external_id` identifica la fila fuera de Atlas Financials (folio de Toronja o
     hash de fecha+monto+concepto): un `external_id` ya CREATED en la empresa es
     un duplicado. La unicidad es lógica (la valida el service), porque las
     filas ERROR/DUPLICATE de otros lotes repiten el mismo valor a propósito.

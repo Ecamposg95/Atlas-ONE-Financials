@@ -117,7 +117,7 @@ function OpeningCard() {
     <Card className="mt-6 max-w-lg">
       <h2 className="font-display text-lg font-semibold">Apertura</h2>
       <p className="mt-1 text-sm text-muted">
-        La fecha de corte y los saldos con los que empezaste en ONE Finance. Captúralos provisionales y corrígelos
+        La fecha de corte y los saldos con los que empezaste en Atlas Financials. Captúralos provisionales y corrígelos
         cuando lleguen los estados de cuenta.
       </p>
       <Link

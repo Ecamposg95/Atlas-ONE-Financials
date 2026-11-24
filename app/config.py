@@ -1,4 +1,4 @@
-"""Configuración de ONE Finance.
+"""Configuración de Atlas Financials.
 
 Patrón Atlas (dasic): dataclass congelada + lru_cache, fail-fast en producción.
 Sin fallback de secreto en producción, nunca.

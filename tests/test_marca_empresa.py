@@ -1,5 +1,5 @@
 """Marca por empresa: la empresa puede llevar la identidad de su negocio
-(acento y logotipo) sobre ONE Finance. El backend sólo guarda la clave; los
+(acento y logotipo) sobre Atlas Financials. El backend sólo guarda la clave; los
 colores y el logo viven en el front."""
 
 from tests.helpers import auth_headers, register

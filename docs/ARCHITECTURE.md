@@ -1,8 +1,10 @@
-# ARCA · Referencia técnica
+# Atlas ONE Financials · Referencia técnica
 
 _Fecha: 2026-10-12 · Audiencia: ingeniería de Atlas y de partners que se integran. Las reglas que nunca se rompen están en `AGENTS.md`; el plan de alcances e integraciones en `docs/MEGA_PLAN_MVP.md`._
 
-ARCA es un monolito modular en FastAPI con el motor contable como núcleo y una capa agéntica con aprobación humana. Las integraciones entran por webhooks firmados e idempotentes y salen por un outbox durable. Toda escritura al libro pasa por un único punto, y todo reporte se deriva del libro en cada consulta.
+> **Cómo leer este documento (revisión 2026-11-23).** Mezcla lo construido con lo planeado. Lo marcado **(plan)** no existe en el código: los webhooks de integración y el outbox (§8), el timbrado y los secretos fiscales (§1, §9), y las variables y la observabilidad que "el plan agrega" (§10). El inventario verificado contra el código está en `docs/financials/01_REPOSITORY_AUDIT.md`. "ARCA" es el nombre anterior de Atlas ONE Financials.
+
+Atlas ONE Financials es un monolito modular en FastAPI con el motor contable como núcleo y una capa agéntica con aprobación humana. Toda escritura al libro pasa por un único punto, y todo reporte se deriva del libro en cada consulta. Las integraciones por webhooks firmados e idempotentes y el outbox durable son diseño **(plan)**, no código.
 
 ## 1. Contexto del sistema
 
@@ -10,10 +12,10 @@ ARCA es un monolito modular en FastAPI con el motor contable como núcleo y una 
 | --- | --- | --- |
 | Dueño de la pyme (frontend React) | Operaciones en lenguaje de negocio: vendí, cobré, gasté, pagué | Dashboard, reportes, avisos, propuestas por aprobar |
 | Despacho contable (frontend React, rol ACCOUNTANT) | Pólizas, catálogo, cierres, mapeos fiscales | Balanza, XML del SAT, export CONTPAQi, paquete NIF, cédula |
-| Atlas ONE (POS y ERP) | Eventos de venta, cobro, devolución y caja | CFDI timbrados (fase FACT) |
+| Atlas ONE (POS y ERP) **(plan)** | Eventos de venta, cobro, devolución y caja | CFDI timbrados (fase FACT) |
 | Atlas Cortex (agentes) | Invocaciones de herramientas con llave `ak_` | Datos de lectura, estatus de propuestas, webhook `proposal.decided` |
-| HRFlow (nómina) | Eventos de nómina autorizada y pagada | CFDI de nómina timbrados (fase FACT) |
-| PAC | — | Solicitudes de timbrado y cancelación |
+| HRFlow (nómina) **(plan)** | Eventos de nómina autorizada y pagada | CFDI de nómina timbrados (fase FACT) |
+| PAC **(plan)** | — | Solicitudes de timbrado y cancelación |
 | SAT | — | Catálogo y balanza XML del Anexo 24, DIOT |
 | Bancos | Estados de cuenta CSV y Excel | — |
 
@@ -31,7 +33,7 @@ ARCA es un monolito modular en FastAPI con el motor contable como núcleo y una 
 | Formatos externos | `app/services/accounting/contpaqi.py`, `sat.py`, `coa.py` | Layout CONTPAQi, XML Anexo 24, catálogo inicial | Funciones puras con archivo dorado en pruebas |
 | Modelos | `app/models/` | SQLAlchemy 2, `UUIDPKMixin`, `TenantMixin`, `AuditMixin`, `Numeric(14,2)` | Registrar módulos nuevos en `app/models/__init__.py` |
 | Capa agéntica | `app/agents/tools.py`, `app/domains/agent_api/`, `app/domains/proposals/` | Catálogo de herramientas, invocación auditada, propuestas | Un agente nunca escribe al ledger: propone y un humano aprueba |
-| Eventos | `app/core/events.py` | Bus en proceso (`event_bus.publish`) | Se vuelve outbox durable en la fase 0 del plan |
+| Eventos | `app/core/events.py` | Bus en proceso (`event_bus.publish`) | **(plan)** Outbox durable cuando exista un consumidor externo (ADR-012) |
 | Seguridad | `app/security/` | Contraseñas, tokens JWT, dependencias de membresía y rol, llaves de agente | Tenant siempre desde la membresía, nunca del payload |
 | Frontend | `frontend/src/features/<x>/` | UX en lenguaje de empresario, TanStack Query v5, Zustand, tokens semánticos Tailwind | Consume; nunca calcula reglas |
 
@@ -120,7 +122,9 @@ entry = post_journal_entry(
 - Aprobación: la página Propuestas muestra resumen, payload legible, evidencia y agente; aprobar ejecuta el service real (misma ruta que un humano), rechazar exige motivo. Eventos `proposal.created`, `proposal.approved`, `proposal.rejected`.
 - El plan agrega `propose_cfdi_link`, `propose_bank_match`, `propose_journal_entry`, `notify_owner`, el webhook `proposal.decided` y un servidor MCP sobre la misma llave.
 
-## 8. Integraciones: contrato de webhooks
+## 8. Integraciones: contrato de webhooks (plan)
+
+> **No implementado.** No existen el endpoint `/api/integrations`, ni las tablas `inbound_events`, `outbox_events` o `integration_connections`. Esta sección es el diseño que retoma el ADR-011 de `docs/financials/08_ARCHITECTURE_DECISIONS.md`.
 
 Entrada: `POST /api/integrations/{source}/events` con `source` ∈ `atlas-one`, `hrflow`, `cortex`.
 
@@ -142,8 +146,9 @@ Salida (`outbox_events`): el worker entrega `proposal.decided`, `invoice.stamped
 - Contraseñas con hash (`app/security/passwords.py`), mínimo 8 caracteres; tokens firmados con `SECRET_KEY` y expiración; refresh rotable.
 - Tenant isolation: todo query filtra por `organization_id` obtenido de la membresía; `tests/test_tenant_isolation.py` lo vigila. Un recurso de otra empresa responde 404.
 - Llaves de agente con hash, scopes, revocación y auditoría completa; una llave nunca ejecuta: propone.
-- Secretos fiscales (CSD, e.firma) cifrados por empresa (Fernet con llave maestra `FISCAL_MASTER_KEY` en entorno, rotación con doble llave documentada), nunca en logs ni en respuestas; acceso registrado.
-- Webhooks con HMAC y ventana de tiempo; rate limiting y bloqueo temporal en auth y por llave (fase 0).
+- **(plan)** Secretos fiscales (CSD, e.firma) cifrados por empresa (Fernet con llave maestra `FISCAL_MASTER_KEY` en entorno, rotación con doble llave), nunca en logs ni en respuestas; acceso registrado. Hoy no se almacena ningún secreto fiscal.
+- Límite de intentos (`app/security/rate_limit.py`, ventana deslizante en memoria): login, registro y refresh por IP; API de agentes por llave. Bloqueo de cuenta durable: 5 contraseñas incorrectas seguidas bloquean 15 minutos (`users.locked_until`). Todo responde 429 con `Retry-After`.
+- **(plan)** Webhooks con HMAC y ventana de tiempo.
 - Nada se borra: `CANCELLED` + campos `cancelled_*`, reversos como pólizas espejo, meses y ejercicios con candado y reapertura con motivo.
 - CORS por lista (`CORS_ORIGINS`); HTTPS terminado en Railway; `/docs` apagado en producción.
 
@@ -155,12 +160,12 @@ Salida (`outbox_events`): el worker entrega `proposal.decided`, `invoice.stamped
 - Migraciones: `AAAAMMDD_NN_slug.py` con `revision="AAAAMMDD_NN"`, un solo head; nunca `create_all()` en producción.
 - Otros hosts: Atlas ONE y HRFlow corren en un VPS de IONOS con Docker y Caddy; Cortex en Railway. Las integraciones cruzan hosts por HTTPS con secretos por conexión.
 - Runbooks: resembrar la demo del despacho con `scripts/demo_despacho.py --url <prod> --contador-email <correo>`; reabrir un mes con motivo desde Cierre de periodo; nunca `railway up` desde `/mnt/d` (drvfs corrompe la carga).
-- Observabilidad hoy: healthchecks y logs estructurados (`arca.accounting` registra todo descuadre rechazado). El plan agrega Sentry, métricas del outbox (pendientes, reintentos, edad del más viejo) y alertas por correo.
+- Observabilidad hoy: healthchecks y logs estructurados (`financials.accounting` registra todo descuadre rechazado). El plan agrega Sentry, métricas del outbox (pendientes, reintentos, edad del más viejo) y alertas por correo.
 
 ## 11. Pruebas
 
 - `pytest` corre en SQLite en memoria con las migraciones aplicadas; fixtures `db` y `client` en `tests/conftest.py`. 388 pruebas al 2026-10-13.
-- Cada módulo trae: aislamiento de tenant, partida doble (la suite falla si una póliza descuadra), efecto en saldos de instrumentos, reporte contra ledger, RBAC y paginación. Los formatos externos (CONTPAQi, XML SAT, DIOT, CFDI) llevan archivo dorado.
+- Cada módulo trae: aislamiento de tenant, partida doble (la suite falla si una póliza descuadra), efecto en saldos de instrumentos, reporte contra ledger, RBAC y paginación. Los formatos externos existentes (CONTPAQi, XML SAT) llevan archivo dorado; DIOT y CFDI son **(plan)**.
 - Frontend: `npm run typecheck` y `npm run build`; capturas con Edge headless desde Windows para revisar UI.
 
 ## 12. Glosario
