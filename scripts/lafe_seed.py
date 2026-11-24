@@ -5,7 +5,7 @@ Registro Contable), dos contribuyentes (Liza y Ale), la caja central y una caja
 de efectivo por unidad con ventas, ligada a su unidad. Sin saldos: el histórico
 entra por importación, no por aquí.
 
-    python scripts/lafe_seed.py --url https://arca-production-d769.up.railway.app \
+    python scripts/lafe_seed.py --url https://atlas-one-financials.up.railway.app \
         --email liza@lafe.mx --password '...'
 
 Idempotente por nombre: correrlo dos veces no duplica nada; lo que ya existe se

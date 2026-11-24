@@ -89,7 +89,7 @@ Tests obligatorios antes de cerrar cualquier feature financiera: tenant isolatio
 
 ## Cómo desplegar
 
-Railway (proyecto Atlas ONE Financials, antes ARCA; servicio `ARCA` + PostgreSQL). El servicio está conectado al repo GitHub `Ecamposg95/Atlas-ONE-Financials`: **push a `main` = deploy automático** (no usar `railway up`; desde /mnt/d además corrompe el upload). Railpack construye (config en `railpack.json`); el arranque ejecuta `alembic upgrade head`. Healthcheck `GET /api/health` (ajustes del servicio en `.railway/railway.ts`; se aplican con `railway config apply`, no al hacer push). Variables obligatorias: `DATABASE_URL`, `SECRET_KEY`, `ENV=production`.
+Railway (proyecto Atlas ONE Financials, antes ARCA; servicio `Atlas-ONE-Financials` + PostgreSQL). El servicio está conectado al repo GitHub `Ecamposg95/Atlas-ONE-Financials`: **push a `main` = deploy automático** (no usar `railway up`; desde /mnt/d además corrompe el upload). Railpack construye (config en `railpack.json`); el arranque ejecuta `alembic upgrade head`. Healthcheck `GET /api/health` (ajustes del servicio en `.railway/railway.ts`; se aplican con `railway config apply`, no al hacer push). Variables obligatorias: `DATABASE_URL`, `SECRET_KEY`, `ENV=production`.
 
 ## Migraciones
 

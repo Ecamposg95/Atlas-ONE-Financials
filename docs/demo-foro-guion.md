@@ -15,7 +15,7 @@ Checklist, en este orden. Toma cinco minutos.
 1. **Sembrar el escenario** (una empresa nueva, con historia):
 
    ```bash
-   python scripts/demo_forum.py --url https://arca-production-d769.up.railway.app
+   python scripts/demo_forum.py --url https://atlas-one-financials.up.railway.app
    ```
 
    Guarda lo que imprime: correo, contraseña, llave de agente y los dos folios que vas a citar en vivo.
@@ -24,7 +24,7 @@ Checklist, en este orden. Toma cinco minutos.
 
    ```bash
    claude mcp add arca \
-       --env ARCA_URL=https://arca-production-d769.up.railway.app \
+       --env ARCA_URL=https://atlas-one-financials.up.railway.app \
        --env ARCA_API_KEY=<la llave que imprimió el script> \
        -- /mnt/d/Devs/ARCA/.venv/bin/python /mnt/d/Devs/ARCA/tools/arca_mcp.py
    ```
@@ -191,7 +191,7 @@ Vuelve al tablero. Señala la deuda en tarjetas.
 | Si falla | Haz esto | Qué se pierde |
 |---|---|---|
 | El modelo tarda o responde mal | Espera diez segundos y repite la instrucción una vez. | Nada. |
-| El cliente MCP no conecta | En otra terminal: `python scripts/demo_plan_b.py --url https://arca-production-d769.up.railway.app --key <llave>` | Sólo el modelo eligiendo la herramienta. Es la misma llamada, con la misma llave y los mismos permisos — dilo así, en voz alta. |
+| El cliente MCP no conecta | En otra terminal: `python scripts/demo_plan_b.py --url https://atlas-one-financials.up.railway.app --key <llave>` | Sólo el modelo eligiendo la herramienta. Es la misma llamada, con la misma llave y los mismos permisos — dilo así, en voz alta. |
 | No hay red | Corre ARCA local con el escenario sembrado en `localhost:8000` y repite el plan B contra esa URL. | El detalle de que corre en producción. |
 
 Frase para cubrir cualquiera de los tres, sin disimular:
@@ -255,7 +255,7 @@ Cambia a Préstamos, abre **Tabla**.
 **La versión de terminal** (si prefieren consola): corre:
 
 ```bash
-python scripts/demo_agentes.py --url https://arca-production-d769.up.railway.app \
+python scripts/demo_agentes.py --url https://atlas-one-financials.up.railway.app \
     --email <correo del escenario>
 ```
 

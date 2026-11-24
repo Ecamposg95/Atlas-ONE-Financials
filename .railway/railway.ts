@@ -4,7 +4,7 @@ import { defineRailway, github, project, service } from "railway/iac";
 // See https://docs.railway.com/infrastructure-as-code#multi-repo-projects
 export const partial = "ARCA";
 export default defineRailway(() => {
-  const ARCA = service("ARCA", {
+  const financials = service("Atlas-ONE-Financials", {
     source: github("Ecamposg95/Atlas-ONE-Financials", { branch: "main", checkSuites: false }),
     build: { buildEnvironment: "V3", builder: "RAILPACK" },
     healthcheck: "/api/health",
@@ -15,6 +15,6 @@ export default defineRailway(() => {
 
   return project("Atlas ONE Financials", {
     variables: { managed: false },
-    resources: [ARCA],
+    resources: [financials],
   });
 });

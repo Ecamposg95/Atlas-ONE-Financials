@@ -89,7 +89,7 @@ ruff check .
 
 ## Deployment (Railway)
 
-Servicios: PostgreSQL + `ARCA` (API + SPA), conectado al repo GitHub: **cada push a `main` despliega automáticamente**. Build con Railpack (`railpack.json`); el arranque ejecuta `alembic upgrade head` antes de uvicorn. Healthcheck: `GET /api/health`. Producción: https://arca-production-d769.up.railway.app
+Servicios: PostgreSQL + `Atlas-ONE-Financials` (API + SPA), conectado al repo GitHub: **cada push a `main` despliega automáticamente**. Build con Railpack (`railpack.json`); el arranque ejecuta `alembic upgrade head` antes de uvicorn. Healthcheck: `GET /api/health`. Producción: https://atlas-one-financials.up.railway.app
 
 ## Estado del MVP
 

@@ -5,7 +5,7 @@ consultora de software— para que el tablero, los reportes y la cartera se vean
 llenos desde el primer segundo, y deja lista una llave de agente para el acto
 del MCP.
 
-    python scripts/demo_forum.py --url https://arca-production-d769.up.railway.app
+    python scripts/demo_forum.py --url https://atlas-one-financials.up.railway.app
 
 Cada corrida crea una empresa NUEVA (correo con marca de tiempo), así que se
 puede ensayar tantas veces como haga falta sin borrar nada ni pisar la anterior.

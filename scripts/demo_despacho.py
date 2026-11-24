@@ -13,7 +13,7 @@ ejercicio anterior queda listo para cerrarse en Contabilidad → Cierre de perio
 B y C las dio de alta el contador (él lleva al cliente). En D la dueña ya usaba
 Atlas Financials y lo invitó como contador (el cliente lo trae a él).
 
-    python scripts/demo_despacho.py --url https://arca-production-d769.up.railway.app
+    python scripts/demo_despacho.py --url https://atlas-one-financials.up.railway.app
 
 Cada corrida crea cuentas NUEVAS (correo con marca de tiempo): se puede ensayar
 las veces que haga falta sin pisar la anterior.

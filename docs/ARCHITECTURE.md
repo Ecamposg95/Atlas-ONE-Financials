@@ -154,7 +154,7 @@ Salida (`outbox_events`): el worker entrega `proposal.decided`, `invoice.stamped
 
 ## 10. Despliegue y operación
 
-- Un solo servicio en Railway (ADR-001): Railpack compila el frontend en el step `build` y FastAPI sirve el estático; PostgreSQL administrado por Railway; `alembic upgrade head` al arranque; push a `main` despliega. Dominio: https://arca-production-d769.up.railway.app.
+- Un solo servicio en Railway (ADR-001): Railpack compila el frontend en el step `build` y FastAPI sirve el estático; PostgreSQL administrado por Railway; `alembic upgrade head` al arranque; push a `main` despliega. Dominio: https://atlas-one-financials.up.railway.app.
 - Variables: `DATABASE_URL`, `SECRET_KEY`, `ENV` (`production` apaga docs), `CORS_ORIGINS`, `ACCESS_TOKEN_EXPIRE_MINUTES`, `REFRESH_TOKEN_EXPIRE_DAYS`, `DOCS_ENABLED`. El plan agrega `FISCAL_MASTER_KEY`, `PAC_*`, `SMTP_*`, `OUTBOX_WORKER_ENABLED`.
 - CI (GitHub Actions): Postgres 16, `ruff check .`, `pytest`, `npm run typecheck`, `npm run build`.
 - Migraciones: `AAAAMMDD_NN_slug.py` con `revision="AAAAMMDD_NN"`, un solo head; nunca `create_all()` en producción.

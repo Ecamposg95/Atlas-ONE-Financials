@@ -14,8 +14,8 @@ Regla del plan: **ningún identificador que alguien externo ya use se renombra s
 |---|---|
 | Repositorio GitHub | `Ecamposg95/Atlas-ONE-Financials` (renombrado; el task pack proponía `atlas-one-financials` en minúsculas) |
 | Proyecto Railway | "Atlas ONE Financials" |
-| Servicio Railway | `ARCA` |
-| Dominio | `arca-production-d769.up.railway.app` |
+| Servicio Railway | `Atlas-ONE-Financials` (renombrado el 2026-11-23; antes `ARCA`) |
+| Dominio | `atlas-one-financials.up.railway.app` (cambiado el 2026-11-23; el anterior `arca-production-d769…` responde 404, sin redirección) |
 | Auto-deploy desde el repo renombrado | Verificado el 2026-11-23 |
 | Copy visible | "ONE Finance" / "Atlas ONE Finance" (`frontend/index.html`, páginas de registro, propuestas, portafolio) |
 | "ARCA" visible al usuario | No se encontró en el copy de `frontend/src` |
@@ -48,7 +48,7 @@ Regla del plan: **ningún identificador que alguien externo ya use se renombra s
 
 Nota sobre los loggers: si alguien filtra logs por `arca.*`, el cambio debe avisarse. No hay evidencia de alertas configuradas sobre esos nombres.
 
-Nota sobre el partial: es el nombre con el que Railway registra qué repositorio es dueño del servicio. Renombrarlo no transfiere la propiedad; se deja como está hasta revisar la documentación de Railway.
+Nota sobre el partial: es el nombre con el que Railway registra qué repositorio es dueño del servicio. Tras el renombre, el partial `ARCA` sigue registrado como dueño de la dirección `service.ARCA`, que ya no existe; `railway config plan` no reporta diferencias con el archivo actual. Falta transferir o liberar esa propiedad (`railway config partials`), que sólo cambia metadatos.
 
 ### Cambios con ruptura (requieren alias)
 
@@ -58,8 +58,8 @@ Nota sobre el partial: es el nombre con el que Railway registra qué repositorio
 | Llave `arca-theme` | `frontend/src/stores/themeStore.ts` | Se pierde la preferencia de tema | Igual |
 | Variables `ARCA_URL`, `ARCA_API_KEY` y servidor MCP `arca` | `tools/arca_mcp.py`, `scripts/demo_forum.py` | Agentes ya configurados dejan de conectar | Aceptar ambos nombres de variable; publicar el nombre nuevo del servidor y mantener el archivo viejo como envoltorio |
 | `"service": "arca"` | `app/main.py` (`/api/health`), `tests/test_health.py` | Monitoreo externo que compare el valor | Confirmar si alguien lo consume; si no, cambiar junto con la prueba |
-| Nombre del servicio `ARCA` en Railway | Railway, `.railway/railway.ts` | Variables de referencia (`RAILWAY_SERVICE_ARCA_URL`), red privada `arca` | Posponer; no aporta valor visible |
-| Dominio `arca-production-d769…` | Railway; `scripts/lafe_seed.py`, `scripts/demo_forum.py`, `CLAUDE.md`, `AGENTS.md`, `docs/` | Marcadores de usuarios, agentes MCP, CORS | Agregar el dominio nuevo, mantener el viejo activo, anunciar, y retirar con redirección |
+| ~~Nombre del servicio `ARCA` en Railway~~ | Railway, `.railway/railway.ts` | — | Hecho el 2026-11-23: el servicio se llama `Atlas-ONE-Financials`; la red privada conserva el nombre `arca` |
+| ~~Dominio `arca-production-d769…`~~ | Railway; scripts, `CLAUDE.md`, `docs/` | Marcadores de usuarios, agentes MCP y sesiones (`localStorage` es por dominio) | Hecho el 2026-11-23 sin periodo de convivencia: el dominio viejo dejó de responder. Queda avisar a los usuarios y actualizar `ARCA_URL` en los agentes configurados |
 
 ### No se tocan
 
@@ -101,7 +101,7 @@ Los pasos 1 a 3 no tocan esquema ni infraestructura. Los pasos 4 y 5 **requieren
 1. Subdominio definitivo y quién administra el DNS de `atlastech.mx`.
 2. Cuánto tiempo se mantiene la lectura dual y el dominio viejo.
 3. Si el logotipo actual se conserva o se sustituye por uno del sistema Atlas ONE.
-4. Si se renombra el servicio de Railway o se deja como `ARCA` de forma permanente.
+4. ~~Si se renombra el servicio de Railway~~: renombrado el 2026-11-23.
 
 ## Riesgos
 
