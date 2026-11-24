@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { api, errorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -60,7 +60,10 @@ function Signed({ value }: { value: string | number }) {
 
 /** Conciliación bancaria: lista de estados de cuenta y, al abrir uno, sus renglones. */
 export function ReconciliationPage() {
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  // El estado de cuenta abierto viaja en la URL: se puede recargar y compartir.
+  const [params, setParams] = useSearchParams()
+  const selectedId = params.get('estado')
+  const setSelectedId = (id: string | null) => setParams(id ? { estado: id } : {})
   const [uploading, setUploading] = useState(false)
   const role = useActiveRole()
   const canWrite = WRITE_ROLES.includes(role ?? '')
