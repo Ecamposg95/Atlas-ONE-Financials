@@ -1,4 +1,4 @@
-/** Apertura: los saldos con los que el negocio empezó en ONE Finance, a la fecha de corte.
+/** Apertura: los saldos con los que el negocio empezó en Atlas Financials, a la fecha de corte.
  *
  *  Todo lo que no se ha confirmado vive contra la cuenta puente (3901) y se
  *  corrige cuando llega el documento. El backend calcula la diferencia, asienta
@@ -75,7 +75,7 @@ export function OpeningPage() {
   const header = (
     <PageHeader
       title="Apertura"
-      description="Los saldos con los que tu negocio empezó en ONE Finance."
+      description="Los saldos con los que tu negocio empezó en Atlas Financials."
       actions={
         <Link to="/configuracion" className="text-sm text-muted hover:text-ink">
           ← Configuración
@@ -119,7 +119,7 @@ export function OpeningPage() {
         {header}
         <EmptyState
           title="Aún no hay fecha de corte"
-          message="Elige el día en que tu negocio empieza en ONE Finance. Todos los saldos de apertura van fechados ahí, y los puedes capturar provisionales y corregirlos después."
+          message="Elige el día en que tu negocio empieza en Atlas Financials. Todos los saldos de apertura van fechados ahí, y los puedes capturar provisionales y corregirlos después."
           action={
             canAdmin ? (
               <Button onClick={() => setCutoffOpen(true)}>Fijar fecha de corte</Button>
@@ -419,7 +419,7 @@ function CutoffModal({ open, onClose, current }: { open: boolean; onClose: () =>
         }}
       >
         <p className="text-sm text-muted">
-          El día en que tu negocio empieza en ONE Finance. Los saldos de apertura y sus correcciones van fechados
+          El día en que tu negocio empieza en Atlas Financials. Los saldos de apertura y sus correcciones van fechados
           aquí; lo que registres después queda como está.
         </p>
         <TextInput label="Fecha de corte" type="date" required value={date} onChange={(e) => setDate(e.target.value)} />

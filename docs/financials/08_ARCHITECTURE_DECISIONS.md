@@ -6,7 +6,7 @@ _Atlas ONE Financials (antes ARCA) · Corte: 2026-11-23 · Fase 0 — Discovery_
 
 Este documento reúne las decisiones de arquitectura de la evolución a Atlas ONE Financials. Continúa la numeración de `docs/decisions/` (001 a 005). Dos decisiones ya están tomadas por el founder (nomenclatura y estrategia); el resto son propuestas. Al aceptarse, cada una debe pasar a su propio archivo en `docs/decisions/`.
 
-La única decisión urgente es **ADR-007 (entidad legal y libros)**: no hay que construirla ahora, pero condiciona el diseño de CFDI y de conciliación.
+**ADR-007 (entidad legal y libros)** quedó aceptada con la opción B: una organización por razón social, agrupadas por encima. Los ADR 006, 007 y 008 ya viven en `docs/decisions/`.
 
 ## Decisiones vigentes (evidencia)
 
@@ -25,7 +25,7 @@ Ninguna se modifica.
 | ADR | Tema | Estado |
 |---|---|---|
 | 006 | Nomenclatura: Atlas ONE Financials | **Aceptada** (2026-11-23) |
-| 007 | Entidad legal y libros | Propuesta — requiere decisión |
+| 007 | Entidad legal y libros | **Aceptada: opción B** (2026-11-23) |
 | 008 | Estrategia B: monolito modular con límites de módulo | **Aceptada** (2026-11-23) |
 | 009 | Versionado de API | Propuesta |
 | 010 | Datos maestros entre suites | Propuesta |
@@ -52,7 +52,7 @@ Ninguna se modifica.
 
 ## ADR-007 · Entidad legal y libros
 
-**Estado:** Propuesta — requiere decisión del founder.
+**Estado:** Aceptada, opción B (founder, 2026-11-23). Texto vigente: `docs/decisions/007-entidad-legal-y-libros.md`.
 
 **Contexto (evidencia):** hoy una organización es el tenant y tiene un solo libro, un catálogo y un juego de candados de periodo. `FiscalEntity` es una etiqueta opcional sobre pólizas y operaciones (`app/models/dimensions.py`). La Fe ya usa contribuyentes como etiqueta. El task pack pide no confundir tenant con razón social.
 
@@ -114,9 +114,9 @@ Ninguna se modifica.
 
 **Estado:** Propuesta.
 
-**Contexto:** `docs/ARCHITECTURE.md` §8 describe un contrato de webhooks firmados que no está implementado. No existe restricción única en base sobre el origen de una póliza.
+**Contexto:** `docs/ARCHITECTURE.md` §8 describe un contrato de webhooks firmados que no está implementado. El origen de una póliza (`source_type`, `source_id`) se repite por diseño, así que la idempotencia de eventos necesita su propia llave.
 
-**Decisión propuesta:** adoptar ese contrato como diseño: identificador de evento del origen, firma HMAC con ventana de tiempo, referencia externa única por empresa y origen, y estados aceptado, duplicado, rechazado y fallido. Los eventos se guardan antes de procesarse y entran al libro como propuesta u operación validada. Se agrega restricción única en base para la referencia externa.
+**Decisión propuesta:** adoptar ese contrato como diseño: identificador de evento del origen, firma HMAC con ventana de tiempo, referencia externa única por empresa y origen, y estados aceptado, duplicado, rechazado y fallido. Los eventos se guardan antes de procesarse y entran al libro como propuesta u operación validada. La tabla de eventos entrantes lleva restricción única sobre la referencia externa.
 
 **Consecuencias:** un reintento nunca duplica; un fallo de regla contable deja el evento reprocesable.
 
@@ -188,7 +188,7 @@ Ninguna se modifica.
 
 ## Decisiones que requieren al founder
 
-1. ADR-007: opción A, B o C.
+1. ~~ADR-007~~: resuelta, opción B.
 2. ADR-015: ¿presupuesto simple en Financials, sí o no?
 3. ADR-016: ¿cookie `HttpOnly` junto con el cambio de dominio?
 4. Aceptación del resto de propuestas, o cambios.

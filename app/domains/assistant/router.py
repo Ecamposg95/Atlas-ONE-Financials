@@ -1,4 +1,4 @@
-"""API del asistente ONE Finance sobre Claude (spec 2026-11-02 §API).
+"""API del asistente Atlas Financials sobre Claude (spec 2026-11-02 §API).
 
 El cliente de Anthropic entra por una dependencia (`get_ai_client`) para que
 las pruebas lo sustituyan por uno falso; sin llave la dependencia devuelve

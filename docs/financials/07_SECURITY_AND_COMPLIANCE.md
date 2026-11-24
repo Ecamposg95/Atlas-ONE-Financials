@@ -31,18 +31,18 @@ En lo fiscal, el producto calcula IVA, retenciones y deducibilidad y genera cont
 
 | # | Amenaza | Activo | Control actual | Brecha | Prioridad |
 |---|---|---|---|---|---|
-| T1 | Fuerza bruta o relleno de credenciales | Cuentas de usuario | bcrypt | Sin límite de intentos ni bloqueo | Alta |
+| T1 | Fuerza bruta o relleno de credenciales | Cuentas de usuario | bcrypt; desde el sprint 1, límite por IP y bloqueo de cuenta | El límite por IP vive en memoria de una sola réplica | Resuelta |
 | T2 | Robo de token por XSS | Sesión | — | Access y refresh en `localStorage`; access de 12 horas por defecto | Alta |
 | T3 | Acceso entre organizaciones | Datos financieros | Filtro por membresía y pruebas | Cobertura de pruebas por muestreo, no por barrido | Media |
-| T4 | Abuso de llave de agente filtrada | Lectura y propuestas | Hash, scopes, revocación | Sin límite de invocaciones; sin expiración de llave | Media |
+| T4 | Abuso de llave de agente filtrada | Lectura y propuestas | Hash, scopes, revocación; desde el sprint 1, tope de invocaciones por llave | Sin expiración de llave | Media |
 | T5 | Inyección de instrucciones al asistente mediante datos (conceptos, adjuntos, importaciones) | Propuestas | El asistente sólo propone; aprobación humana | Sin evaluación sistemática | Media |
 | T6 | Fraude interno: una persona captura y autoriza | Dinero | Umbral y facultad de autorizar | Sin regla que impida autorizar lo propio en todos los casos; sin matriz de segregación | Media |
 | T7 | Escritura directa al libro saltando reglas | Integridad contable | Convención y revisión; un único punto de asiento | Sin restricción de cuadre en base de datos | Media |
 | T8 | Pérdida de datos | Todo | Respaldos del proveedor (no verificados) | Sin prueba de restauración | Alta |
 | T9 | Archivo malicioso en adjuntos o importación | Servidor, usuarios | Validación de firma y tipo | Sin análisis antimalware | Baja |
-| T10 | Duplicado por reintento de integración | Integridad contable | Idempotencia por `source_id` en procesos periódicos | Sin restricción única; integraciones aún no existen | Media, al integrar |
+| T10 | Duplicado por reintento de integración | Integridad contable | Idempotencia en aplicación para procesos periódicos | La restricción única irá en la tabla de eventos entrantes; integraciones aún no existen | Media, al integrar |
 | T11 | Exposición de secretos fiscales | Certificados y llaves | No se almacenan hoy | Diseño pendiente antes de timbrar | Bloqueante para PAC |
-| T12 | Promesa de controles inexistentes | Confianza, responsabilidad | — | `docs/ARCHITECTURE.md` §9 describe cifrado de secretos fiscales y rate limiting que no existen | Alta, costo bajo |
+| T12 | Promesa de controles inexistentes | Confianza, responsabilidad | Desde el sprint 1, `docs/ARCHITECTURE.md` marca como **(plan)** lo no construido | — | Resuelta |
 
 ## Matriz de permisos
 
@@ -83,14 +83,14 @@ Lo confirmado por documentación del repositorio:
 | Caso | Cubierto por | Agregar |
 |---|---|---|
 | Póliza descuadrada se rechaza | `tests/test_ledger.py` | — |
-| Cualquier secuencia de operaciones deja la balanza cuadrada | — | Prueba de propiedad |
+| Cualquier secuencia de operaciones deja la balanza cuadrada | `tests/test_propiedad_balanza.py` | — |
 | Reverso emite póliza espejo y no se repite | `tests/test_reversos.py` | — |
 | Mes cerrado no acepta pólizas | `tests/test_cierre_periodo.py` | — |
 | Ejercicio cerrado y póliza de cierre | `tests/test_cierre_anual.py` | — |
 | Folios consecutivos sin huecos ni repetidos bajo concurrencia | `tests/test_folios.py`, `tests/test_bloqueo_postgres.py` | — |
 | Proceso periódico dos veces no duplica | `tests/test_activos_fijos.py`, `tests/test_recurrentes.py` | Mismo evento externo dos veces |
 | Importación duplicada | `tests/test_importacion_*.py` | — |
-| Auxiliares contra mayor | Parcial | CxC y CxP abiertas igual a sus cuentas de control |
+| Auxiliares contra mayor | `tests/test_propiedad_balanza.py` (CxC, CxP y caja) | Tarjetas, activos y préstamos |
 | Reporte reproducible a fecha de corte | `tests/test_reports.py` | Mismo reporte antes y después de operaciones posteriores |
 | Acceso entre organizaciones | `tests/test_tenant_isolation.py` | Barrido de todos los endpoints |
 | Dos pagos simultáneos al mismo documento | — | Prueba de concurrencia en PostgreSQL |

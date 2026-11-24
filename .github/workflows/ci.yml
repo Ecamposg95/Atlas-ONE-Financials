@@ -1,4 +1,4 @@
-# CI de ARCA — solo valida. El despliegue lo hace Railway por su cuenta.
+# CI de Atlas Financials — solo valida. El despliegue lo hace Railway por su cuenta.
 name: CI
 
 on:
@@ -13,17 +13,17 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: arca
-          POSTGRES_PASSWORD: arca
-          POSTGRES_DB: arca_test
+          POSTGRES_USER: financials
+          POSTGRES_PASSWORD: financials
+          POSTGRES_DB: financials_test
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U arca"
+          --health-cmd "pg_isready -U financials"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
     env:
-      TEST_DATABASE_URL: postgresql://arca:arca@localhost:5432/arca_test
+      TEST_DATABASE_URL: postgresql://financials:financials@localhost:5432/financials_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

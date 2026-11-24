@@ -1,4 +1,4 @@
-"""Asistente ONE Finance sobre Claude (spec 2026-11-02).
+"""Asistente Atlas Financials sobre Claude (spec 2026-11-02).
 
 `blocks` guarda el contenido crudo del API (texto, thinking con firma,
 tool_use, tool_result) para reenviar el historial íntegro; `text` es lo que

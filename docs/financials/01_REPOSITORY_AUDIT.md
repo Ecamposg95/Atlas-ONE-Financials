@@ -58,7 +58,7 @@ Las brechas están en tres frentes: **fiscal** (no hay CFDI), **tesorería** (no
 | Versionado de API | Ausente | Todo cuelga de `/api`; no existe `/v1` |
 | Eventos de dominio | Parcial | Bus síncrono en proceso (`app/core/events.py`); se publican `journal_entry.created`, `expense.*`, `payable.*`, `receivable.created`, `proposal.*` |
 | Outbox / webhooks de integración | Ausente | Cero coincidencias de `outbox_events`, `inbound_events`, `integration_connections` o `/integrations` en `app/` y `alembic/` |
-| Idempotencia | Parcial | Procesos periódicos por `source_id` (`AGENTS.md` invariante 14); importación por folio o hash; no hay restricción única en BD sobre `source_id` |
+| Idempotencia | Parcial | Procesos periódicos por `source_id` (`AGENTS.md` invariante 14); importación por folio o hash. Se valida en la aplicación; `source_id` no puede ser único en BD porque el alta, los pagos y los reversos de un documento comparten origen |
 | Entitlements / feature flags | Ausente | Cero coincidencias |
 | Auditoría | Implementada | `change_log` append-only con valores anteriores; bitácora de acciones de agente (`models/agent.py`) |
 | Respaldos y restauración | No verificable | No hay scripts ni runbooks de respaldo en el repositorio |
@@ -70,7 +70,9 @@ Las brechas están en tres frentes: **fiscal** (no hay CFDI), **tesorería** (no
 
 - §8 describe `POST /api/integrations/{source}/events`, `inbound_events` y `outbox_events`. **No existen en el código.**
 - §9 afirma "Secretos fiscales (CSD, e.firma) cifrados por empresa (Fernet…)". **No hay nada de eso en `app/`.**
-- §9 lista "rate limiting y bloqueo temporal en auth". **Ausente** (también reconocido como deuda en `docs/MVP_STATUS.md`).
+- §9 lista "rate limiting y bloqueo temporal en auth". **Ausente** al corte de esta auditoría; construido después en el sprint 1.
+
+Actualización del sprint 1: `docs/ARCHITECTURE.md` ya marca como **(plan)** lo que no existe.
 - §7 habla de 21 herramientas de agente; `docs/MVP_STATUS.md` cita un catálogo de 18. El número vigente no se verificó.
 
 Esto es un riesgo comercial y de seguridad: un partner o un auditor que lea el documento asumirá controles que no están.
@@ -89,7 +91,7 @@ Esto es un riesgo comercial y de seguridad: un partner o un auditor que lea el d
 | Riesgo | Detalle |
 |---|---|
 | Cliente real en producción | La Fe opera con histórico cargado; cualquier cambio al modelo de tenant o al libro la afecta |
-| Sin rate limiting ni lockout en `/auth` | Expuesto a fuerza bruta |
+| Sin rate limiting ni lockout en `/auth` | Expuesto a fuerza bruta. **Resuelto en el sprint 1** (`app/security/rate_limit.py`, `users.locked_until`) |
 | Tokens en `localStorage` | `frontend/src/stores/authStore.ts` persiste access y refresh bajo la llave `arca-auth` |
 | Adjuntos en PostgreSQL | `attachment_blobs` guarda bytes en la base; crece con el uso |
 | Balance sólo en aplicación | No hay `CheckConstraint` en BD; el cuadre depende de que todo pase por `post_journal_entry` |

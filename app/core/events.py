@@ -11,7 +11,7 @@ from collections import defaultdict
 from collections.abc import Callable
 from typing import Any
 
-logger = logging.getLogger("arca.events")
+logger = logging.getLogger("financials.events")
 
 Handler = Callable[[str, dict[str, Any]], None]
 

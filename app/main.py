@@ -1,4 +1,4 @@
-"""Atlas ONE Finance — administración financiera y contable (Atlas Tech).
+"""Atlas ONE Financials — administración financiera y contable (Atlas Tech).
 
 App FastAPI única: API bajo /api/*, SPA React servida por catch-all (registrado al final).
 """
@@ -24,7 +24,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
 )
-logger = logging.getLogger("arca")
+logger = logging.getLogger("financials")
 
 FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 
@@ -33,7 +33,7 @@ def create_app() -> FastAPI:
     settings = get_settings()
 
     app = FastAPI(
-        title="Atlas ONE Finance API",
+        title="Atlas ONE Financials API",
         version="0.1.0",
         docs_url="/docs" if settings.docs_enabled else None,
         redoc_url=None,
@@ -95,7 +95,7 @@ def create_app() -> FastAPI:
     _register_routers(app)
     _mount_frontend(app)
 
-    logger.info("ONE Finance iniciada (env=%s)", settings.env)
+    logger.info("Atlas Financials iniciada (env=%s)", settings.env)
     return app
 
 

@@ -1,6 +1,6 @@
 """Apertura provisional y ajustable a la fecha de corte.
 
-La empresa llega a ONE Finance un día (la fecha de corte) sabiendo sólo algunos
+La empresa llega a Atlas Financials un día (la fecha de corte) sabiendo sólo algunos
 de sus saldos. Lo demás se captura en cero o con una cifra provisional y se
 corrige cuando llega el estado de cuenta, sin tocar lo registrado después:
 

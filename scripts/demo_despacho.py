@@ -11,7 +11,7 @@ Todas traen además una venta en junio y una renta en julio del año pasado: el
 ejercicio anterior queda listo para cerrarse en Contabilidad → Cierre de periodo.
 
 B y C las dio de alta el contador (él lleva al cliente). En D la dueña ya usaba
-ARCA y lo invitó como contador (el cliente lo trae a él).
+Atlas Financials y lo invitó como contador (el cliente lo trae a él).
 
     python scripts/demo_despacho.py --url https://arca-production-d769.up.railway.app
 
@@ -97,7 +97,7 @@ PROPUESTAS = (
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Cartera de un despacho para la demo")
-    parser.add_argument("--url", default="http://localhost:8000", help="ARCA base URL")
+    parser.add_argument("--url", default="http://localhost:8000", help="Atlas Financials base URL")
     parser.add_argument("--password", default="demodespacho2026")
     parser.add_argument("--contador", default="C.P. Demo", help="Nombre del contador")
     parser.add_argument("--despacho", default="Despacho Contable del Valle")
@@ -242,7 +242,7 @@ def main() -> None:
     }, restaurante)
     close_last_month(restaurante)
 
-    # --- D · Clínica: la dueña ya usaba ARCA e invita a su contador ---
+    # --- D · Clínica: la dueña ya usaba Atlas Financials e invita a su contador ---
     duena = register(duena_email, "Dra. Sofía Rangel", CLINICA["name"], CLINICA["business_type"])
     clinica = session(duena, duena["organization"]["id"])
     call("PATCH", "/organizations/current", clinica, json={"tax_id": CLINICA["tax_id"]})

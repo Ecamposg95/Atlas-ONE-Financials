@@ -26,7 +26,7 @@ export interface Organization {
   default_tax_rate: string
   ai_budget_usd: string | null
   ai_enabled: boolean
-  /** Marca propia de la empresa (logotipo y colores); null = ONE Finance. */
+  /** Marca propia de la empresa (logotipo y colores); null = Atlas Financials. */
   brand?: string | null
   /** Si la empresa definió unidades o contribuyentes (sólo en /organizations/current). */
   has_business_units?: boolean
@@ -308,7 +308,7 @@ export type ProposalKind =
   | 'TRANSFER'
 
 /** De dónde salió una propuesta: lo capturó alguien y espera autorización,
- *  lo propuso un agente, el asistente o ONE Finance (recurrentes). */
+ *  lo propuso un agente, el asistente o Atlas Financials (recurrentes). */
 export type ProposalSource = 'approval' | 'agent' | 'assistant' | 'system'
 
 export interface Proposal {
@@ -606,7 +606,7 @@ export interface LedgerAccount {
   contpaqi_code: string | null
   /** Código agrupador del SAT (Anexo 24), o null. */
   sat_code: string | null
-  /** La sembró ONE Finance al crear la empresa; las reglas la usan y no se desactiva. */
+  /** La sembró Atlas Financials al crear la empresa; las reglas la usan y no se desactiva. */
   system: boolean
   /** Tiene al menos una línea en el ledger; una cuenta así no se desactiva. */
   has_movements: boolean
@@ -711,7 +711,7 @@ export interface SatCode {
   name: string
 }
 
-// --- Asistente ONE Finance sobre Claude (spec 2026-11-02) ---
+// --- Asistente Atlas Financials sobre Claude (spec 2026-11-02) ---
 
 export interface AssistantStatus {
   available: boolean

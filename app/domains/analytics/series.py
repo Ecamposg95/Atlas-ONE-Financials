@@ -1,5 +1,5 @@
 """Serie de ventas que une el histórico (antes de la fecha de corte) con lo
-registrado en ONE Finance (desde el corte). Nunca suma ambos para el mismo
+registrado en Atlas Financials (desde el corte). Nunca suma ambos para el mismo
 día; un periodo sin dato no aparece.
 
 Reglas (spec «Cómo se lee» y Definiciones 1 y 7):
@@ -56,7 +56,7 @@ def live_sales(
     business_unit_id: str | None = None,
     fiscal_entity_id: str | None = None,
 ) -> dict[date, Decimal]:
-    """Venta registrada en ONE Finance por periodo: ingresos de la categoría de
+    """Venta registrada en Atlas Financials por periodo: ingresos de la categoría de
     ventas más las cuentas por cobrar de esa categoría, sin cancelados."""
     category_id = _resolved_toronja_settings(db, organization_id)["income_category_id"]
     if category_id is None:

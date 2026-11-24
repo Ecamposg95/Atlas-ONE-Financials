@@ -1,10 +1,10 @@
-# Atlas ONE Finance
+# Atlas ONE Financials
 
-> **Atlas ONE Finance** es el producto (suite de administración financiera y contable del ecosistema Atlas ONE); **ARCA** es su motor financiero-contable: libro mayor, motor de pólizas, reglas contables y reportes. Por eso el repo, el paquete y la infraestructura de Railway se llaman ARCA. Visión completa: `docs/ATLAS_ONE_FINANCE_VISION.md`.
+> **Atlas ONE Financials** (nombre corto: Atlas Financials) es la suite financiera del ecosistema Atlas ONE. **ARCA** es su nombre anterior y queda como alias histórico del motor contable; todavía aparece en el servicio y el dominio de Railway. Estrategia, arquitectura y roadmap: `docs/financials/`.
 
 **Plataforma de administración financiera y contable de Atlas Tech**
 
-ONE Finance permite a un emprendedor o pequeña empresa operar sus finanzas sin conocimientos contables: registra ventas, gastos, cobros y pagos en su propio lenguaje, y por debajo un motor contable formal (partida doble, auditable) produce estados financieros exactos.
+Atlas Financials permite a un emprendedor o pequeña empresa operar sus finanzas sin conocimientos contables: registra ventas, gastos, cobros y pagos en su propio lenguaje, y por debajo un motor contable formal (partida doble, auditable) produce estados financieros exactos.
 
 ```text
 OPERACIÓN → EVENTO FINANCIERO → MOVIMIENTO → CONTABILIDAD → ESTADOS FINANCIEROS

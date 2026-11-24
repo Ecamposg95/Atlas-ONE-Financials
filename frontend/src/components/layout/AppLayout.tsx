@@ -26,7 +26,7 @@ import {
 import { usePendingCount } from '@/lib/approvals'
 import { useApplyBrand, useBrand } from '@/lib/brand'
 import { useActiveRole, useCompanies } from '@/lib/companies'
-import { ArcaMark } from '@/components/ui/ArcaMark'
+import { BrandMark } from '@/components/ui/BrandMark'
 import { CommandPalette } from '@/components/ui/CommandPalette'
 import { Toasts } from '@/components/ui/Toasts'
 import { AppFooter } from '@/components/layout/AppFooter'
@@ -147,7 +147,7 @@ export function AppLayout() {
         }`}
       >
         {brand ? (
-          /* Empresa con marca propia: su logotipo manda; ONE Finance firma en el pie. */
+          /* Empresa con marca propia: su logotipo manda; Atlas Financials firma en el pie. */
           <div className="px-5 pb-5 pt-5">
             <img src={brand.logo.light} alt={brand.name} className="h-auto w-full dark:hidden" />
             <img src={brand.logo.dark} alt={brand.name} className="hidden h-auto w-full dark:block" />
@@ -157,9 +157,9 @@ export function AppLayout() {
           </div>
         ) : (
           <div className="flex items-center gap-2.5 px-5 pb-5 pt-5">
-            <ArcaMark />
+            <BrandMark />
             <div className="min-w-0">
-              <div className="font-display text-base font-bold leading-none tracking-tight">Atlas ONE Finance</div>
+              <div className="font-display text-base font-bold leading-none tracking-tight">Atlas ONE Financials</div>
               <div className="figures mt-1 text-[9px] uppercase tracking-[0.2em] text-rail-muted">
                 Finanzas y contabilidad
               </div>

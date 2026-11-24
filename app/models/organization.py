@@ -29,13 +29,13 @@ class Organization(Base, UUIDPKMixin, AuditMixin):
     # (MEMBER) no captura por encima de su límite (null = sin límite).
     approval_threshold = Column(Numeric(14, 2), nullable=True)
     member_capture_limit = Column(Numeric(14, 2), nullable=True)
-    # Fecha de corte: el día en que la empresa empieza en ONE Finance. Todo
+    # Fecha de corte: el día en que la empresa empieza en Atlas Financials. Todo
     # saldo de apertura (y cada ajuste posterior) va fechado aquí, no el día en
     # que se capturó. `opening_status` dice si la apertura ya se confirmó con
     # estados de cuenta (CONFIRMED) o sigue provisional (PROVISIONAL).
     opening_date = Column(Date, nullable=True)
     opening_status = Column(String(20), nullable=True)  # OPENING_STATUSES
-    # Marca propia sobre ONE Finance (VALID_BRANDS): el backend sólo guarda la
+    # Marca propia sobre Atlas Financials (VALID_BRANDS): el backend sólo guarda la
     # clave; acento y logotipo viven en el front (`frontend/src/lib/brand.ts`).
     brand = Column(String(40), nullable=True)
 

@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Tokens ONE Finance — base Atlas Cortex con acento verde (finanzas), HSL con canal separado para permitir alpha (bg-surface/60).
+/* Tokens Atlas Financials — base Atlas Cortex con acento verde (finanzas), HSL con canal separado para permitir alpha (bg-surface/60).
    Fuente de los valores: atlas-cortex frontend/tailwind.config.js (brand.* / dark.*). */
 :root {
   --bg: 140 20% 97%; /* #f6f9f7 casi blanco verdoso */
@@ -12,7 +12,7 @@
   --ink-soft: 154 11% 28%; /* #3f4f48 */
   --muted: 156 7% 45%; /* #6b7a74 */
   --border: 142 13% 88%; /* #dde5e0 */
-  --accent: 154 63% 33%; /* #1f8a5b verde ONE Finance */
+  --accent: 154 63% 33%; /* #1f8a5b verde Atlas Financials */
   --accent-strong: 154 66% 26%; /* #176e48 */
   --on-accent: 0 0% 100%; /* texto sobre el acento */
   --accent-soft: 152 45% 95%; /* #edf7f2 */
@@ -65,7 +65,7 @@
 }
 
 /* Marca por empresa (organizations.brand → <html data-brand>). Sólo cambian
-   tokens: la estructura es la misma ONE Finance.
+   tokens: la estructura es la misma Atlas Financials.
 
    Lafe laboratorios (lafelaboratorios.com): verde #00c800 sobre blanco y grises
    neutros. El verde vivo no da contraste como texto ni bajo texto blanco, así
@@ -143,7 +143,7 @@ body {
 }
 
 /* Una sola secuencia de entrada; el bloque global de reduced-motion la neutraliza. */
-@keyframes arca-rise {
+@keyframes fin-rise {
   from {
     opacity: 0;
     transform: translateY(8px);
@@ -154,11 +154,11 @@ body {
   }
 }
 
-.arca-rise {
-  animation: arca-rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+.fin-rise {
+  animation: fin-rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.arca-rise-late {
+.fin-rise-late {
   animation-delay: 90ms;
 }
 

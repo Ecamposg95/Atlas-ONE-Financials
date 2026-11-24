@@ -31,7 +31,7 @@ const ACTION_DOT: Record<HistoryAction, string> = {
 }
 
 export const SOURCE_LABELS: Record<HistoryEvent['source'], string> = {
-  web: 'ONE Finance',
+  web: 'Atlas Financials',
   assistant: 'asistente',
   agent: 'agente',
   import: 'importación',

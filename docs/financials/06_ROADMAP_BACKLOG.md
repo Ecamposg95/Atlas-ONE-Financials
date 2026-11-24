@@ -94,8 +94,8 @@ No tocan el libro ni el esquema.
 
 | Ítem | Tamaño | Origen |
 |---|---|---|
-| Restricción única de idempotencia sobre origen de pólizas | S | `03_DOMAIN_ARCHITECTURE.md` |
-| Prueba de propiedad de balanza cuadrada | S | Estrategia de pruebas |
+| ~~Restricción única de idempotencia sobre origen de pólizas~~ | — | Descartada en el sprint 1: el origen se repite por diseño; la restricción va en la tabla de eventos entrantes (ADR-011) |
+| ~~Prueba de propiedad de balanza cuadrada~~ | — | Hecha en el sprint 1 (`tests/test_propiedad_balanza.py`) |
 | Barrido automático de aislamiento de tenant por endpoint | M | Estrategia de pruebas |
 | Expiración y edición de propuestas de agente | S | `docs/MVP_STATUS.md` |
 | `cash_flow.opening_cash` cuenta saldos iniciales de cuentas creadas en el periodo | S | `docs/MVP_STATUS.md` |
@@ -151,13 +151,13 @@ No tocan el libro ni el esquema.
 2. Rebranding pasos 1 y 2 (copy, reglas para agentes, internos).
 3. Corrección de `docs/ARCHITECTURE.md`.
 4. ADR-006 (nomenclatura) aceptado y ADR-007 (entidad legal) redactado para decisión.
-5. Restricción única de idempotencia y prueba de propiedad de balanza.
+5. Prueba de propiedad de balanza. (La restricción única de idempotencia se descartó al revisar el código: ver deuda técnica.)
 
 **Definition of Done:**
 
 - `pytest`, `ruff check .`, `npm run typecheck` y `npm run build` en verde.
 - CI en verde sobre PostgreSQL.
-- Ningún cambio de esquema fuera de la restricción de idempotencia, que lleva su migración con reversa.
+- Ningún cambio de esquema fuera de las dos columnas del bloqueo de cuenta (`20261123_01`), con su reversa.
 - El deploy pasa el healthcheck y una sesión previa sigue activa.
 - `docs/MVP_STATUS.md` actualizado.
 - Cada afirmación nueva en documentación cita un archivo o se marca como propuesta.

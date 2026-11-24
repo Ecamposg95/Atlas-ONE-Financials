@@ -64,7 +64,7 @@ class Agente:
             "/agent/invoke", json={"tool": tool, "arguments": argumentos or {}}
         )
         if respuesta.status_code >= 400:
-            sys.exit(f"{self.nombre}: ARCA rechazó {tool}: {respuesta.text}")
+            sys.exit(f"{self.nombre}: Atlas Financials rechazó {tool}: {respuesta.text}")
         return respuesta.json()["result"]
 
     def lista(self, tool: str, argumentos: dict | None = None) -> list:
@@ -265,7 +265,7 @@ def main() -> None:
     for autor, pid in propuestas:
         linea(f"  · {autor}  →  {pid}")
     linea()
-    linea("Nadie escribió en la contabilidad. Abre Propuestas en ARCA:")
+    linea("Nadie escribió en la contabilidad. Abre Propuestas en Atlas Financials:")
     linea("cada tarjeta trae su autor, su evidencia y sus botones.")
     cierra()
 

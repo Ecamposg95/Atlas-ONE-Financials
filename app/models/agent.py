@@ -42,7 +42,7 @@ class AgentKey(Base, UUIDPKMixin, TenantMixin, AuditMixin):
 class AgentProposal(Base, UUIDPKMixin, TenantMixin, AuditMixin):
     __tablename__ = "agent_proposals"
 
-    # Nullable: los borradores recurrentes los propone ONE Finance mismo, sin llave.
+    # Nullable: los borradores recurrentes los propone Atlas Financials mismo, sin llave.
     agent_key_id = Column(String(36), ForeignKey("agent_keys.id"), nullable=True, index=True)
     kind = Column(String(20), nullable=False)  # PROPOSAL_KINDS
     payload = Column(JSON, nullable=False)

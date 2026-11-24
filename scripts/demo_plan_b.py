@@ -40,7 +40,7 @@ def main() -> None:
     def invoke(tool: str, arguments: dict) -> dict:
         response = client.post("/agent/invoke", json={"tool": tool, "arguments": arguments})
         if response.status_code >= 400:
-            sys.exit(f"ARCA rechazó '{tool}': {response.status_code} {response.text}")
+            sys.exit(f"Atlas Financials rechazó '{tool}': {response.status_code} {response.text}")
         return response.json()["result"]
 
     # El agente primero lee: nunca propone a ciegas.
@@ -71,7 +71,7 @@ def main() -> None:
     )
     print(f"Propuso:          {propuesta['summary']}")
     print(f"Estado:           {propuesta['status']} — espera aprobación humana")
-    print("\nAbre Propuestas en ARCA y apruébala en pantalla.")
+    print("\nAbre Propuestas en Atlas Financials y apruébala en pantalla.")
 
 
 if __name__ == "__main__":

@@ -308,7 +308,7 @@ export function ProposalsPage() {
         ) : (
           <EmptyState
             title={statusFilter === 'PROPOSED' ? 'Sin propuestas pendientes' : 'Nada por aquí'}
-            message="Cuando un agente conectado a ONE Finance detecte una operación (una venta, un gasto, una factura), o alguien del equipo capture algo que alcance el umbral, lo verás aquí para aprobarlo o rechazarlo con un clic."
+            message="Cuando un agente conectado a Atlas Financials detecte una operación (una venta, un gasto, una factura), o alguien del equipo capture algo que alcance el umbral, lo verás aquí para aprobarlo o rechazarlo con un clic."
           />
         )
       ) : (
