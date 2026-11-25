@@ -1,0 +1,4 @@
+.venv/
+recursos_sat/
+__pycache__/
+.pytest_cache/
