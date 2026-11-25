@@ -13,7 +13,7 @@ Cuatro hechos condicionan el plan:
 1. **Ningún repositorio tiene hoy código de CFDI, timbrado ni certificados.** Se construye desde cero.
 2. **El SAT revocó ocho proveedores de timbrado en 2026**, entre ellos SW sapien y el de CONTPAQi (fuentes secundarias; la lista oficial no se pudo abrir). El diseño debe permitir cambiar de proveedor sin migrar llaves ni reescribir el módulo.
 3. **Atlas ONE no calcula IVA en las ventas que no piden factura** y sus productos no tienen claves del SAT. Sin corregir eso no hay factura global ni factura por ticket.
-4. **El repositorio de RRHH (HRFlow) no está en esta máquina.** La parte de nómina de este plan se apoya en un documento de octubre sin verificar; su primer paso es auditar ese código.
+4. **RRHH (HRFlow) no calcula nómina fiscal.** La auditoría del 25-11-2026 sobre `hrflow-next` encontró que paga días por salario diario, sin ISR por tarifa, cuotas reales del IMSS, subsidio, conceptos con clave del SAT ni corrida de nómina, y que no tiene ninguna integración saliente. La fase de nómina exige antes un trabajo grande en ese repositorio (ver fase 6).
 
 La recomendación es sellar en nuestro lado, con la llave del cliente dentro de un servicio de llaves externo, y enviar al proveedor el XML ya sellado sólo para timbrar. El orden propuesto: cimientos fiscales y seguridad, factura individual, conexión con el punto de venta, factura global, pagos y egresos, y nómina al final.
 
@@ -29,7 +29,7 @@ La recomendación es sellar en nuestro lado, con la llave del cliente dentro de 
 | D6 | ¿Quién revisa lo legal? | Contratar revisión del contrato de custodia y del aviso de privacidad **[abogado]** | La ley no trae formato para que un tercero custodie el certificado; rige la ley de datos personales de 2025 |
 | D7 | ¿Dónde está el repositorio de HRFlow? | Clonarlo en `~/Dev` para auditarlo | Sin él no se puede dimensionar la fase de nómina |
 
-**Estado al 2026-11-25.** Aceptadas como se recomiendan: D1 (custodia propia en un servicio de llaves externo), D2 (Prodigia como primario a cotizar y un segundo de contingencia, sujeto a cotejar la lista oficial del SAT), D3 (emitir antes que importar) y D7 (clonar y auditar HRFlow). Abiertas: D4, D5 **[contador]** y D6 **[abogado]**.
+**Estado al 2026-11-25.** Aceptadas como se recomiendan: D1 (custodia propia en un servicio de llaves externo), D2 (Prodigia como primario a cotizar y un segundo de contingencia, sujeto a cotejar la lista oficial del SAT), D3 (emitir antes que importar) y D7 (clonar y auditar HRFlow). También se aceptó partir la fase 6 en 6A, 6B y 6C. Abiertas: D4, D5 **[contador]** y D6 **[abogado]**.
 
 ## Qué dice la investigación
 
@@ -61,7 +61,7 @@ La recomendación es sellar en nuestro lado, con la llave del cliente dentro de 
 - Plazo para timbrar nómina por número de trabajadores, y las cifras del subsidio para el empleo de 2026.
 - Qué pasa con los timbres prepagados de un proveedor revocado.
 - Cómo guardan los proveedores los certificados que se les suben.
-- Todo lo relativo al código de HRFlow.
+- De HRFlow: los datos de producción (cuántas empresas y empleados, cuántos con RFC y CURP, si su nómina se usa de verdad para pagar) y el estado real de su servidor. El código sí se auditó.
 - Las pólizas contables de nómina **[contador]**.
 
 ## Arquitectura objetivo
@@ -109,7 +109,7 @@ Tamaños relativos: S, M, L, XL. No son fechas.
 - Revisión legal: contrato de custodia, aviso de privacidad, procedimiento de aviso ante incidente **[abogado]**.
 - Validación con contador de reglas de IVA, retenciones y pólizas **[contador]**.
 - Aceptar o ajustar los ADR 011 (eventos entrantes), 013 (localización) y uno nuevo de custodia de llaves.
-- Auditar HRFlow.
+- Auditar HRFlow (hecho el 25-11-2026).
 - **Hecho cuando:** hay proveedor elegido con cuenta de pruebas, catálogos cargados, dictamen legal y ADR aceptados.
 
 ### Fase 1 · Custodia de certificados (M)
@@ -161,7 +161,24 @@ En Atlas ONE:
 - Anticipos, sólo si un cliente los necesita.
 - **Hecho cuando:** un cobro parcial genera su complemento y el saldo insoluto cuadra con la cartera.
 
-### Fase 6 · Nómina (XL, sujeta a la auditoría de HRFlow)
+### Fase 6 · Nómina (XL en Financials; queda corta sin el trabajo previo en HRFlow)
+
+Lo que encontró la auditoría de `hrflow-next` (commit `ad66fdc`; notas en `research_notes/Timbrado CFDI y conexión Atlas/auditoria_hrflow.md`):
+
+- **Cálculo:** días pagables por salario diario, con IMSS e ISR a tasa plana que se descartan al aprobar; sólo se guardan bruto, una deducción y neto por empleado. El dinero se calcula en punto flotante.
+- **Sin corrida ni periodo:** una fila por empleado y rango de fechas, sin quién aprobó ni cuándo; reaprobar el mismo rango sobrescribe lo no pagado.
+- **Empleado y patrón:** el empleado sólo tiene RFC y CURP, opcionales y sin validar; faltan número de seguridad social, código postal fiscal, tipo de contrato, régimen, jornada, periodicidad, salario diario integrado y riesgo de puesto. Del patrón sólo existe el nombre comercial.
+- **Sin integración:** no hay eventos, cola durable, webhooks ni API expuesta. Corre en un servidor propio, con una base de datos por empresa.
+- **Datos personales:** sin cifrado de campos ni bitácora de acceso.
+- **Su documento de rumbo** propone timbrar con un proveedor desde HRFlow; contradice este plan y hay que alinearlo.
+
+Aceptado por el founder el 2026-11-25: la fase se parte en tres.
+
+- **6A · Nómina fiscal en RRHH (XL):** datos maestros de empleado y patrón, corrida como entidad inmutable, renglones con catálogo del SAT, motor de ISR, IMSS y subsidio con aritmética decimal **[contador]**.
+- **6B · Contrato y conexión (L):** cola durable de salida, firma, recepción de recibos y correcciones.
+- **6C · CFDI de nómina en Financials (L a XL):** los entregables de abajo; puede avanzar contra eventos sintéticos.
+
+Entregables en Financials:
 
 - Contrato del evento "nómina autorizada" con percepciones, deducciones y otros pagos ya clasificados con clave del SAT.
 - Validación previa de datos del empleado contra el padrón.
@@ -199,7 +216,7 @@ En Atlas ONE:
 | Fuga de una llave de cliente | Facturas falsas a su nombre | Llave no exportable en servicio externo, bitácora, alertas, contrato con aviso inmediato |
 | Timbrar con datos fiscales mal calculados | Comprobantes inválidos y recálculo | Validación con contador antes de la fase 2; pruebas contra el ambiente del proveedor |
 | Camino de autofactura rechazado por el SAT | Rehacer la fase 4 | Decisión D5 con contador; dejar ambos caminos posibles en el modelo |
-| HRFlow más lejos de lo supuesto | La fase 6 crece | Auditoría en fase 0; nómina al final |
+| HRFlow no tiene nómina fiscal (confirmado) | La fase 6 depende de construir el motor fiscal en otro repositorio | Partir la fase en 6A, 6B y 6C; nómina al final; validación de contador |
 | Rechazos masivos por datos del receptor | Mala experiencia en caja | Validar contra el padrón antes de timbrar y pedir la constancia fiscal |
 | Afirmar cumplimiento que no se ha probado | Riesgo comercial y legal | Ningún material dice "cumple" sin evidencia; cada fase cierra con prueba en el ambiente del proveedor |
 | Volumen del punto de venta | Costo y carga | Global por sucursal; timbres sin caducidad; medir volumen real antes de contratar |
