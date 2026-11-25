@@ -264,6 +264,11 @@ def _revisa(prep: Preparacion, funcion, *args, **kwargs) -> bool:
     return True
 
 
+def tiene_regimen_capital(razon_social: str | None) -> bool:
+    """¿La razón social trae el régimen de capital (S.A. de C.V., S. de R.L.…)? CFDI 4.0 la pide sin él."""
+    return bool(_REGIMEN_CAPITAL.search((razon_social or "").strip()))
+
+
 def _razon_social(prep: Preparacion, razon_social: str | None, rfc: str | None) -> None:
     if not (razon_social or "").strip():
         prep.falta("Razón social tal como aparece en la constancia de situación fiscal.")

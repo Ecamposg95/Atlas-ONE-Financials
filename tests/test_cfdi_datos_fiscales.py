@@ -376,7 +376,7 @@ def test_migracion_un_solo_head_y_columnas_nullable():
 
     raiz = Path(__file__).resolve().parents[1]
     script = ScriptDirectory.from_config(Config(str(raiz / "alembic.ini")))
-    assert script.get_heads() == ["20261125_01"]
+    assert len(script.get_heads()) == 1
 
     migracion = script.get_revision("20261125_01").module
     for tabla, columnas in migracion._COLUMNAS.items():

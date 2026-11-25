@@ -368,6 +368,62 @@ Atlas ONE Financials va a emitir CFDI para sus clientes y a convertir cada venta
 
 ---
 
+## I. Armado de la factura individual (supuestos ya programados en el borrador)
+
+El borrador de factura (`app/services/cfdi/armado.py`, detalle en `app/services/cfdi/README.md`) ya aplica estos supuestos. Ninguno corrige montos de la operación: si no cuadran, la factura no se prepara.
+
+### I-01 · Concepto único cuando la operación no tiene renglones
+
+**Supuesto programado.** Hoy ingresos y cuentas por cobrar no tienen renglones. Se factura un concepto: cantidad 1, valor unitario = subtotal de la operación, descripción de la operación, clave `01010101` ("No existe en el catálogo") y unidad `E48` ("Unidad de servicio"), salvo que el usuario indique otras. La validación lo marca como advertencia.
+
+- ☐ Correcto.
+- ☐ Usar otra clave por omisión por empresa: ______ / unidad ______.
+- ☐ Exigir siempre la clave (no permitir 01010101).
+
+### I-02 · Operación sin IVA
+
+**Supuesto programado.** Tasa 0 en la operación no distingue tasa 0 %, exenta o no objeto; el usuario debe elegir y no se adivina. Exenta se emite con `ObjetoImp 02` y traslado `Exento`; no objeto, con `ObjetoImp 01` sin impuestos.
+
+- ☐ Correcto.
+- ☐ Distinto (explique).
+
+### I-03 · Descuentos
+
+**Supuesto programado.** El subtotal de la operación es la base después de descuentos; en el CFDI `SubTotal` va antes de descuentos y `Descuento` por renglón. Se exige que `SubTotal − Descuento` sea el subtotal de la operación.
+
+- ☐ Correcto.
+- ☐ Distinto (explique).
+
+### I-04 · Centavos de IVA con varios renglones
+
+**Supuesto programado.** El IVA de cada renglón se redondea a centavos; si la suma no da el IVA de la operación, la diferencia se reparte de a un centavo, en orden, sólo donde la tolerancia del Anexo 20 lo permite. Si no cabe, la factura no se prepara y se pide corregir la operación.
+
+- ☐ Correcto.
+- ☐ Distinto (explique).
+
+### I-05 · PUE en una cuenta por cobrar pendiente
+
+**Supuesto programado.** Se respeta el método capturado en la operación. Si dice PUE y la operación no está cobrada, sólo se advierte (no bloquea); si dice PPD y ya está cobrada, se advierte que hará falta el complemento de pago. Ver también F-01.
+
+- ☐ Correcto.
+- ☐ Bloquear PUE si la operación no está cobrada.
+
+### I-06 · IVA 8 % fuera de la franja fronteriza
+
+**Supuesto programado.** Si la tasa es 8 % y el código postal de expedición no está marcado como franja fronteriza norte en `c_CodigoPostal`, sólo se advierte.
+
+- ☐ Correcto.
+- ☐ Bloquear.
+
+### I-07 · Cliente con RFC genérico
+
+**Supuesto programado.** Con `XAXX010101000` el régimen debe ser 616, el código postal del cliente se toma del lugar de expedición y el nombre no puede ser "PUBLICO EN GENERAL" (eso es factura global, fase 4). `XEXX010101000` (extranjero) aún no se soporta.
+
+- ☐ Correcto.
+- ☐ Distinto (explique).
+
+---
+
 ## Cierre
 
 | | |
