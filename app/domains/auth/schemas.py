@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, computed_field
+
+from app.domains.fiscal_mx.schemas import FiscalReadiness
 
 
 class RegisterRequest(BaseModel):
@@ -52,6 +54,19 @@ class OrganizationRead(BaseModel):
     # y filtros; si no, nada cambia. Lo llena GET /organizations/current.
     has_business_units: bool = False
     has_fiscal_entities: bool = False
+    # Emisor de CFDI: claves del SAT (c_RegimenFiscal, c_CodigoPostal).
+    fiscal_regime: str | None = None
+    fiscal_postal_code: str | None = None
+
+    @computed_field
+    @property
+    def fiscal_readiness(self) -> FiscalReadiness:
+        """Qué le falta a la empresa para emitir facturas (lo calcula el backend)."""
+        from app.domains.fiscal_mx.service import emisor_readiness
+
+        return FiscalReadiness(
+            **emisor_readiness(self.tax_id, self.legal_name, self.fiscal_regime, self.fiscal_postal_code)
+        )
 
 
 class MembershipRead(BaseModel):

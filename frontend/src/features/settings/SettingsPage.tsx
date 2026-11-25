@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/Table'
 import { ApprovalsCard } from '@/features/settings/ApprovalsCard'
 import { AssistantCard } from '@/features/settings/AssistantCard'
 import { DimensionsCard } from '@/features/settings/DimensionsCard'
+import { FiscalDataCard } from '@/features/settings/FiscalDataCard'
 import { HistoryCard } from '@/features/settings/HistoryCard'
 import { ImportSettingsCard } from '@/features/settings/ImportSettingsCard'
 import { TeamCard } from '@/features/settings/TeamCard'
@@ -23,8 +24,6 @@ export function SettingsPage() {
   const role = useActiveRole()
   const [form, setForm] = useState({
     name: organization?.name ?? '',
-    legal_name: organization?.legal_name ?? '',
-    tax_id: organization?.tax_id ?? '',
     default_tax_rate: organization?.default_tax_rate ?? '0.16',
   })
   const [message, setMessage] = useState<string | null>(null)
@@ -33,8 +32,6 @@ export function SettingsPage() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload: Record<string, string> = { name: form.name }
-      if (form.legal_name) payload.legal_name = form.legal_name
-      if (form.tax_id) payload.tax_id = form.tax_id
       payload.default_tax_rate = form.default_tax_rate
       return (await api.patch<Organization>('/organizations/current', payload)).data
     },
@@ -73,16 +70,6 @@ export function SettingsPage() {
             value={form.name}
             onChange={(event) => setForm({ ...form, name: event.target.value })}
           />
-          <TextInput
-            label="Razón social (opcional)"
-            value={form.legal_name}
-            onChange={(event) => setForm({ ...form, legal_name: event.target.value })}
-          />
-          <TextInput
-            label="RFC (opcional)"
-            value={form.tax_id}
-            onChange={(event) => setForm({ ...form, tax_id: event.target.value })}
-          />
           <SelectInput
             label="Impuesto que se propone al registrar operaciones"
             options={TAX_RATES}
@@ -100,6 +87,7 @@ export function SettingsPage() {
         </form>
       </Card>
 
+      <FiscalDataCard />
       {role === 'OWNER' || role === 'ADMIN' || role === 'ACCOUNTANT' ? <OpeningCard /> : null}
       <DimensionsCard />
       <ImportSettingsCard />

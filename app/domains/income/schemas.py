@@ -7,8 +7,10 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.domains.fiscal_mx.schemas import CfdiOperationFields
 
-class IncomeCreate(BaseModel):
+
+class IncomeCreate(CfdiOperationFields):
     date: date_type
     customer_id: str | None = None
     description: str = Field(min_length=1, max_length=500)
@@ -30,9 +32,10 @@ class IncomeCreate(BaseModel):
     notes: str | None = Field(default=None, max_length=1000)
 
 
-class IncomeUpdate(BaseModel):
+class IncomeUpdate(CfdiOperationFields):
     """Edición parcial. Pendiente: casi todo es corregible; cobrado o cancelado,
-    sólo el proyecto (el resto exige reverso). Cada cambio queda en el historial."""
+    sólo el proyecto y los datos para el CFDI (el resto exige reverso). Cada
+    cambio queda en el historial."""
 
     date: date_type | None = None
     customer_id: str | None = None
@@ -77,3 +80,6 @@ class IncomeRead(BaseModel):
     notes: str | None
     paid_at: datetime | None
     created_at: datetime
+    cfdi_use: str | None = None
+    cfdi_payment_form: str | None = None
+    cfdi_payment_method: str | None = None

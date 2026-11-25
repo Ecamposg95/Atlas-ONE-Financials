@@ -9,6 +9,7 @@ from app.domains.receivables.schemas import (
     CollectionCreate,
     DebtCancel,
     ReceivableCreate,
+    ReceivableFiscalUpdate,
     ReceivableRead,
 )
 from app.models.organization import WRITE_ROLES
@@ -87,6 +88,21 @@ def get_receivable(
     org_id: str = Depends(get_current_org_id),
 ):
     return ReceivableRead.model_validate(_get_receivable(db, org_id, receivable_id))
+
+
+@router.patch("/{receivable_id}", response_model=ReceivableRead)
+def update_receivable_fiscal(
+    receivable_id: str,
+    payload: ReceivableFiscalUpdate,
+    db: Session = Depends(get_db),
+    org_id: str = Depends(get_current_org_id),
+    user: User = Depends(get_current_user),
+    _membership=Depends(require_role(WRITE_ROLES)),
+):
+    """Sólo los datos para el CFDI; monto, fechas y cliente se corrigen cancelando."""
+    receivable = _get_receivable(db, org_id, receivable_id)
+    changes = payload.model_dump(exclude_unset=True)
+    return ReceivableRead.model_validate(service.update_receivable_fiscal(db, org_id, receivable, changes, user.id))
 
 
 @router.post("/{receivable_id}/collect", response_model=ReceivableRead)

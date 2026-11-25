@@ -14,7 +14,15 @@ class _ContactColumns:
     status = Column(String(20), nullable=False, default="ACTIVE")
 
 
-class Customer(Base, UUIDPKMixin, TenantMixin, AuditMixin, SoftDeleteMixin, _ContactColumns):
+class _ReceptorColumns:
+    """Receptor de CFDI: razón social = legal_name y RFC = tax_id; el resto, claves del SAT."""
+
+    fiscal_regime = Column(String(3), nullable=True)  # c_RegimenFiscal
+    fiscal_postal_code = Column(String(5), nullable=True)  # c_CodigoPostal (domicilio fiscal)
+    default_cfdi_use = Column(String(4), nullable=True)  # c_UsoCFDI
+
+
+class Customer(Base, UUIDPKMixin, TenantMixin, AuditMixin, SoftDeleteMixin, _ContactColumns, _ReceptorColumns):
     __tablename__ = "customers"
 
 
