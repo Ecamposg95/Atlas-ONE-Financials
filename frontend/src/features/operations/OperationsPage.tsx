@@ -51,6 +51,12 @@ import { useAccounts, useCategories, useContacts, useDimensions } from '@/lib/ho
 import { useAuthStore } from '@/stores/authStore'
 import { toast } from '@/stores/toastStore'
 import { AttachmentsPanel, PendingAttachments, uploadAttachment } from './Attachments'
+import {
+  CfdiFields,
+  EMPTY_CFDI,
+  cfdiCreatePayload,
+  withCustomerDefault,
+} from '@/features/fiscal/CfdiOperationFields'
 import type { Expense, Income, Page } from '@/types/api'
 
 type Operation = Income & Expense
@@ -130,6 +136,8 @@ export function OperationsPage({ config }: { config: Config }) {
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [detailFor, setDetailFor] = useState<Operation | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Datos para la factura: sólo en ingresos, opcionales.
+  const [cfdi, setCfdi] = useState(EMPTY_CFDI)
   const [form, setForm] = useState({
     date: today(),
     description: '',
@@ -281,6 +289,7 @@ export function OperationsPage({ config }: { config: Config }) {
       if (form.business_unit_id) payload.business_unit_id = form.business_unit_id
       if (form.fiscal_entity_id) payload.fiscal_entity_id = form.fiscal_entity_id
       if (form.notes) payload.notes = form.notes
+      if (config.kind === 'income') Object.assign(payload, cfdiCreatePayload(cfdi))
       // 202: alcanzó el umbral y espera autorización. El formulario se cierra igual.
       const response = await api.post<Operation>(config.endpoint, payload)
       if (handlePendingApproval(response)) {
@@ -332,6 +341,7 @@ export function OperationsPage({ config }: { config: Config }) {
     setModalOpen(false)
     setError(null)
     setPendingFiles([])
+    setCfdi(EMPTY_CFDI)
     setForm({
       date: today(),
       description: '',
@@ -877,6 +887,7 @@ export function OperationsPage({ config }: { config: Config }) {
         accountName={accountLabel}
         onClose={() => setDetailFor(null)}
         onSaved={invalidate}
+        customers={config.kind === 'income' ? (contacts ?? []) : undefined}
       />
 
       <JournalEntryModal
@@ -941,7 +952,13 @@ export function OperationsPage({ config }: { config: Config }) {
               placeholder="Sin asignar"
               options={(contacts ?? []).map((contact) => ({ value: contact.id, label: contact.name }))}
               value={form.contact_id}
-              onChange={(event) => setForm({ ...form, contact_id: event.target.value })}
+              onChange={(event) => {
+                if (config.kind === 'income') {
+                  const find = (id: string) => (contacts ?? []).find((contact) => contact.id === id)
+                  setCfdi(withCustomerDefault(cfdi, find(form.contact_id), find(event.target.value)))
+                }
+                setForm({ ...form, contact_id: event.target.value })
+              }}
             />
           </div>
           {config.kind === 'expense' ? (
@@ -1055,6 +1072,14 @@ export function OperationsPage({ config }: { config: Config }) {
             value={form.notes}
             onChange={(event) => setForm({ ...form, notes: event.target.value })}
           />
+          {config.kind === 'income' ? (
+            <CfdiFields
+              title="¿Vas a facturar este ingreso?"
+              value={cfdi}
+              onChange={setCfdi}
+              customer={(contacts ?? []).find((contact) => contact.id === form.contact_id)}
+            />
+          ) : null}
           {config.kind === 'expense' ? (
             <PendingAttachments files={pendingFiles} onChange={setPendingFiles} />
           ) : null}

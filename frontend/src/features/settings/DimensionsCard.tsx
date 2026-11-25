@@ -11,6 +11,14 @@ import { api, errorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { SelectInput, TextInput } from '@/components/ui/Field'
 import { Card } from '@/components/ui/Table'
+import {
+  EMPTY_FISCAL_FORM,
+  FiscalFields,
+  ReadinessBadge,
+  ReadinessPanel,
+  fiscalPayload,
+  type FiscalForm,
+} from '@/features/fiscal/FiscalFields'
 import { useDimensions } from '@/lib/hooks'
 import type { BusinessUnit, FiscalEntity } from '@/types/api'
 
@@ -24,7 +32,20 @@ const KINDS = [
 const KIND_LABELS: Record<string, string> = Object.fromEntries(KINDS.map((kind) => [kind.value, kind.label]))
 
 const EMPTY_UNIT = { name: '', code: '', kind: 'OTRA', opened_on: '', aliases: '' }
-const EMPTY_ENTITY = { name: '', tax_id: '', regime: '' }
+const EMPTY_ENTITY = { name: '', regime: '', ...EMPTY_FISCAL_FORM }
+
+type EntityForm = typeof EMPTY_ENTITY
+
+function entityForm(entity: FiscalEntity): EntityForm {
+  return {
+    name: entity.name,
+    regime: entity.regime ?? '',
+    legal_name: entity.legal_name ?? '',
+    tax_id: entity.tax_id ?? '',
+    fiscal_regime: entity.fiscal_regime ?? '',
+    fiscal_postal_code: entity.fiscal_postal_code ?? '',
+  }
+}
 
 /** "VNSA, VNSA MOVIL" → ["VNSA", "VNSA MOVIL"]. */
 function splitAliases(raw: string): string[] {
@@ -224,7 +245,7 @@ function EntitiesSection({ entities }: { entities: FiscalEntity[] }) {
   const [editing, setEditing] = useState<FiscalEntity | null>(null)
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [form, setForm] = useState(EMPTY_ENTITY)
+  const [form, setForm] = useState<EntityForm>(EMPTY_ENTITY)
 
   function invalidate() {
     void queryClient.invalidateQueries({ queryKey: ['fiscal-entities'] })
@@ -241,14 +262,20 @@ function EntitiesSection({ entities }: { entities: FiscalEntity[] }) {
     setEditing(entity)
     setOpen(true)
     setError(null)
-    setForm({ name: entity.name, tax_id: entity.tax_id ?? '', regime: entity.regime ?? '' })
+    setForm(entityForm(entity))
   }
 
   const save = useMutation({
     mutationFn: async () => {
-      const payload = { name: form.name, tax_id: form.tax_id || null, regime: form.regime || null }
-      if (editing) await api.patch(`/fiscal-entities/${editing.id}`, payload)
-      else await api.post('/fiscal-entities', payload)
+      const payload: Record<string, string | null> = { ...fiscalPayload(form), name: form.name }
+      if (editing) {
+        // Sólo lo que cambió: un dato viejo mal capturado no bloquea renombrarlo.
+        const before = fiscalPayload(entityForm(editing))
+        const changed = Object.fromEntries(Object.entries(payload).filter(([key, value]) => before[key] !== value))
+        if (Object.keys(changed).length > 0) await api.patch(`/fiscal-entities/${editing.id}`, changed)
+      } else {
+        await api.post('/fiscal-entities', payload)
+      }
     },
     onSuccess: () => {
       invalidate()
@@ -277,7 +304,14 @@ function EntitiesSection({ entities }: { entities: FiscalEntity[] }) {
                   {entity.name}
                   {entity.tax_id ? <span className="figures ml-2 text-xs text-muted">{entity.tax_id}</span> : null}
                 </p>
-                {entity.regime ? <p className="text-xs text-muted">{entity.regime}</p> : null}
+                {entity.legal_name || entity.regime ? (
+                  <p className="truncate text-xs text-muted">
+                    {[entity.legal_name, entity.regime].filter(Boolean).join(' · ')}
+                  </p>
+                ) : null}
+                <div className="mt-1">
+                  <ReadinessBadge readiness={entity.fiscal_readiness} />
+                </div>
               </div>
               <div className="flex items-center gap-1.5">
                 <Button variant="ghost" className="!px-2 !py-1 text-xs" onClick={() => startEdit(entity)}>
@@ -312,18 +346,24 @@ function EntitiesSection({ entities }: { entities: FiscalEntity[] }) {
             value={form.name}
             onChange={(event) => setForm({ ...form, name: event.target.value })}
           />
-          <div className="grid grid-cols-2 gap-3">
-            <TextInput
-              label="RFC (opcional)"
-              maxLength={13}
-              value={form.tax_id}
-              onChange={(event) => setForm({ ...form, tax_id: event.target.value.toUpperCase() })}
-            />
-            <TextInput
-              label="Régimen (opcional)"
-              placeholder="RESICO"
-              value={form.regime}
-              onChange={(event) => setForm({ ...form, regime: event.target.value })}
+          <TextInput
+            label="Etiqueta de régimen (opcional)"
+            placeholder="RESICO"
+            hint="Cómo lo llamas tú. El régimen del SAT va en los datos para facturar."
+            value={form.regime}
+            onChange={(event) => setForm({ ...form, regime: event.target.value })}
+          />
+          <div className="space-y-3 border-t border-border pt-3">
+            <div>
+              <h4 className="text-sm font-semibold">Datos para facturar</h4>
+              <p className="text-xs text-muted">
+                Las operaciones de este contribuyente se facturan con su RFC, no con el de la empresa.
+              </p>
+            </div>
+            {editing ? <ReadinessPanel readiness={editing.fiscal_readiness} subject="Este contribuyente" /> : null}
+            <FiscalFields
+              form={form as FiscalForm}
+              onChange={(fiscal) => setForm({ ...form, ...fiscal })}
             />
           </div>
           <div className="flex justify-end gap-2">
