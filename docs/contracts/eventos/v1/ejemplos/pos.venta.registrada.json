@@ -1,0 +1,148 @@
+{
+  "id_evento": "0b7d2a4e-6c1f-4e8a-9d3b-5f2e1a7c4b60",
+  "tipo": "pos.venta.registrada",
+  "version_esquema": "1.0",
+  "emisor": "atlas-one",
+  "organizacion_origen": {
+    "id": "42"
+  },
+  "ocurrido_en": "2026-11-24T13:45:10-06:00",
+  "zona_horaria": "America/Mexico_City",
+  "clave_idempotencia": "atlas-one:42:venta:3f0c6a52-8d1e-4f7b-9a43-2b6c1e0d5a91:registrada",
+  "datos": {
+    "venta": {
+      "id_origen": "3f0c6a52-8d1e-4f7b-9a43-2b6c1e0d5a91",
+      "folio_ticket": "7-A-10482"
+    },
+    "serie": "A",
+    "folio": "10482",
+    "sucursal": {
+      "id_origen": "7",
+      "nombre": "Toluca Centro",
+      "codigo_postal": "50000",
+      "zona_horaria": "America/Mexico_City"
+    },
+    "id_sesion_caja": "3391",
+    "vendedor": {
+      "id_origen": "15",
+      "nombre": "Mariana López"
+    },
+    "moneda": "MXN",
+    "condicion": "contado",
+    "requiere_factura": false,
+    "precios_incluyen_impuestos": false,
+    "renglones": [
+      {
+        "numero": 1,
+        "id_variante_origen": "b71e2c04-5f3a-4d2e-8c19-0a6f4e7d3b21",
+        "sku": "REF-600",
+        "descripcion": "Refresco de cola 600 ml",
+        "clave_prod_serv": "50202306",
+        "clave_unidad": "H87",
+        "unidad": "pza",
+        "objeto_impuesto": "02",
+        "cantidad": "3",
+        "valor_unitario": "15.50",
+        "importe": "46.50",
+        "descuento": "0.00",
+        "impuestos": [
+          {
+            "impuesto": "002",
+            "tipo_factor": "Tasa",
+            "tasa": "0.1600",
+            "base": "46.50",
+            "importe": "7.44"
+          }
+        ],
+        "total": "53.94"
+      },
+      {
+        "numero": 2,
+        "id_variante_origen": "c2a9d811-7e64-4b0f-a3d5-9e1b2c4f6a08",
+        "sku": "TOR-KG",
+        "descripcion": "Tortilla de maíz",
+        "clave_prod_serv": "50221200",
+        "clave_unidad": "KGM",
+        "unidad": "kg",
+        "objeto_impuesto": "02",
+        "cantidad": "1.250",
+        "valor_unitario": "24.00",
+        "importe": "30.00",
+        "descuento": "0.00",
+        "impuestos": [
+          {
+            "impuesto": "002",
+            "tipo_factor": "Tasa",
+            "tasa": "0.0000",
+            "base": "30.00",
+            "importe": "0.00"
+          }
+        ],
+        "total": "30.00"
+      },
+      {
+        "numero": 3,
+        "id_variante_origen": "d4f0b3a7-1c28-4e95-b6a2-5d8e7f9c0b13",
+        "sku": "CUA-100",
+        "descripcion": "Cuaderno profesional 100 hojas",
+        "clave_prod_serv": "14111514",
+        "clave_unidad": "H87",
+        "unidad": "pza",
+        "objeto_impuesto": "02",
+        "cantidad": "2",
+        "valor_unitario": "43.10",
+        "importe": "86.20",
+        "descuento": "8.62",
+        "impuestos": [
+          {
+            "impuesto": "002",
+            "tipo_factor": "Tasa",
+            "tasa": "0.1600",
+            "base": "77.58",
+            "importe": "12.41"
+          }
+        ],
+        "total": "89.99"
+      }
+    ],
+    "totales": {
+      "subtotal": "162.70",
+      "descuento": "8.62",
+      "impuestos": [
+        {
+          "impuesto": "002",
+          "tipo_factor": "Tasa",
+          "tasa": "0.1600",
+          "base": "124.08",
+          "importe": "19.85"
+        },
+        {
+          "impuesto": "002",
+          "tipo_factor": "Tasa",
+          "tasa": "0.0000",
+          "base": "30.00",
+          "importe": "0.00"
+        }
+      ],
+      "total": "173.93"
+    },
+    "propina": "20.00",
+    "recargo_tarjeta": "0.00",
+    "pagos": [
+      {
+        "id_origen": "88123",
+        "metodo_origen": "CASH",
+        "forma_pago_sat": "01",
+        "importe": "100.00"
+      },
+      {
+        "id_origen": "88124",
+        "metodo_origen": "CARD",
+        "importe": "93.93",
+        "referencia": "Terminal 2, aut. 471203"
+      }
+    ],
+    "cambio": "0.00",
+    "saldo_pendiente": "0.00"
+  }
+}

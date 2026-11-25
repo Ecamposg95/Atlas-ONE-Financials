@@ -1,0 +1,40 @@
+{
+  "id_evento": "a7c9e1b3-5d2f-4a8c-9e0b-4f6d8a2c1e57",
+  "tipo": "financials.cfdi.actualizado",
+  "version_esquema": "1.0",
+  "emisor": "atlas-financials",
+  "organizacion_origen": {
+    "id": "8d3f2b1a-6e4c-4a9f-b2d7-1c5e9a0f3b68"
+  },
+  "organizacion_destino": {
+    "id": "42"
+  },
+  "ocurrido_en": "2026-11-24T13:47:31-06:00",
+  "zona_horaria": "America/Mexico_City",
+  "clave_idempotencia": "atlas-financials:8d3f2b1a-6e4c-4a9f-b2d7-1c5e9a0f3b68:cfdi:2c9a1f7e-0b3d-4e5a-8f6c-7d1b3e9a5c02:timbrado",
+  "causado_por": "f1a3c5e7-9b2d-4f6a-8c0e-3d5b7a9c1e24",
+  "datos": {
+    "origen": {
+      "tipo": "solicitud_factura",
+      "id_origen": "5531",
+      "venta": {
+        "id_origen": "3f0c6a52-8d1e-4f7b-9a43-2b6c1e0d5a91",
+        "folio_ticket": "7-A-10482"
+      }
+    },
+    "tipo_comprobante": "I",
+    "estado": "timbrado",
+    "uuid": "2c9a1f7e-0b3d-4e5a-8f6c-7d1b3e9a5c02",
+    "serie": "F",
+    "folio": "1093",
+    "fecha_timbrado": "2026-11-24T13:47:29-06:00",
+    "total": "173.93",
+    "receptor_rfc": "EKU9003173C9",
+    "enlaces": {
+      "xml": "https://atlas-one-financials.up.railway.app/api/cfdi/2c9a1f7e-0b3d-4e5a-8f6c-7d1b3e9a5c02/xml?firma=ejemplo",
+      "pdf": "https://atlas-one-financials.up.railway.app/api/cfdi/2c9a1f7e-0b3d-4e5a-8f6c-7d1b3e9a5c02/pdf?firma=ejemplo",
+      "expiran_en": "2026-12-01T13:47:31-06:00",
+      "xml_sha256": "a60de48e55aaaa3a416f70d018e7ae9aaf86f301055f47f52405260347915e35"
+    }
+  }
+}

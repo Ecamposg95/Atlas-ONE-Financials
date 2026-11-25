@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/pos.caja.cerrada.schema.json",
+  "title": "pos.caja.cerrada",
+  "description": "Se cerró una sesión de caja. Financials lo liga a su corte de caja y registra faltante o sobrante. No crea ventas: las ventas llegan una por una en pos.venta.registrada y aquí sólo se concilian.",
+  "allOf": [
+    { "$ref": "sobre.schema.json" },
+    {
+      "properties": {
+        "tipo": { "const": "pos.caja.cerrada" },
+        "emisor": { "const": "atlas-one" },
+        "organizacion_origen": { "properties": { "id": { "pattern": "^[0-9]{1,18}$" } } },
+        "datos": { "$ref": "#/$defs/datos" }
+      }
+    }
+  ],
+  "$defs": {
+    "datos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id_sesion_caja", "sucursal", "cajero", "abierta_en", "cerrada_en", "numero_ventas",
+        "cobros_por_metodo", "total_cobrado", "efectivo"
+      ],
+      "properties": {
+        "id_sesion_caja": { "$ref": "comunes.schema.json#/$defs/id_origen" },
+        "sucursal": { "$ref": "comunes.schema.json#/$defs/sucursal" },
+        "cajero": { "$ref": "comunes.schema.json#/$defs/persona_ref" },
+        "abierta_en": { "$ref": "comunes.schema.json#/$defs/fecha_hora" },
+        "cerrada_en": { "$ref": "comunes.schema.json#/$defs/fecha_hora" },
+        "numero_ventas": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Ventas registradas en la sesión. Financials compara contra los pos.venta.registrada que recibió con ese id_sesion_caja."
+        },
+        "cobros_por_metodo": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["metodo_origen", "importe"],
+            "properties": {
+              "metodo_origen": { "$ref": "comunes.schema.json#/$defs/metodo_pago_pos" },
+              "importe": { "$ref": "comunes.schema.json#/$defs/monto" }
+            }
+          },
+          "description": "Un renglón por método; su suma es total_cobrado (ventas, propinas, recargos y abonos cobrados en la sesión)."
+        },
+        "total_cobrado": { "$ref": "comunes.schema.json#/$defs/monto" },
+        "efectivo": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["fondo_inicial", "cobros", "entradas", "salidas", "reembolsos", "esperado", "contado", "diferencia"],
+          "properties": {
+            "fondo_inicial": { "$ref": "comunes.schema.json#/$defs/monto" },
+            "cobros": { "$ref": "comunes.schema.json#/$defs/monto", "description": "Igual al renglón CASH de cobros_por_metodo." },
+            "entradas": { "$ref": "comunes.schema.json#/$defs/monto" },
+            "salidas": { "$ref": "comunes.schema.json#/$defs/monto" },
+            "reembolsos": { "$ref": "comunes.schema.json#/$defs/monto", "description": "Devoluciones pagadas en efectivo." },
+            "esperado": { "$ref": "comunes.schema.json#/$defs/monto", "description": "fondo_inicial + cobros + entradas − salidas − reembolsos." },
+            "contado": { "$ref": "comunes.schema.json#/$defs/monto" },
+            "diferencia": { "$ref": "comunes.schema.json#/$defs/monto_con_signo", "description": "contado − esperado. Negativo es faltante." }
+          }
+        }
+      }
+    }
+  }
+}

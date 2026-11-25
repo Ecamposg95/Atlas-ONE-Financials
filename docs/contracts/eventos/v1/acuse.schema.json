@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/acuse.schema.json",
+  "title": "Acuse síncrono de recepción",
+  "description": "Cuerpo de la respuesta HTTP de quien recibe un evento. Dice si el evento se guardó, no si el CFDI se timbró: eso llega después como evento financials.*. Conserva la convención de errores {\"detail\": \"...\"} de Financials.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id_evento", "estado", "recibido_en"],
+  "properties": {
+    "id_evento": { "$ref": "comunes.schema.json#/$defs/uuid" },
+    "estado": {
+      "enum": ["aceptado", "en_espera", "duplicado", "rechazado"],
+      "description": "aceptado (202): guardado y en proceso. en_espera (202): guardado, falta un evento del que depende. duplicado (200): ya se había recibido esa clave de idempotencia. rechazado (422): no cumple el contrato; no consume la clave."
+    },
+    "recibido_en": { "$ref": "comunes.schema.json#/$defs/fecha_hora" },
+    "id_evento_original": {
+      "$ref": "comunes.schema.json#/$defs/uuid",
+      "description": "En duplicado: el id del evento que sí se procesó con esa clave."
+    },
+    "detail": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "description": "Resumen en español para personas."
+    },
+    "errores": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "comunes.schema.json#/$defs/motivo_rechazo" }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "estado": { "const": "rechazado" } } },
+      "then": { "required": ["detail", "errores"] }
+    },
+    {
+      "if": { "properties": { "estado": { "const": "duplicado" } } },
+      "then": { "required": ["id_evento_original"] }
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/pos.venta.cancelada.schema.json",
+  "title": "pos.venta.cancelada",
+  "description": "La venta completa se anula (DELETE /api/sales/{id} en Atlas ONE). Financials revierte con póliza espejo y, si ya hay CFDI, decide si cancela ante el SAT o emite egreso. Una devolución parcial NO es cancelación: usa pos.devolucion.aprobada.",
+  "allOf": [
+    { "$ref": "sobre.schema.json" },
+    {
+      "properties": {
+        "tipo": { "const": "pos.venta.cancelada" },
+        "emisor": { "const": "atlas-one" },
+        "organizacion_origen": { "properties": { "id": { "pattern": "^[0-9]{1,18}$" } } },
+        "datos": { "$ref": "#/$defs/datos" }
+      }
+    }
+  ],
+  "$defs": {
+    "datos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["venta", "sucursal", "total_cancelado", "motivo", "cancelada_por"],
+      "properties": {
+        "venta": { "$ref": "comunes.schema.json#/$defs/venta_ref" },
+        "sucursal": { "$ref": "comunes.schema.json#/$defs/sucursal" },
+        "total_cancelado": {
+          "$ref": "comunes.schema.json#/$defs/monto",
+          "description": "Debe ser igual a totales.total de la venta registrada; si no, Financials rechaza."
+        },
+        "motivo": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["clave", "descripcion"],
+          "properties": {
+            "clave": {
+              "enum": ["error_captura", "cliente_desistio", "venta_duplicada", "otro"],
+              "description": "Motivo estructurado del punto de venta. Financials lo traduce al motivo del SAT (01 a 04) si hay CFDI."
+            },
+            "descripcion": { "type": "string", "minLength": 1, "maxLength": 500 }
+          }
+        },
+        "cancelada_por": { "$ref": "comunes.schema.json#/$defs/persona_ref" },
+        "uuid_cfdi": {
+          "$ref": "comunes.schema.json#/$defs/uuid",
+          "description": "Si el punto de venta guardó el UUID que le devolvió Financials. Es informativo: Financials manda."
+        }
+      }
+    }
+  }
+}

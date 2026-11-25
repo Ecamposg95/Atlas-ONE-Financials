@@ -1,0 +1,301 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/rrhh.nomina.autorizada.schema.json",
+  "title": "rrhh.nomina.autorizada",
+  "description": "RRHH autorizó una corrida de nómina, ya calculada y clasificada con claves del SAT. La corrida es inmutable: una corrección es una versión nueva con sólo los recibos que cambian. Financials no recalcula ISR, IMSS ni exenciones; valida forma y cuadre, timbra un CFDI por recibo y responde con financials.nomina.timbrada. Los importes son responsabilidad de RRHH [contador].",
+  "allOf": [
+    { "$ref": "sobre.schema.json" },
+    {
+      "properties": {
+        "tipo": { "const": "rrhh.nomina.autorizada" },
+        "emisor": { "const": "hrflow" },
+        "datos": { "$ref": "#/$defs/datos" }
+      }
+    }
+  ],
+  "$defs": {
+    "clave_sat_3": { "type": "string", "pattern": "^[0-9]{3}$" },
+    "clave_interna": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{3,15}$",
+      "description": "Clave del concepto en el catálogo del patrón (atributo Clave del complemento, 3 a 15 caracteres)."
+    },
+    "concepto": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "percepcion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tipo_percepcion", "clave", "concepto", "importe_gravado", "importe_exento"],
+      "properties": {
+        "tipo_percepcion": { "$ref": "#/$defs/clave_sat_3", "description": "c_TipoPercepcion." },
+        "clave": { "$ref": "#/$defs/clave_interna" },
+        "concepto": { "$ref": "#/$defs/concepto" },
+        "importe_gravado": { "$ref": "comunes.schema.json#/$defs/monto" },
+        "importe_exento": { "$ref": "comunes.schema.json#/$defs/monto" },
+        "horas_extra": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["dias", "tipo_horas", "horas", "importe_pagado"],
+            "properties": {
+              "dias": { "type": "integer", "minimum": 1 },
+              "tipo_horas": { "enum": ["01", "02", "03"], "description": "c_TipoHoras: 01 dobles, 02 triples, 03 simples." },
+              "horas": { "type": "integer", "minimum": 1 },
+              "importe_pagado": { "$ref": "comunes.schema.json#/$defs/monto" }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "tipo_percepcion": { "const": "019" } } },
+          "then": { "required": ["horas_extra"] },
+          "else": { "not": { "required": ["horas_extra"] } }
+        }
+      ]
+    },
+    "deduccion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tipo_deduccion", "clave", "concepto", "importe"],
+      "properties": {
+        "tipo_deduccion": { "$ref": "#/$defs/clave_sat_3", "description": "c_TipoDeduccion. 002 es ISR retenido." },
+        "clave": { "$ref": "#/$defs/clave_interna" },
+        "concepto": { "$ref": "#/$defs/concepto" },
+        "importe": { "$ref": "comunes.schema.json#/$defs/monto_positivo" }
+      }
+    },
+    "otro_pago": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tipo_otro_pago", "clave", "concepto", "importe"],
+      "properties": {
+        "tipo_otro_pago": { "$ref": "#/$defs/clave_sat_3", "description": "c_TipoOtroPago. 002 es subsidio para el empleo." },
+        "clave": { "$ref": "#/$defs/clave_interna" },
+        "concepto": { "$ref": "#/$defs/concepto" },
+        "importe": { "$ref": "comunes.schema.json#/$defs/monto" },
+        "subsidio_causado": { "$ref": "comunes.schema.json#/$defs/monto", "description": "Obligatorio en 002; mayor o igual al importe." }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "tipo_otro_pago": { "const": "002" } } },
+          "then": { "required": ["subsidio_causado"] },
+          "else": { "not": { "required": ["subsidio_causado"] } }
+        }
+      ]
+    },
+    "incapacidad": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dias", "tipo_incapacidad"],
+      "properties": {
+        "dias": { "type": "integer", "minimum": 1 },
+        "tipo_incapacidad": { "type": "string", "pattern": "^[0-9]{2}$", "description": "c_TipoIncapacidad." },
+        "importe_monetario": { "$ref": "comunes.schema.json#/$defs/monto" }
+      }
+    },
+    "empleado": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id_origen", "num_empleado", "rfc", "curp", "nombre_fiscal", "codigo_postal_fiscal"],
+      "properties": {
+        "id_origen": { "$ref": "comunes.schema.json#/$defs/id_origen", "description": "Empleado.id (cuid) de HRFlow; único sólo dentro de su empresa." },
+        "num_empleado": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,15}$", "description": "NumEmpleado del recibo: el código corto, no el cuid (25 caracteres no caben)." },
+        "rfc": { "$ref": "comunes.schema.json#/$defs/rfc" },
+        "curp": { "$ref": "comunes.schema.json#/$defs/curp" },
+        "nombre_fiscal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 254,
+          "description": "Nombre(s) y apellidos como aparecen en la constancia de situación fiscal, en mayúsculas."
+        },
+        "codigo_postal_fiscal": { "$ref": "comunes.schema.json#/$defs/codigo_postal" },
+        "correo": { "$ref": "comunes.schema.json#/$defs/correo" }
+      }
+    },
+    "laboral": {
+      "description": "Datos del nodo Receptor del complemento. Si hay registro_patronal, son obligatorios num_seguridad_social, fecha_inicio_rel_laboral, antiguedad, riesgo_puesto y salario_diario_integrado; si no lo hay, ninguno de esos cinco debe existir.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tipo_contrato", "tipo_regimen", "clave_ent_fed"],
+      "properties": {
+        "tipo_contrato": { "type": "string", "pattern": "^(0[1-9]|10|99)$", "description": "c_TipoContrato." },
+        "tipo_regimen": { "type": "string", "pattern": "^(0[2-9]|1[0-3]|99)$", "description": "c_TipoRegimen." },
+        "tipo_jornada": { "type": "string", "pattern": "^(0[1-8]|99)$" },
+        "sindicalizado": { "type": "boolean" },
+        "departamento": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "puesto": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "clave_ent_fed": { "type": "string", "pattern": "^[A-Z]{2,3}$", "description": "c_Estado donde presta el servicio (MEX, CMX, JAL...)." },
+        "registro_patronal": { "type": "string", "minLength": 1, "maxLength": 20 },
+        "num_seguridad_social": { "type": "string", "pattern": "^[0-9]{1,15}$" },
+        "fecha_inicio_rel_laboral": { "$ref": "comunes.schema.json#/$defs/fecha" },
+        "antiguedad": {
+          "type": "string",
+          "pattern": "^P(([1-9][0-9]{0,3})W|([1-9][0-9]?Y)?(([1-9]|1[0-1])M)?(([1-9]|[1-2][0-9]|3[0-1])D)?)$",
+          "not": { "const": "P" },
+          "description": "Duración ISO 8601 en semanas (P141W) o años-meses-días (P2Y8M14D)."
+        },
+        "riesgo_puesto": { "type": "string", "pattern": "^([1-5]|99)$" },
+        "salario_diario_integrado": { "$ref": "comunes.schema.json#/$defs/monto" },
+        "salario_base_cot_apor": { "$ref": "comunes.schema.json#/$defs/monto" },
+        "banco": { "type": "string", "pattern": "^[0-9]{3}$", "description": "c_Banco. No debe ir con CLABE de 18 posiciones." },
+        "cuenta_bancaria": {
+          "type": "string",
+          "pattern": "^([0-9]{10,11}|[0-9]{15,16}|[0-9]{18})$",
+          "description": "Opcional y desaconsejado: dato personal que Financials no necesita para timbrar si no se informa [abogado]."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["registro_patronal"] },
+          "then": {
+            "required": ["num_seguridad_social", "fecha_inicio_rel_laboral", "antiguedad", "riesgo_puesto", "salario_diario_integrado"]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                { "required": ["num_seguridad_social"] },
+                { "required": ["fecha_inicio_rel_laboral"] },
+                { "required": ["antiguedad"] },
+                { "required": ["riesgo_puesto"] },
+                { "required": ["salario_diario_integrado"] }
+              ]
+            }
+          }
+        },
+        {
+          "if": { "properties": { "tipo_contrato": { "pattern": "^0[1-8]$" } } },
+          "then": {
+            "required": ["registro_patronal"],
+            "properties": { "tipo_regimen": { "enum": ["02", "03", "04"] } }
+          },
+          "else": {
+            "properties": { "tipo_regimen": { "not": { "enum": ["02", "03", "04"] } } }
+          }
+        },
+        {
+          "if": { "required": ["cuenta_bancaria"], "properties": { "cuenta_bancaria": { "pattern": "^[0-9]{18}$" } } },
+          "then": { "not": { "required": ["banco"] } }
+        },
+        {
+          "if": { "required": ["cuenta_bancaria"], "properties": { "cuenta_bancaria": { "pattern": "^([0-9]{10,11}|[0-9]{16})$" } } },
+          "then": { "required": ["banco"] }
+        }
+      ]
+    },
+    "totales_recibo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total_percepciones", "total_gravado", "total_exento", "total_deducciones",
+        "total_impuestos_retenidos", "total_otras_deducciones", "total_otros_pagos", "neto"
+      ],
+      "properties": {
+        "total_percepciones": { "$ref": "comunes.schema.json#/$defs/monto" },
+        "total_gravado": { "$ref": "comunes.schema.json#/$defs/monto" },
+        "total_exento": { "$ref": "comunes.schema.json#/$defs/monto" },
+        "total_deducciones": { "$ref": "comunes.schema.json#/$defs/monto" },
+        "total_impuestos_retenidos": { "$ref": "comunes.schema.json#/$defs/monto", "description": "Suma de deducciones 002." },
+        "total_otras_deducciones": { "$ref": "comunes.schema.json#/$defs/monto" },
+        "total_otros_pagos": { "$ref": "comunes.schema.json#/$defs/monto" },
+        "neto": { "$ref": "comunes.schema.json#/$defs/monto", "description": "total_percepciones + total_otros_pagos − total_deducciones. Nunca negativo." }
+      }
+    },
+    "recibo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id_recibo_origen", "empleado", "laboral", "num_dias_pagados", "percepciones", "deducciones", "otros_pagos", "totales"],
+      "properties": {
+        "id_recibo_origen": { "$ref": "comunes.schema.json#/$defs/id_origen" },
+        "sustituye": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id_recibo_origen", "uuid"],
+          "properties": {
+            "id_recibo_origen": { "$ref": "comunes.schema.json#/$defs/id_origen" },
+            "uuid": { "$ref": "comunes.schema.json#/$defs/uuid" }
+          },
+          "description": "Recibo ya timbrado que éste reemplaza (CFDI relacionado 04). Financials timbra el nuevo y luego cancela el anterior."
+        },
+        "empleado": { "$ref": "#/$defs/empleado" },
+        "laboral": { "$ref": "#/$defs/laboral" },
+        "num_dias_pagados": { "$ref": "comunes.schema.json#/$defs/dias" },
+        "percepciones": { "type": "array", "items": { "$ref": "#/$defs/percepcion" } },
+        "deducciones": { "type": "array", "items": { "$ref": "#/$defs/deduccion" } },
+        "otros_pagos": { "type": "array", "items": { "$ref": "#/$defs/otro_pago" } },
+        "incapacidades": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/incapacidad" } },
+        "totales": { "$ref": "#/$defs/totales_recibo" }
+      },
+      "anyOf": [
+        { "properties": { "percepciones": { "minItems": 1 } } },
+        { "properties": { "otros_pagos": { "minItems": 1 } } }
+      ]
+    },
+    "datos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "corrida", "alcance", "tipo_nomina", "periodicidad_pago", "fecha_pago",
+        "fecha_inicial_pago", "fecha_final_pago", "autorizada_por", "autorizada_en", "recibos", "totales"
+      ],
+      "properties": {
+        "corrida": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id_origen", "version"],
+          "properties": {
+            "id_origen": { "$ref": "comunes.schema.json#/$defs/id_origen" },
+            "version": { "type": "integer", "minimum": 1, "description": "1 en el envío inicial; sube en cada corrección de la misma corrida." },
+            "descripcion": { "type": "string", "maxLength": 100 }
+          }
+        },
+        "alcance": {
+          "enum": ["completa", "correccion"],
+          "description": "completa: todos los recibos de la corrida (versión 1). correccion: sólo recibos rechazados corregidos o recibos que sustituyen a uno timbrado."
+        },
+        "tipo_nomina": { "enum": ["O", "E"], "description": "Ordinaria o extraordinaria." },
+        "periodicidad_pago": {
+          "type": "string",
+          "pattern": "^(0[1-9]|10|99)$",
+          "description": "c_PeriodicidadPago. Ordinaria: distinta de 99. Extraordinaria: 99."
+        },
+        "fecha_pago": { "$ref": "comunes.schema.json#/$defs/fecha", "description": "Fecha en que efectivamente se paga, no la del clic." },
+        "fecha_inicial_pago": { "$ref": "comunes.schema.json#/$defs/fecha" },
+        "fecha_final_pago": { "$ref": "comunes.schema.json#/$defs/fecha" },
+        "codigo_postal_expedicion": {
+          "$ref": "comunes.schema.json#/$defs/codigo_postal",
+          "description": "Opcional: centro de trabajo que expide. Si falta, Financials usa el de la empresa."
+        },
+        "autorizada_por": { "$ref": "comunes.schema.json#/$defs/persona_ref" },
+        "autorizada_en": { "$ref": "comunes.schema.json#/$defs/fecha_hora" },
+        "recibos": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/recibo" } },
+        "totales": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["numero_recibos", "total_percepciones", "total_deducciones", "total_otros_pagos", "total_neto"],
+          "properties": {
+            "numero_recibos": { "type": "integer", "minimum": 1 },
+            "total_percepciones": { "$ref": "comunes.schema.json#/$defs/monto" },
+            "total_deducciones": { "$ref": "comunes.schema.json#/$defs/monto" },
+            "total_otros_pagos": { "$ref": "comunes.schema.json#/$defs/monto" },
+            "total_neto": { "$ref": "comunes.schema.json#/$defs/monto" }
+          },
+          "description": "Totales de los recibos que viajan en ESTE evento (no de la corrida entera si es corrección)."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "tipo_nomina": { "const": "O" } } },
+          "then": { "properties": { "periodicidad_pago": { "not": { "const": "99" } } } },
+          "else": { "properties": { "periodicidad_pago": { "const": "99" } } }
+        },
+        {
+          "if": { "properties": { "alcance": { "const": "completa" } } },
+          "then": { "properties": { "corrida": { "properties": { "version": { "const": 1 } } } } },
+          "else": { "properties": { "corrida": { "properties": { "version": { "minimum": 2 } } } } }
+        }
+      ]
+    }
+  }
+}

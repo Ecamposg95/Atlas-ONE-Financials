@@ -1,0 +1,53 @@
+{
+  "id_evento": "e2b5d8a1-4f7c-4b9e-8a3d-6c1f0e2b9d45",
+  "tipo": "pos.caja.cerrada",
+  "version_esquema": "1.0",
+  "emisor": "atlas-one",
+  "organizacion_origen": {
+    "id": "42"
+  },
+  "ocurrido_en": "2026-11-24T21:10:00-06:00",
+  "zona_horaria": "America/Mexico_City",
+  "clave_idempotencia": "atlas-one:42:caja:3391:cerrada",
+  "datos": {
+    "id_sesion_caja": "3391",
+    "sucursal": {
+      "id_origen": "7",
+      "nombre": "Toluca Centro",
+      "codigo_postal": "50000",
+      "zona_horaria": "America/Mexico_City"
+    },
+    "cajero": {
+      "id_origen": "15",
+      "nombre": "Mariana López"
+    },
+    "abierta_en": "2026-11-24T08:00:12-06:00",
+    "cerrada_en": "2026-11-24T21:09:47-06:00",
+    "numero_ventas": 87,
+    "cobros_por_metodo": [
+      {
+        "metodo_origen": "CASH",
+        "importe": "3250.50"
+      },
+      {
+        "metodo_origen": "CARD",
+        "importe": "5120.00"
+      },
+      {
+        "metodo_origen": "TRANSFER",
+        "importe": "830.00"
+      }
+    ],
+    "total_cobrado": "9200.50",
+    "efectivo": {
+      "fondo_inicial": "1000.00",
+      "cobros": "3250.50",
+      "entradas": "0.00",
+      "salidas": "200.00",
+      "reembolsos": "45.00",
+      "esperado": "4005.50",
+      "contado": "4000.00",
+      "diferencia": "-5.50"
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/pos.devolucion.aprobada.schema.json",
+  "title": "pos.devolucion.aprobada",
+  "description": "Un supervisor aprobó una devolución. Viaja con sus propios importes por renglón (base e impuesto), sin reescribir la venta original: Financials la registra como reverso parcial y, si la venta tenía CFDI o estaba en una global, como CFDI de egreso relacionado.",
+  "allOf": [
+    { "$ref": "sobre.schema.json" },
+    {
+      "properties": {
+        "tipo": { "const": "pos.devolucion.aprobada" },
+        "emisor": { "const": "atlas-one" },
+        "organizacion_origen": { "properties": { "id": { "pattern": "^[0-9]{1,18}$" } } },
+        "datos": { "$ref": "#/$defs/datos" }
+      }
+    }
+  ],
+  "$defs": {
+    "renglon_devuelto": {
+      "description": "Mismo formato que el renglón de venta, más el número de renglón de la venta original. La cantidad no puede exceder lo vendido menos lo ya devuelto.",
+      "allOf": [
+        { "$ref": "comunes.schema.json#/$defs/renglon_venta" }
+      ]
+    },
+    "datos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id_devolucion_origen", "venta", "sucursal", "id_sesion_caja", "renglones", "totales",
+        "reembolsos", "motivo", "aprobada_por"
+      ],
+      "properties": {
+        "id_devolucion_origen": { "$ref": "comunes.schema.json#/$defs/id_origen" },
+        "venta": { "$ref": "comunes.schema.json#/$defs/venta_ref" },
+        "sucursal": { "$ref": "comunes.schema.json#/$defs/sucursal" },
+        "id_sesion_caja": { "$ref": "comunes.schema.json#/$defs/id_origen" },
+        "renglones": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/renglon_devuelto" },
+          "description": "numero es el número del renglón en la venta original."
+        },
+        "totales": { "$ref": "comunes.schema.json#/$defs/totales_documento" },
+        "reembolsos": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "comunes.schema.json#/$defs/pago_pos" },
+          "description": "Cómo se devolvió el dinero. Su suma es totales.total."
+        },
+        "reingreso_inventario": { "type": "boolean" },
+        "motivo": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "aprobada_por": { "$ref": "comunes.schema.json#/$defs/persona_ref" }
+      }
+    }
+  }
+}

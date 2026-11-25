@@ -1,0 +1,31 @@
+{
+  "id_evento": "f1a3c5e7-9b2d-4f6a-8c0e-3d5b7a9c1e24",
+  "tipo": "pos.factura.solicitada",
+  "version_esquema": "1.0",
+  "emisor": "atlas-one",
+  "organizacion_origen": {
+    "id": "42"
+  },
+  "ocurrido_en": "2026-11-24T13:47:02-06:00",
+  "zona_horaria": "America/Mexico_City",
+  "clave_idempotencia": "atlas-one:42:solicitud_factura:5531:solicitada",
+  "datos": {
+    "id_solicitud_origen": "5531",
+    "venta": {
+      "id_origen": "3f0c6a52-8d1e-4f7b-9a43-2b6c1e0d5a91",
+      "folio_ticket": "7-A-10482"
+    },
+    "total_ticket": "173.93",
+    "canal": "caja",
+    "receptor": {
+      "id_cliente_origen": "702",
+      "rfc": "EKU9003173C9",
+      "nombre": "ESCUELA KEMPER URGATE",
+      "regimen_fiscal": "601",
+      "codigo_postal": "42501",
+      "uso_cfdi": "G03",
+      "correo": "facturas@ejemplo.mx"
+    },
+    "metodo_pago": "PUE"
+  }
+}

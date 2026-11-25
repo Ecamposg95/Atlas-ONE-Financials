@@ -1,0 +1,155 @@
+{
+  "id_evento": "1d4b7e2a-9c3f-4a6d-8e1b-5c7a9f2d4e68",
+  "tipo": "rrhh.nomina.autorizada",
+  "version_esquema": "1.0",
+  "emisor": "hrflow",
+  "organizacion_origen": {
+    "id": "cm3k9x2ab0001qz8r7t6y5w4v",
+    "slug": "rmazh"
+  },
+  "ocurrido_en": "2026-11-14T18:20:05-06:00",
+  "zona_horaria": "America/Mexico_City",
+  "clave_idempotencia": "hrflow:cm3k9x2ab0001qz8r7t6y5w4v:corrida:cm3nq1r4z0007ab2c3d4e5f6g:v1",
+  "datos": {
+    "corrida": {
+      "id_origen": "cm3nq1r4z0007ab2c3d4e5f6g",
+      "version": 1,
+      "descripcion": "Quincena 21 de 2026"
+    },
+    "alcance": "completa",
+    "tipo_nomina": "O",
+    "periodicidad_pago": "04",
+    "fecha_pago": "2026-11-15",
+    "fecha_inicial_pago": "2026-11-01",
+    "fecha_final_pago": "2026-11-15",
+    "autorizada_por": {
+      "id_origen": "cm0adm1n00001ab2c3d4e5f6",
+      "nombre": "Laura Méndez (administradora)"
+    },
+    "autorizada_en": "2026-11-14T18:20:05-06:00",
+    "recibos": [
+      {
+        "id_recibo_origen": "cm3nq1r4z0008ab2c3d4e5f6h",
+        "empleado": {
+          "id_origen": "cm1a2b3c40001xy7z8w9v0u1t",
+          "num_empleado": "TOL-0042",
+          "rfc": "GOMA850312QJ4",
+          "curp": "GOMA850312MMCMRN05",
+          "nombre_fiscal": "ANA GOMEZ MARTINEZ",
+          "codigo_postal_fiscal": "50010"
+        },
+        "laboral": {
+          "tipo_contrato": "01",
+          "tipo_regimen": "02",
+          "tipo_jornada": "01",
+          "sindicalizado": false,
+          "departamento": "Tienda Toluca Centro",
+          "puesto": "Cajera",
+          "clave_ent_fed": "MEX",
+          "registro_patronal": "Y5512345109",
+          "num_seguridad_social": "12088512345",
+          "fecha_inicio_rel_laboral": "2024-03-01",
+          "antiguedad": "P141W",
+          "riesgo_puesto": "1",
+          "salario_diario_integrado": "418.63",
+          "salario_base_cot_apor": "418.63"
+        },
+        "num_dias_pagados": "15",
+        "percepciones": [
+          {
+            "tipo_percepcion": "001",
+            "clave": "P001",
+            "concepto": "Sueldo",
+            "importe_gravado": "6000.00",
+            "importe_exento": "0.00"
+          },
+          {
+            "tipo_percepcion": "010",
+            "clave": "P010",
+            "concepto": "Premio de puntualidad",
+            "importe_gravado": "600.00",
+            "importe_exento": "0.00"
+          }
+        ],
+        "deducciones": [
+          {
+            "tipo_deduccion": "002",
+            "clave": "D002",
+            "concepto": "ISR",
+            "importe": "750.32"
+          },
+          {
+            "tipo_deduccion": "001",
+            "clave": "D001",
+            "concepto": "Cuota obrera IMSS",
+            "importe": "165.43"
+          }
+        ],
+        "otros_pagos": [],
+        "totales": {
+          "total_percepciones": "6600.00",
+          "total_gravado": "6600.00",
+          "total_exento": "0.00",
+          "total_deducciones": "915.75",
+          "total_impuestos_retenidos": "750.32",
+          "total_otras_deducciones": "165.43",
+          "total_otros_pagos": "0.00",
+          "neto": "5684.25"
+        }
+      },
+      {
+        "id_recibo_origen": "cm3nq1r4z0009ab2c3d4e5f6i",
+        "empleado": {
+          "id_origen": "cm1a2b3c40002xy7z8w9v0u1s",
+          "num_empleado": "TOL-0057",
+          "rfc": "PERL900704KT2",
+          "curp": "PERL900704HMCRDS08",
+          "nombre_fiscal": "LUIS PEREZ RODRIGUEZ",
+          "codigo_postal_fiscal": "50120"
+        },
+        "laboral": {
+          "tipo_contrato": "09",
+          "tipo_regimen": "09",
+          "clave_ent_fed": "MEX",
+          "puesto": "Asesor contable"
+        },
+        "num_dias_pagados": "15",
+        "percepciones": [
+          {
+            "tipo_percepcion": "046",
+            "clave": "P046",
+            "concepto": "Asimilados a salarios",
+            "importe_gravado": "8000.00",
+            "importe_exento": "0.00"
+          }
+        ],
+        "deducciones": [
+          {
+            "tipo_deduccion": "002",
+            "clave": "D002",
+            "concepto": "ISR",
+            "importe": "1046.60"
+          }
+        ],
+        "otros_pagos": [],
+        "totales": {
+          "total_percepciones": "8000.00",
+          "total_gravado": "8000.00",
+          "total_exento": "0.00",
+          "total_deducciones": "1046.60",
+          "total_impuestos_retenidos": "1046.60",
+          "total_otras_deducciones": "0.00",
+          "total_otros_pagos": "0.00",
+          "neto": "6953.40"
+        }
+      }
+    ],
+    "totales": {
+      "numero_recibos": 2,
+      "total_percepciones": "14600.00",
+      "total_deducciones": "1962.35",
+      "total_otros_pagos": "0.00",
+      "total_neto": "12637.65"
+    }
+  }
+}

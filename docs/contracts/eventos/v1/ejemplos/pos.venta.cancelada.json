@@ -1,0 +1,33 @@
+{
+  "id_evento": "5e8c1b3d-2a7f-4c6e-b9d0-1f4a3e6c8b27",
+  "tipo": "pos.venta.cancelada",
+  "version_esquema": "1.0",
+  "emisor": "atlas-one",
+  "organizacion_origen": {
+    "id": "42"
+  },
+  "ocurrido_en": "2026-11-24T14:02:33-06:00",
+  "zona_horaria": "America/Mexico_City",
+  "clave_idempotencia": "atlas-one:42:venta:3f0c6a52-8d1e-4f7b-9a43-2b6c1e0d5a91:cancelada",
+  "datos": {
+    "venta": {
+      "id_origen": "3f0c6a52-8d1e-4f7b-9a43-2b6c1e0d5a91",
+      "folio_ticket": "7-A-10482"
+    },
+    "sucursal": {
+      "id_origen": "7",
+      "nombre": "Toluca Centro",
+      "codigo_postal": "50000",
+      "zona_horaria": "America/Mexico_City"
+    },
+    "total_cancelado": "173.93",
+    "motivo": {
+      "clave": "venta_duplicada",
+      "descripcion": "Se cobró dos veces el mismo ticket"
+    },
+    "cancelada_por": {
+      "id_origen": "3",
+      "nombre": "Jorge Ramírez (gerente)"
+    }
+  }
+}

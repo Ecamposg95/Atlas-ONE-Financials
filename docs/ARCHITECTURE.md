@@ -125,6 +125,8 @@ entry = post_journal_entry(
 ## 8. Integraciones: contrato de webhooks (plan)
 
 > **No implementado.** No existen el endpoint `/api/integrations`, ni las tablas `inbound_events`, `outbox_events` o `integration_connections`. Esta sección es el diseño que retoma el ADR-011 de `docs/financials/08_ARCHITECTURE_DECISIONS.md`.
+>
+> **El contrato detallado vive en `docs/contracts/eventos/`** (JSON Schema v1, ejemplos, reglas de cuadre, idempotencia, orden y reintentos) y manda sobre esta sección donde difieran: la firma cubre `marca de tiempo + "." + cuerpo`, se agrega `X-Atlas-Key-Id` para rotar secretos, los nombres de evento van en español (`pos.venta.registrada`, `rrhh.nomina.autorizada`, `financials.cfdi.actualizado`, `financials.nomina.timbrada`) y los campos del sobre también (`id_evento`, `ocurrido_en`, `clave_idempotencia`, `organizacion_origen`).
 
 Entrada: `POST /api/integrations/{source}/events` con `source` ∈ `atlas-one`, `hrflow`, `cortex`.
 

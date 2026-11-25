@@ -1,0 +1,14 @@
+{
+  "id_evento": "0b7d2a4e-6c1f-4e8a-9d3b-5f2e1a7c4b60",
+  "estado": "rechazado",
+  "recibido_en": "2026-11-24T13:45:11-06:00",
+  "detail": "La venta no cuadra: el total del renglón 3 no es igual a importe menos descuento más impuestos.",
+  "errores": [
+    {
+      "codigo": "cuadre_renglon",
+      "mensaje": "El renglón 3 suma 89.99 y el evento dice 90.00.",
+      "ruta": "datos.renglones.2.total",
+      "reintentable": false
+    }
+  ]
+}

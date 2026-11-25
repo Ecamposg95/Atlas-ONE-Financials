@@ -197,6 +197,8 @@ Entregables en Financials:
 
 ## Lo que hay que resolver en el contrato entre sistemas
 
+Propuesta de contrato v1 (esquemas, ejemplos, reglas de cuadre y la tabla resuelta, que incluye las incompatibilidades de HRFlow): `docs/contracts/eventos/README.md`.
+
 | Tema | Atlas ONE | Financials | Regla del contrato |
 |---|---|---|---|
 | Identificador de empresa y cliente | Entero | UUID | Mapeo en la conexión; el evento lleva el del origen |

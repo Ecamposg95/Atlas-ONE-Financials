@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/pos.abono.registrado.schema.json",
+  "title": "pos.abono.registrado",
+  "description": "Un cliente abonó a ventas a crédito. Cobra la cartera en Financials y, si la venta tiene factura PPD, dispara el complemento de pagos. Atlas ONE admite abonos a la cuenta global del cliente: el evento exige que el abono ya venga repartido por venta.",
+  "allOf": [
+    { "$ref": "sobre.schema.json" },
+    {
+      "properties": {
+        "tipo": { "const": "pos.abono.registrado" },
+        "emisor": { "const": "atlas-one" },
+        "organizacion_origen": { "properties": { "id": { "pattern": "^[0-9]{1,18}$" } } },
+        "datos": { "$ref": "#/$defs/datos" }
+      }
+    }
+  ],
+  "$defs": {
+    "datos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pago", "cliente", "sucursal", "fecha_pago", "aplicaciones"],
+      "properties": {
+        "pago": { "$ref": "comunes.schema.json#/$defs/pago_pos" },
+        "cliente": { "$ref": "comunes.schema.json#/$defs/persona_ref" },
+        "sucursal": { "$ref": "comunes.schema.json#/$defs/sucursal" },
+        "id_sesion_caja": { "$ref": "comunes.schema.json#/$defs/id_origen" },
+        "fecha_pago": {
+          "$ref": "comunes.schema.json#/$defs/fecha_hora",
+          "description": "Cuándo se recibió el dinero. Es la fecha que lleva el complemento de pagos."
+        },
+        "aplicaciones": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["venta", "importe", "saldo_anterior", "saldo_insoluto"],
+            "properties": {
+              "venta": { "$ref": "comunes.schema.json#/$defs/venta_ref" },
+              "importe": { "$ref": "comunes.schema.json#/$defs/monto_positivo" },
+              "saldo_anterior": { "$ref": "comunes.schema.json#/$defs/monto" },
+              "saldo_insoluto": { "$ref": "comunes.schema.json#/$defs/monto", "description": "saldo_anterior − importe." }
+            }
+          },
+          "description": "Reparto del abono. La suma de importe es pago.importe."
+        }
+      }
+    }
+  }
+}

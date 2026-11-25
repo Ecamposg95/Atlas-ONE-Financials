@@ -1,0 +1,80 @@
+{
+  "id_evento": "9a1f4c7e-3b2d-4e8f-a6c5-0d7b2e9f1a34",
+  "tipo": "pos.devolucion.aprobada",
+  "version_esquema": "1.0",
+  "emisor": "atlas-one",
+  "organizacion_origen": {
+    "id": "42"
+  },
+  "ocurrido_en": "2026-11-25T10:15:00-06:00",
+  "zona_horaria": "America/Mexico_City",
+  "clave_idempotencia": "atlas-one:42:devolucion:1207:aprobada",
+  "datos": {
+    "id_devolucion_origen": "1207",
+    "venta": {
+      "id_origen": "3f0c6a52-8d1e-4f7b-9a43-2b6c1e0d5a91",
+      "folio_ticket": "7-A-10482"
+    },
+    "sucursal": {
+      "id_origen": "7",
+      "nombre": "Toluca Centro",
+      "codigo_postal": "50000",
+      "zona_horaria": "America/Mexico_City"
+    },
+    "id_sesion_caja": "3402",
+    "renglones": [
+      {
+        "numero": 3,
+        "id_variante_origen": "d4f0b3a7-1c28-4e95-b6a2-5d8e7f9c0b13",
+        "sku": "CUA-100",
+        "descripcion": "Cuaderno profesional 100 hojas",
+        "clave_prod_serv": "14111514",
+        "clave_unidad": "H87",
+        "unidad": "pza",
+        "objeto_impuesto": "02",
+        "cantidad": "1",
+        "valor_unitario": "43.10",
+        "importe": "43.10",
+        "descuento": "4.31",
+        "impuestos": [
+          {
+            "impuesto": "002",
+            "tipo_factor": "Tasa",
+            "tasa": "0.1600",
+            "base": "38.79",
+            "importe": "6.21"
+          }
+        ],
+        "total": "45.00"
+      }
+    ],
+    "totales": {
+      "subtotal": "43.10",
+      "descuento": "4.31",
+      "impuestos": [
+        {
+          "impuesto": "002",
+          "tipo_factor": "Tasa",
+          "tasa": "0.1600",
+          "base": "38.79",
+          "importe": "6.21"
+        }
+      ],
+      "total": "45.00"
+    },
+    "reembolsos": [
+      {
+        "id_origen": "R-1207",
+        "metodo_origen": "CASH",
+        "forma_pago_sat": "01",
+        "importe": "45.00"
+      }
+    ],
+    "reingreso_inventario": true,
+    "motivo": "Cuaderno con hojas dañadas",
+    "aprobada_por": {
+      "id_origen": "3",
+      "nombre": "Jorge Ramírez (gerente)"
+    }
+  }
+}

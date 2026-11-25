@@ -1,0 +1,53 @@
+{
+  "id_evento": "c4e7a2b9-8d1f-4a3c-9e6b-2f5d0a8c7e13",
+  "tipo": "pos.abono.registrado",
+  "version_esquema": "1.0",
+  "emisor": "atlas-one",
+  "organizacion_origen": {
+    "id": "42"
+  },
+  "ocurrido_en": "2026-11-25T12:30:00-06:00",
+  "zona_horaria": "America/Mexico_City",
+  "clave_idempotencia": "atlas-one:42:abono:90211:registrado",
+  "datos": {
+    "pago": {
+      "id_origen": "90211",
+      "metodo_origen": "TRANSFER",
+      "forma_pago_sat": "03",
+      "importe": "500.00",
+      "referencia": "SPEI 2611250000123"
+    },
+    "cliente": {
+      "id_origen": "618",
+      "nombre": "Abarrotes Doña Lupe"
+    },
+    "sucursal": {
+      "id_origen": "7",
+      "nombre": "Toluca Centro",
+      "codigo_postal": "50000",
+      "zona_horaria": "America/Mexico_City"
+    },
+    "id_sesion_caja": "3402",
+    "fecha_pago": "2026-11-25T12:28:41-06:00",
+    "aplicaciones": [
+      {
+        "venta": {
+          "id_origen": "6a2d9e40-1b7c-4f53-8e2a-c3d4b5a69f71",
+          "folio_ticket": "7-A-10311"
+        },
+        "importe": "300.00",
+        "saldo_anterior": "300.00",
+        "saldo_insoluto": "0.00"
+      },
+      {
+        "venta": {
+          "id_origen": "7b3eaf51-2c8d-4064-9f3b-d4e5c6b7a082",
+          "folio_ticket": "7-A-10397"
+        },
+        "importe": "200.00",
+        "saldo_anterior": "1250.00",
+        "saldo_insoluto": "1050.00"
+      }
+    ]
+  }
+}
