@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.domains.auth.schemas import OrganizationRead
+from app.domains.fiscal_mx.schemas import SatKey
+from app.domains.fiscal_mx.service import check_emisor
 from app.domains.imports.schemas import ImportSettingsRead, ImportSettingsUpdate
 from app.models.organization import (
     Organization,
@@ -36,6 +38,9 @@ class OrganizationUpdate(BaseModel):
     ai_enabled: bool | None = None
     # Marca propia (null la quita): sólo el dueño, y sólo una que el front conozca.
     brand: str | None = Field(default=None, max_length=40)
+    # Emisor de CFDI. Se validan contra los catálogos del SAT en el servicio.
+    fiscal_regime: SatKey = Field(default=None, max_length=3)
+    fiscal_postal_code: SatKey = Field(default=None, max_length=5)
 
     @field_validator("brand")
     @classmethod
@@ -74,6 +79,7 @@ def create_organization(
     Mismo arranque que el registro (catálogo, categorías, "Caja"); quien la crea
     queda como dueño.
     """
+    tax_id = check_emisor(None, {"tax_id": payload.tax_id})["tax_id"]
     organization = provision_organization(
         db,
         user,
@@ -81,7 +87,7 @@ def create_organization(
         business_type=payload.business_type,
         initial_cash=payload.initial_cash,
     )
-    organization.tax_id = (payload.tax_id or "").strip().upper() or None
+    organization.tax_id = tax_id
     db.commit()
     db.refresh(organization)
     return OrganizationRead.model_validate(organization)
@@ -123,6 +129,7 @@ def update_current_organization(
         raise HTTPException(status_code=403, detail="Sólo el dueño puede cambiar el presupuesto del asistente.")
     if "brand" in changes and membership.role != ROLE_OWNER:
         raise HTTPException(status_code=403, detail="Sólo el dueño puede cambiar la marca de la empresa.")
+    changes = check_emisor(organization, changes)
     for field, value in changes.items():
         setattr(organization, field, value)
     db.commit()

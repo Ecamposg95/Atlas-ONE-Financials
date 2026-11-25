@@ -6,8 +6,10 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
+from app.domains.fiscal_mx.schemas import CfdiOperationFields
 
-class ReceivableCreate(BaseModel):
+
+class ReceivableCreate(CfdiOperationFields):
     customer_id: str
     description: str = Field(min_length=1, max_length=500)
     amount: Decimal = Field(gt=0, allow_inf_nan=False)  # TOTAL con impuesto
@@ -20,6 +22,10 @@ class ReceivableCreate(BaseModel):
     business_unit_id: str | None = None
     fiscal_entity_id: str | None = None
     notes: str | None = Field(default=None, max_length=1000)
+
+
+class ReceivableFiscalUpdate(CfdiOperationFields):
+    """Datos para el CFDI: editables en cualquier estado porque no tocan el libro."""
 
 
 class CollectionCreate(BaseModel):
@@ -54,6 +60,9 @@ class ReceivableRead(BaseModel):
     status: str
     notes: str | None
     created_at: datetime
+    cfdi_use: str | None = None
+    cfdi_payment_form: str | None = None
+    cfdi_payment_method: str | None = None
 
     @computed_field
     @property

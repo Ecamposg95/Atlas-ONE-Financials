@@ -50,6 +50,9 @@ TRACKED_FIELDS: dict[str, tuple[str, ...]] = {
         "project_id",
         "notes",
         "status",
+        "cfdi_use",
+        "cfdi_payment_form",
+        "cfdi_payment_method",
     ),
     "payable": (
         "amount",
@@ -74,6 +77,9 @@ TRACKED_FIELDS: dict[str, tuple[str, ...]] = {
         "project_id",
         "notes",
         "status",
+        "cfdi_use",
+        "cfdi_payment_form",
+        "cfdi_payment_method",
     ),
     "financial_account": (
         "name",

@@ -38,6 +38,10 @@ class Organization(Base, UUIDPKMixin, AuditMixin):
     # Marca propia sobre Atlas Financials (VALID_BRANDS): el backend sólo guarda la
     # clave; acento y logotipo viven en el front (`frontend/src/lib/brand.ts`).
     brand = Column(String(40), nullable=True)
+    # Emisor de CFDI (fase 2 del megaplan): razón social = legal_name y RFC = tax_id.
+    # Claves del SAT validadas contra los catálogos en app/services/cfdi.
+    fiscal_regime = Column(String(3), nullable=True)  # c_RegimenFiscal
+    fiscal_postal_code = Column(String(5), nullable=True)  # c_CodigoPostal (lugar de expedición)
 
 
 # Marcas que el front sabe pintar. Agregar una aquí exige sus tokens y su logo allá.

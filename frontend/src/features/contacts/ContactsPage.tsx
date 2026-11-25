@@ -9,6 +9,7 @@ import { Modal } from '@/components/ui/Modal'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Table } from '@/components/ui/Table'
 import { TableFooter } from '@/components/ui/Pagination'
+import { FiscalFields, ReadinessBadge, ReadinessPanel, type FiscalForm } from '@/features/fiscal/FiscalFields'
 import type { Contact, Page } from '@/types/api'
 
 interface Config {
@@ -38,7 +39,35 @@ export const VENDORS_CONFIG: Config = {
   emptyMessage: 'Da de alta a tus proveedores para saber a quién le compras y a quién le debes.',
 }
 
-const EMPTY_FORM = { name: '', legal_name: '', tax_id: '', email: '', phone: '', notes: '' }
+const EMPTY_FORM = {
+  name: '',
+  legal_name: '',
+  tax_id: '',
+  email: '',
+  phone: '',
+  notes: '',
+  fiscal_regime: '',
+  fiscal_postal_code: '',
+  default_cfdi_use: '',
+}
+
+type ContactForm = typeof EMPTY_FORM
+
+const FISCAL_KEYS = ['fiscal_regime', 'fiscal_postal_code', 'default_cfdi_use'] as const
+
+function formFrom(contact: Contact): ContactForm {
+  return {
+    name: contact.name,
+    legal_name: contact.legal_name ?? '',
+    tax_id: contact.tax_id ?? '',
+    email: contact.email ?? '',
+    phone: contact.phone ?? '',
+    notes: contact.notes ?? '',
+    fiscal_regime: contact.fiscal_regime ?? '',
+    fiscal_postal_code: contact.fiscal_postal_code ?? '',
+    default_cfdi_use: contact.default_cfdi_use ?? '',
+  }
+}
 
 export function ContactsPage({ config }: { config: Config }) {
   const queryClient = useQueryClient()
@@ -46,8 +75,10 @@ export function ContactsPage({ config }: { config: Config }) {
   const [modalOpen, setModalOpen] = useState(searchParams.has('nuevo'))
   const [search, setSearch] = useState('')
   const [offset, setOffset] = useState(0)
-  const [form, setForm] = useState(EMPTY_FORM)
+  const [form, setForm] = useState<ContactForm>(EMPTY_FORM)
+  const [editing, setEditing] = useState<Contact | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const isCustomer = config.resource === 'customers'
 
   const { data, isLoading } = useQuery({
     queryKey: [config.resource, search, offset],
@@ -59,10 +90,24 @@ export function ContactsPage({ config }: { config: Config }) {
       ).data,
   })
 
-  const createMutation = useMutation({
+  const saveMutation = useMutation({
     mutationFn: async () => {
-      const payload = Object.fromEntries(Object.entries(form).filter(([, value]) => value !== ''))
-      await api.post(`/${config.resource}`, payload)
+      const entries = Object.entries(form).filter(
+        ([key]) => isCustomer || !(FISCAL_KEYS as readonly string[]).includes(key),
+      )
+      if (editing) {
+        // Sólo lo que cambió (un RFC viejo mal capturado no bloquea editar el teléfono);
+        // lo vacío viaja como null para poder borrar un dato.
+        const before = formFrom(editing)
+        const payload = Object.fromEntries(
+          entries
+            .filter(([key, value]) => before[key as keyof ContactForm] !== value)
+            .map(([key, value]) => [key, value === '' && key !== 'name' ? null : value]),
+        )
+        await api.patch(`/${config.resource}/${editing.id}`, payload)
+      } else {
+        await api.post(`/${config.resource}`, Object.fromEntries(entries.filter(([, value]) => value !== '')))
+      }
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: [config.resource] })
@@ -71,8 +116,16 @@ export function ContactsPage({ config }: { config: Config }) {
     onError: (err) => setError(errorMessage(err)),
   })
 
+  function openEdit(contact: Contact) {
+    setEditing(contact)
+    setForm(formFrom(contact))
+    setError(null)
+    setModalOpen(true)
+  }
+
   function closeModal() {
     setModalOpen(false)
+    setEditing(null)
     setForm(EMPTY_FORM)
     setError(null)
     if (searchParams.has('nuevo')) {
@@ -112,11 +165,16 @@ export function ContactsPage({ config }: { config: Config }) {
         />
       ) : (
         <Table
-          headers={['Nombre', 'RFC', 'Correo', 'Teléfono']}
+          headers={isCustomer ? ['Nombre', 'RFC', 'Correo', 'Teléfono', 'Facturación'] : ['Nombre', 'RFC', 'Correo', 'Teléfono']}
           footer={<TableFooter page={data!} onOffsetChange={setOffset} noun={config.title.toLowerCase()} />}
         >
           {items.map((contact) => (
-            <tr key={contact.id} className="hover:bg-surface-2/50">
+            <tr
+              key={contact.id}
+              className="cursor-pointer hover:bg-surface-2/50"
+              onClick={() => openEdit(contact)}
+              title="Ver y editar la ficha"
+            >
               <td className="px-4 py-2.5">
                 <div className="font-medium">{contact.name}</div>
                 {contact.legal_name ? <div className="text-xs text-muted">{contact.legal_name}</div> : null}
@@ -124,16 +182,25 @@ export function ContactsPage({ config }: { config: Config }) {
               <td className="px-4 py-2.5 text-muted">{contact.tax_id ?? '—'}</td>
               <td className="px-4 py-2.5 text-muted">{contact.email ?? '—'}</td>
               <td className="px-4 py-2.5 text-muted">{contact.phone ?? '—'}</td>
+              {isCustomer ? (
+                <td className="px-4 py-2.5">
+                  <ReadinessBadge readiness={contact.fiscal_readiness} />
+                </td>
+              ) : null}
             </tr>
           ))}
         </Table>
       )}
 
-      <Modal title={`Nuevo ${config.singular.toLowerCase()}`} open={modalOpen} onClose={closeModal}>
+      <Modal
+        title={editing ? editing.name : `Nuevo ${config.singular.toLowerCase()}`}
+        open={modalOpen}
+        onClose={closeModal}
+      >
         <form
           onSubmit={(event) => {
             event.preventDefault()
-            createMutation.mutate()
+            saveMutation.mutate()
           }}
           className="space-y-4"
         >
@@ -144,18 +211,20 @@ export function ContactsPage({ config }: { config: Config }) {
             value={form.name}
             onChange={(event) => setForm({ ...form, name: event.target.value })}
           />
-          <div className="grid grid-cols-2 gap-4">
-            <TextInput
-              label="Razón social (opcional)"
-              value={form.legal_name}
-              onChange={(event) => setForm({ ...form, legal_name: event.target.value })}
-            />
-            <TextInput
-              label="RFC (opcional)"
-              value={form.tax_id}
-              onChange={(event) => setForm({ ...form, tax_id: event.target.value })}
-            />
-          </div>
+          {isCustomer ? null : (
+            <div className="grid grid-cols-2 gap-4">
+              <TextInput
+                label="Razón social (opcional)"
+                value={form.legal_name}
+                onChange={(event) => setForm({ ...form, legal_name: event.target.value })}
+              />
+              <TextInput
+                label="RFC (opcional)"
+                value={form.tax_id}
+                onChange={(event) => setForm({ ...form, tax_id: event.target.value })}
+              />
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <TextInput
               label="Correo (opcional)"
@@ -174,12 +243,26 @@ export function ContactsPage({ config }: { config: Config }) {
             value={form.notes}
             onChange={(event) => setForm({ ...form, notes: event.target.value })}
           />
+          {isCustomer ? (
+            <section className="space-y-3 border-t border-border pt-4">
+              <div>
+                <h3 className="text-sm font-semibold">Datos para facturar</h3>
+                <p className="text-xs text-muted">Pídele al cliente su constancia de situación fiscal.</p>
+              </div>
+              {editing ? <ReadinessPanel readiness={editing.fiscal_readiness} subject="Este cliente" /> : null}
+              <FiscalFields
+                receptor
+                form={form as FiscalForm}
+                onChange={(fiscal) => setForm({ ...form, ...fiscal, default_cfdi_use: fiscal.default_cfdi_use ?? '' })}
+              />
+            </section>
+          ) : null}
           {error ? <p className="text-sm text-neg">{error}</p> : null}
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="ghost" onClick={closeModal}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={createMutation.isPending}>
+            <Button type="submit" disabled={saveMutation.isPending}>
               Guardar
             </Button>
           </div>

@@ -7,6 +7,7 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.core.events import event_bus
+from app.domains.fiscal_mx.service import OPERATION_FIELDS, check_operation
 from app.models.accounting import JournalEntry
 from app.models.category import Category
 from app.models.contact import Customer
@@ -67,6 +68,8 @@ def build_receivable(db: Session, org_id: str, payload, created_by: str) -> Rece
     category = _validate_category(db, org_id, payload.category_id)
     _validate_customer(db, org_id, payload.customer_id)
     validate_dimensions(db, org_id, payload.business_unit_id, payload.fiscal_entity_id)
+    fiscal = {field: getattr(payload, field, None) for field in OPERATION_FIELDS}
+    check_operation(db, org_id, customer_id=payload.customer_id, **fiscal)
     issue_date = payload.date or date.today()
 
     tax = resolve_tax(db, org_id, payload)
@@ -86,6 +89,7 @@ def build_receivable(db: Session, org_id: str, payload, created_by: str) -> Rece
         fiscal_entity_id=payload.fiscal_entity_id,
         notes=payload.notes,
         created_by=created_by,
+        **fiscal,
     )
     db.add(receivable)
     db.flush()
@@ -235,6 +239,19 @@ def cancel_receivable(db: Session, org_id: str, receivable: Receivable, user_id:
     receivable.cancelled_by = user_id
     receivable.cancellation_reason = reason
     record_change(db, org_id, receivable, "CANCEL", user_id, before=before, after=snapshot(receivable), reason=reason)
+    db.commit()
+    db.refresh(receivable)
+    return receivable
+
+
+def update_receivable_fiscal(db: Session, org_id: str, receivable: Receivable, changes: dict, user_id: str) -> Receivable:
+    """Uso de CFDI, forma y método de pago. No tocan el libro: editables en cualquier estado."""
+    fiscal = {field: changes.get(field, getattr(receivable, field)) for field in OPERATION_FIELDS}
+    check_operation(db, org_id, customer_id=receivable.customer_id, **fiscal)
+    before = snapshot(receivable)
+    for field, value in fiscal.items():
+        setattr(receivable, field, value)
+    record_change(db, org_id, receivable, "UPDATE", user_id, before=before, after=snapshot(receivable))
     db.commit()
     db.refresh(receivable)
     return receivable

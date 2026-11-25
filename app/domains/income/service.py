@@ -7,6 +7,7 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.core.events import event_bus
+from app.domains.fiscal_mx.service import OPERATION_FIELDS, check_operation
 from app.models.category import Category
 from app.models.contact import Customer
 from app.models.financial_account import FinancialAccount
@@ -80,6 +81,8 @@ def build_income(db: Session, org_id: str, payload, created_by: str) -> Income:
     if payload.customer_id:
         _validate_customer(db, org_id, payload.customer_id)
     validate_dimensions(db, org_id, payload.business_unit_id, payload.fiscal_entity_id)
+    fiscal = {field: getattr(payload, field, None) for field in OPERATION_FIELDS}
+    check_operation(db, org_id, customer_id=payload.customer_id, **fiscal)
 
     tax = resolve_tax(db, org_id, payload)
     income = Income(
@@ -101,6 +104,7 @@ def build_income(db: Session, org_id: str, payload, created_by: str) -> Income:
         notes=payload.notes,
         status="PENDING",
         created_by=created_by,
+        **fiscal,
     )
     db.add(income)
     db.flush()
@@ -324,6 +328,11 @@ def update_income(db: Session, org_id: str, income: Income, changes: dict, user_
         income.description = changes["description"].strip()
     if "notes" in changes:
         income.notes = changes["notes"]
+    if any(field in changes for field in OPERATION_FIELDS) or "customer_id" in changes:
+        fiscal = {field: changes.get(field, getattr(income, field)) for field in OPERATION_FIELDS}
+        check_operation(db, org_id, customer_id=income.customer_id, **fiscal)
+        for field, value in fiscal.items():
+            setattr(income, field, value)
     if changes.get("amount") is not None or changes.get("tax_rate") is not None:
         amount = changes.get("amount") or Decimal(income.amount)
         rate = changes["tax_rate"] if changes.get("tax_rate") is not None else Decimal(income.tax_rate)

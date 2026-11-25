@@ -18,5 +18,10 @@ class FiscalEntity(Base, UUIDPKMixin, TenantMixin, AuditMixin):
     tax_id = Column(String(13), nullable=True)  # RFC, mayúsculas
     # Texto libre: "Persona física con actividad empresarial", "RESICO"...
     regime = Column(String(80), nullable=True)
+    # Emisor de CFDI cuando la operación lleva este contribuyente. `name` es el
+    # apodo interno ("Liza"); la factura usa la razón social de la constancia.
+    legal_name = Column(String(255), nullable=True)
+    fiscal_regime = Column(String(3), nullable=True)  # c_RegimenFiscal
+    fiscal_postal_code = Column(String(5), nullable=True)  # c_CodigoPostal
     active = Column(Boolean, nullable=False, default=True)
     sort_order = Column(Integer, nullable=False, default=0)

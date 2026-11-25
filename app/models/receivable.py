@@ -31,6 +31,11 @@ class Receivable(Base, UUIDPKMixin, TenantMixin, AuditMixin, BusinessUnitDimensi
     project_id = Column(String(36), ForeignKey("projects.id"), nullable=True, index=True)
     status = Column(String(20), nullable=False, default="OPEN")  # RECEIVABLE_STATUSES
     notes = Column(String(1000), nullable=True)
+    # Datos para el CFDI (opcionales; no tocan el libro). `cfdi_payment_method`
+    # es PUE/PPD del SAT, distinto de cómo se cobró el movimiento.
+    cfdi_use = Column(String(4), nullable=True)  # c_UsoCFDI
+    cfdi_payment_form = Column(String(2), nullable=True)  # c_FormaPago
+    cfdi_payment_method = Column(String(3), nullable=True)  # c_MetodoPago
     cancelled_at = Column(DateTime(timezone=True), nullable=True)
     cancelled_by = Column(String(36), ForeignKey("users.id"), nullable=True)
     cancellation_reason = Column(String(500), nullable=True)

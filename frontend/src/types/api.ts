@@ -31,6 +31,11 @@ export interface Organization {
   /** Si la empresa definió unidades o contribuyentes (sólo en /organizations/current). */
   has_business_units?: boolean
   has_fiscal_entities?: boolean
+  /** Emisor de CFDI: claves del SAT (c_RegimenFiscal, c_CodigoPostal). */
+  fiscal_regime?: string | null
+  fiscal_postal_code?: string | null
+  /** Qué falta para emitir facturas; lo calcula el backend. */
+  fiscal_readiness?: FiscalReadiness
 }
 
 /** Sucursal, toma de muestra, unidad móvil o canal: una etiqueta del libro, no una cuenta. */
@@ -56,6 +61,30 @@ export interface FiscalEntity {
   active: boolean
   sort_order: number
   created_at: string
+  legal_name?: string | null
+  fiscal_regime?: string | null
+  fiscal_postal_code?: string | null
+  fiscal_readiness?: FiscalReadiness
+}
+
+/** ¿Listo para facturar? `faltantes` impide timbrar; `advertencias` no. */
+export interface FiscalReadiness {
+  listo: boolean
+  faltantes: string[]
+  advertencias: string[]
+}
+
+/** Clave de un catálogo del SAT para un selector. */
+export interface SatOption {
+  clave: string
+  descripcion: string
+}
+
+/** Datos del SAT para el CFDI de un ingreso o cuenta por cobrar (opcionales). */
+export interface CfdiOperationFields {
+  cfdi_use?: string | null
+  cfdi_payment_form?: string | null
+  cfdi_payment_method?: string | null
 }
 
 /** Las dos dimensiones opcionales que lleva cada operación y su póliza. */
@@ -234,11 +263,16 @@ export interface Contact {
   notes: string | null
   status: string
   created_at: string
+  /** Sólo clientes: datos del receptor de CFDI. */
+  fiscal_regime?: string | null
+  fiscal_postal_code?: string | null
+  default_cfdi_use?: string | null
+  fiscal_readiness?: FiscalReadiness
 }
 
 export type OperationStatus = 'PENDING' | 'PAID' | 'CANCELLED'
 
-export interface Income extends Dimensioned {
+export interface Income extends Dimensioned, CfdiOperationFields {
   id: string
   date: string
   customer_id: string | null
@@ -342,7 +376,7 @@ export interface ApprovalSettings {
 
 export type DebtDisplayStatus = 'OPEN' | 'PARTIAL' | 'PAID' | 'CANCELLED' | 'OVERDUE'
 
-export interface Debt extends Dimensioned {
+export interface Debt extends Dimensioned, CfdiOperationFields {
   id: string
   customer_id?: string
   vendor_id?: string
