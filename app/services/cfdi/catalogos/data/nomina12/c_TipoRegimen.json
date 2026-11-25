@@ -1,0 +1,48 @@
+{
+  "catalogo": "c_TipoRegimen",
+  "grupo": "nomina12",
+  "titulo": "Catálogo de tipos de régimen de contratación.",
+  "sat": {
+    "version_cfdi": null,
+    "version": "2",
+    "revision": "1",
+    "fecha_publicacion": "2019-12-05",
+    "vigencia_inicio": null,
+    "vigencia_fin": null
+  },
+  "origen": {
+    "archivo": "catNomina.xls",
+    "url": "http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/catNomina.xls",
+    "version_archivo": null,
+    "fecha_descarga": "2026-11-25",
+    "sha256": "6e61a49d7b966dbcf730ef46a5fde1cb3b505114b69b4ecbf8fa2ba5d882a3c3",
+    "hojas": [
+      "c_TipoRegimen"
+    ]
+  },
+  "llave": [
+    "clave"
+  ],
+  "claves_solo_en_xsd": [],
+  "columnas": [
+    "clave",
+    "descripcion",
+    "vigencia_inicio",
+    "vigencia_fin"
+  ],
+  "registros": [
+    ["02", "Sueldos (Incluye ingresos señalados en la fracción I del artículo 94 de LISR)", "2017-01-01", null],
+    ["03", "Jubilados", "2017-01-01", null],
+    ["04", "Pensionados", "2017-01-01", null],
+    ["05", "Asimilados Miembros Sociedades Cooperativas Produccion", "2017-01-01", null],
+    ["06", "Asimilados Integrantes Sociedades Asociaciones Civiles", "2017-01-01", null],
+    ["07", "Asimilados Miembros consejos", "2017-01-01", null],
+    ["08", "Asimilados comisionistas", "2017-01-01", null],
+    ["09", "Asimilados Honorarios", "2017-01-01", null],
+    ["10", "Asimilados acciones", "2017-01-01", null],
+    ["11", "Asimilados otros", "2017-01-01", null],
+    ["12", "Jubilados o Pensionados", "2017-03-27", null],
+    ["13", "Indemnización o Separación", "2018-10-15", null],
+    ["99", "Otro Regimen", "2017-01-01", null]
+  ]
+}

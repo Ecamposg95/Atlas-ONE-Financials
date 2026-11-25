@@ -1,0 +1,84 @@
+{
+  "catalogo": "c_TipoPercepcion",
+  "grupo": "nomina12",
+  "titulo": "Catálogo de tipos de percepciones.",
+  "sat": {
+    "version_cfdi": null,
+    "version": "2",
+    "revision": "1",
+    "fecha_publicacion": "2019-12-05",
+    "vigencia_inicio": null,
+    "vigencia_fin": null
+  },
+  "origen": {
+    "archivo": "catNomina.xls",
+    "url": "http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/catNomina.xls",
+    "version_archivo": null,
+    "fecha_descarga": "2026-11-25",
+    "sha256": "6e61a49d7b966dbcf730ef46a5fde1cb3b505114b69b4ecbf8fa2ba5d882a3c3",
+    "hojas": [
+      "c_TipoPercepcion"
+    ]
+  },
+  "llave": [
+    "clave"
+  ],
+  "claves_solo_en_xsd": [
+    "054",
+    "055",
+    "056",
+    "057"
+  ],
+  "columnas": [
+    "clave",
+    "descripcion",
+    "vigencia_inicio",
+    "vigencia_fin"
+  ],
+  "registros": [
+    ["001", "Sueldos, Salarios Rayas y Jornales", "2016-11-01", null],
+    ["002", "Gratificación Anual (Aguinaldo)", "2016-11-01", null],
+    ["003", "Participación de los Trabajadores en las Utilidades PTU", "2016-11-01", null],
+    ["004", "Reembolso de Gastos Médicos Dentales y Hospitalarios", "2016-11-01", null],
+    ["005", "Fondo de Ahorro", "2016-11-01", null],
+    ["006", "Caja de ahorro", "2016-11-01", null],
+    ["009", "Contribuciones a Cargo del Trabajador Pagadas por el Patrón", "2016-11-01", null],
+    ["010", "Premios por puntualidad", "2016-11-01", null],
+    ["011", "Prima de Seguro de vida", "2016-11-01", null],
+    ["012", "Seguro de Gastos Médicos Mayores", "2016-11-01", null],
+    ["013", "Cuotas Sindicales Pagadas por el Patrón", "2016-11-01", null],
+    ["014", "Subsidios por incapacidad", "2016-11-01", null],
+    ["015", "Becas para trabajadores y/o hijos", "2016-11-01", null],
+    ["019", "Horas extra", "2016-11-01", null],
+    ["020", "Prima dominical", "2016-11-01", null],
+    ["021", "Prima vacacional", "2016-11-01", null],
+    ["022", "Prima por antigüedad", "2016-11-01", null],
+    ["023", "Pagos por separación", "2016-11-01", null],
+    ["024", "Seguro de retiro", "2016-11-01", null],
+    ["025", "Indemnizaciones", "2016-11-01", null],
+    ["026", "Reembolso por funeral", "2016-11-01", null],
+    ["027", "Cuotas de seguridad social pagadas por el patrón", "2016-11-01", null],
+    ["028", "Comisiones", "2016-11-01", null],
+    ["029", "Vales de despensa", "2016-11-01", null],
+    ["030", "Vales de restaurante", "2016-11-01", null],
+    ["031", "Vales de gasolina", "2016-11-01", null],
+    ["032", "Vales de ropa", "2016-11-01", null],
+    ["033", "Ayuda para renta", "2016-11-01", null],
+    ["034", "Ayuda para artículos escolares", "2016-11-01", null],
+    ["035", "Ayuda para anteojos", "2016-11-01", null],
+    ["036", "Ayuda para transporte", "2016-11-01", null],
+    ["037", "Ayuda para gastos de funeral", "2016-11-01", null],
+    ["038", "Otros ingresos por salarios", "2016-11-01", null],
+    ["039", "Jubilaciones, pensiones o haberes de retiro", "2016-11-01", null],
+    ["044", "Jubilaciones, pensiones o haberes de retiro en parcialidades", "2016-11-01", null],
+    ["045", "Ingresos en acciones o títulos valor que representan bienes", "2016-11-01", null],
+    ["046", "Ingresos asimilados a salarios", "2016-11-01", null],
+    ["047", "Alimentación diferentes a los establecidos en el Art 94 último párrafo LISR", "2016-11-01", null],
+    ["048", "Habitación", "2016-11-01", null],
+    ["049", "Premios por asistencia", "2016-11-01", null],
+    ["050", "Viáticos", "2017-01-06", null],
+    ["051", "Pagos por gratificaciones, primas, compensaciones, recompensas u otros a extrabajadores derivados de jubilación en parcialidades", "2018-10-15", null],
+    ["052", "Pagos que se realicen a extrabajadores que obtengan una jubilación en parcialidades derivados de la ejecución de resoluciones judicial o de un laudo", "2018-10-15", null],
+    ["053", "Pagos que se realicen a extrabajadores que obtengan una jubilación en una sola exhibición derivados de la ejecución de resoluciones judicial o de un laudo", "2018-10-15", null]
+  ]
+}

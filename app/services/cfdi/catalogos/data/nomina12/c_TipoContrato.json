@@ -1,0 +1,44 @@
+{
+  "catalogo": "c_TipoContrato",
+  "grupo": "nomina12",
+  "titulo": "Catálogo de tipos de contrato.",
+  "sat": {
+    "version_cfdi": null,
+    "version": "1",
+    "revision": "0",
+    "fecha_publicacion": null,
+    "vigencia_inicio": "2017-01-01",
+    "vigencia_fin": null
+  },
+  "origen": {
+    "archivo": "catNomina.xls",
+    "url": "http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/catNomina.xls",
+    "version_archivo": null,
+    "fecha_descarga": "2026-11-25",
+    "sha256": "6e61a49d7b966dbcf730ef46a5fde1cb3b505114b69b4ecbf8fa2ba5d882a3c3",
+    "hojas": [
+      "c_TipoContrato"
+    ]
+  },
+  "llave": [
+    "clave"
+  ],
+  "claves_solo_en_xsd": [],
+  "columnas": [
+    "clave",
+    "descripcion"
+  ],
+  "registros": [
+    ["01", "Contrato de trabajo por tiempo indeterminado"],
+    ["02", "Contrato de trabajo para obra determinada"],
+    ["03", "Contrato de trabajo por tiempo determinado"],
+    ["04", "Contrato de trabajo por temporada"],
+    ["05", "Contrato de trabajo sujeto a prueba"],
+    ["06", "Contrato de trabajo con capacitación inicial"],
+    ["07", "Modalidad de contratación por pago de hora laborada"],
+    ["08", "Modalidad de trabajo por comisión laboral"],
+    ["09", "Modalidades de contratación donde no existe relación de trabajo"],
+    ["10", "Jubilación, pensión, retiro."],
+    ["99", "Otro contrato"]
+  ]
+}

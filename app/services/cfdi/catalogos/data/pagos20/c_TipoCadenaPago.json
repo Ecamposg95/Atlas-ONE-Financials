@@ -1,0 +1,34 @@
+{
+  "catalogo": "c_TipoCadenaPago",
+  "grupo": "pagos20",
+  "titulo": "Catálogo del tipo de la cadena de pago.",
+  "sat": {
+    "version_cfdi": "4.0",
+    "version": "1",
+    "revision": "0",
+    "fecha_publicacion": null,
+    "vigencia_inicio": "2022-01-01",
+    "vigencia_fin": null
+  },
+  "origen": {
+    "archivo": "catPagos.xls",
+    "url": "http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/catPagos.xls",
+    "version_archivo": null,
+    "fecha_descarga": "2026-11-25",
+    "sha256": "5492da027a2edec9a7680e6a43c426ca3c7e3554a596f89ee0248cce576cb200",
+    "hojas": [
+      "c_TIpoCadenaPago"
+    ]
+  },
+  "llave": [
+    "clave"
+  ],
+  "claves_solo_en_xsd": [],
+  "columnas": [
+    "clave",
+    "descripcion"
+  ],
+  "registros": [
+    ["01", "SPEI"]
+  ]
+}

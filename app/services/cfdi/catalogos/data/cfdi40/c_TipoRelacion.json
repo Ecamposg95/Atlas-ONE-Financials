@@ -1,0 +1,45 @@
+{
+  "catalogo": "c_TipoRelacion",
+  "grupo": "cfdi40",
+  "titulo": "Catálogo de tipos de relación entre CFDI.",
+  "sat": {
+    "version_cfdi": "4.0",
+    "version": "1",
+    "revision": "0",
+    "fecha_publicacion": null,
+    "vigencia_inicio": "2022-01-01",
+    "vigencia_fin": null
+  },
+  "origen": {
+    "archivo": "catCFDI_V_4_20261120.xls",
+    "url": "http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/catCFDI_V_4_20261120.xls",
+    "version_archivo": "2026-11-20",
+    "fecha_descarga": "2026-11-25",
+    "sha256": "b8c156b356d378ab1f31b319a74b8caf04267b33edf04c910b9715474af96571",
+    "hojas": [
+      "c_TipoRelacion"
+    ]
+  },
+  "llave": [
+    "clave"
+  ],
+  "claves_solo_en_xsd": [
+    "08",
+    "09"
+  ],
+  "columnas": [
+    "clave",
+    "descripcion",
+    "vigencia_inicio",
+    "vigencia_fin"
+  ],
+  "registros": [
+    ["01", "Nota de crédito de los documentos relacionados", "2022-01-01", null],
+    ["02", "Nota de débito de los documentos relacionados", "2022-01-01", null],
+    ["03", "Devolución de mercancía sobre facturas o traslados previos", "2022-01-01", null],
+    ["04", "Sustitución de los CFDI previos", "2022-01-01", null],
+    ["05", "Traslados de mercancías facturados previamente", "2022-01-01", null],
+    ["06", "Factura generada por los traslados previos", "2022-01-01", null],
+    ["07", "CFDI por aplicación de anticipo", "2022-01-01", null]
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "catalogo": "c_FormaPago",
+  "grupo": "cfdi40",
+  "titulo": "Catálogo de formas de pago.",
+  "sat": {
+    "version_cfdi": "4.0",
+    "version": "1",
+    "revision": "0",
+    "fecha_publicacion": null,
+    "vigencia_inicio": "2022-01-01",
+    "vigencia_fin": null
+  },
+  "origen": {
+    "archivo": "catCFDI_V_4_20261120.xls",
+    "url": "http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/catCFDI_V_4_20261120.xls",
+    "version_archivo": "2026-11-20",
+    "fecha_descarga": "2026-11-25",
+    "sha256": "b8c156b356d378ab1f31b319a74b8caf04267b33edf04c910b9715474af96571",
+    "hojas": [
+      "c_FormaPago"
+    ]
+  },
+  "llave": [
+    "clave"
+  ],
+  "claves_solo_en_xsd": [],
+  "columnas": [
+    "clave",
+    "descripcion",
+    "bancarizado",
+    "numero_de_operacion",
+    "rfc_del_emisor_de_la_cuenta_ordenante",
+    "cuenta_ordenante",
+    "patron_para_cuenta_ordenante",
+    "rfc_del_emisor_cuenta_de_beneficiario",
+    "cuenta_de_benenficiario",
+    "patron_para_cuenta_beneficiaria",
+    "tipo_cadena_pago",
+    "nombre_del_banco_emisor_de_la_cuenta_ordenante_en_caso_de_extranjero",
+    "vigencia_inicio",
+    "vigencia_fin"
+  ],
+  "registros": [
+    ["01", "Efectivo", "No", "Opcional", "No", "No", "No", "No", "No", "No", "No", "No", "2022-01-01", null],
+    ["02", "Cheque nominativo", "Sí", "Opcional", "Opcional", "Opcional", "[0-9]{11}|[0-9]{18}", "Opcional", "Opcional", "[0-9]{10,11}|[0-9]{15,16}|[0-9]{18}|[A-Z0-9_]{10,50}", "No", "Si el RFC del emisor de la cuenta ordenante es XEXX010101000, este campo es obligatorio.", "2022-01-01", null],
+    ["03", "Transferencia electrónica de fondos", "Sí", "Opcional", "Opcional", "Opcional", "[0-9]{10}|[0-9]{16}|[0-9]{18}", "Opcional", "Opcional", "[0-9]{10}|[0-9]{18}", "Opcional", "Si el RFC del emisor de la cuenta ordenante es XEXX010101000, este campo es obligatorio.", "2022-01-01", null],
+    ["04", "Tarjeta de crédito", "Sí", "Opcional", "Opcional", "Opcional", "[0-9]{16}", "Opcional", "Opcional", "[0-9]{10,11}|[0-9]{15,16}|[0-9]{18}|[A-Z0-9_]{10,50}", "No", "Si el RFC del emisor de la cuenta ordenante es XEXX010101000, este campo es obligatorio.", "2022-01-01", null],
+    ["05", "Monedero electrónico", "Sí", "Opcional", "Opcional", "Opcional", "[0-9]{10,11}|[0-9]{15,16}|[0-9]{18}|[A-Z0-9_]{10,50}", "Opcional", "Opcional", "[0-9]{10,11}|[0-9]{15,16}|[0-9]{18}|[A-Z0-9_]{10,50}", "No", "No", "2022-01-01", null],
+    ["06", "Dinero electrónico", "Sí", "Opcional", "Opcional", "Opcional", "[0-9]{10}", "No", "No", "No", "No", "No", "2022-01-01", null],
+    ["08", "Vales de despensa", "No", "Opcional", "No", "No", "No", "No", "No", "No", "No", "No", "2022-01-01", null],
+    ["12", "Dación en pago", "No", "Opcional", "No", "No", "No", "No", "No", "No", "No", "No", "2022-01-01", null],
+    ["13", "Pago por subrogación", "No", "Opcional", "No", "No", "No", "No", "No", "No", "No", "No", "2022-01-01", null],
+    ["14", "Pago por consignación", "No", "Opcional", "No", "No", "No", "No", "No", "No", "No", "No", "2022-01-01", null],
+    ["15", "Condonación", "No", "Opcional", "No", "No", "No", "No", "No", "No", "No", "No", "2022-01-01", null],
+    ["17", "Compensación", "No", "Opcional", "No", "No", "No", "No", "No", "No", "No", "No", "2022-01-01", null],
+    ["23", "Novación", "No", "Opcional", "No", "No", "No", "No", "No", "No", "No", "No", "2022-01-01", null],
+    ["24", "Confusión", "No", "Opcional", "No", "No", "No", "No", "No", "No", "No", "No", "2022-01-01", null],
+    ["25", "Remisión de deuda", "No", "Opcional", "No", "No", "No", "No", "No", "No", "No", "No", "2022-01-01", null],
+    ["26", "Prescripción o caducidad", "No", "Opcional", "No", "No", "No", "No", "No", "No", "No", "No", "2022-01-01", null],
+    ["27", "A satisfacción del acreedor", "No", "Opcional", "No", "No", "No", "No", "No", "No", "No", "No", "2022-01-01", null],
+    ["28", "Tarjeta de débito", "Sí", "Opcional", "Opcional", "Opcional", "[0-9]{16}", "Opcional", "Opcional", "[0-9]{10,11}|[0-9]{15,16}|[0-9]{18}|[A-Z0-9_]{10,50}", "No", "Si el RFC del emisor de la cuenta ordenante es XEXX010101000, este campo es obligatorio.", "2022-01-01", null],
+    ["29", "Tarjeta de servicios", "Sí", "Opcional", "Opcional", "Opcional", "[0-9]{15,16}", "Opcional", "Opcional", "[0-9]{10,11}|[0-9]{15,16}|[0-9]{18}|[A-Z0-9_]{10,50}", "No", "Si el RFC del emisor de la cuenta ordenante es XEXX010101000, este campo es obligatorio.", "2022-01-01", null],
+    ["30", "Aplicación de anticipos", "No", "Opcional", "No", "No", "No", "No", "No", "No", "No", "No", "2022-01-01", null],
+    ["31", "Intermediario pagos", "No", "Opcional", "No", "No", "No", "No", "No", "No", "No", "No", "2022-01-01", null],
+    ["99", "Por definir", "Opcional", "Opcional", "Opcional", "Opcional", "Opcional", "Opcional", "Opcional", "Opcional", "Opcional", "Opcional", "2022-01-01", null]
+  ]
+}

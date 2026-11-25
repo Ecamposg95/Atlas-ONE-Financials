@@ -1,0 +1,37 @@
+{
+  "catalogo": "c_TipoIncapacidad",
+  "grupo": "nomina12",
+  "titulo": "Catálogo del tipo de incapacidad.",
+  "sat": {
+    "version_cfdi": null,
+    "version": "2",
+    "revision": "0",
+    "fecha_publicacion": null,
+    "vigencia_inicio": "2020-01-01",
+    "vigencia_fin": null
+  },
+  "origen": {
+    "archivo": "catNomina.xls",
+    "url": "http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/catNomina.xls",
+    "version_archivo": null,
+    "fecha_descarga": "2026-11-25",
+    "sha256": "6e61a49d7b966dbcf730ef46a5fde1cb3b505114b69b4ecbf8fa2ba5d882a3c3",
+    "hojas": [
+      "c_TipoIncapacidad"
+    ]
+  },
+  "llave": [
+    "clave"
+  ],
+  "claves_solo_en_xsd": [],
+  "columnas": [
+    "clave",
+    "descripcion"
+  ],
+  "registros": [
+    ["01", "Riesgo de trabajo."],
+    ["02", "Enfermedad en general."],
+    ["03", "Maternidad."],
+    ["04", "Licencia por cuidados médicos de hijos diagnosticados con cáncer."]
+  ]
+}
