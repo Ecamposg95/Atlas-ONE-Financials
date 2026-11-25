@@ -106,9 +106,9 @@ Tamaños relativos: S, M, L, XL. No son fechas.
 
 - Cotejar a mano la lista oficial de proveedores y cotizar a los candidatos de D2; abrir cuenta de pruebas.
 - Leer catálogos y matriz de errores del SAT y cargarlos como datos versionados.
-- Revisión legal: contrato de custodia, aviso de privacidad, procedimiento de aviso ante incidente **[abogado]**.
-- Validación con contador de reglas de IVA, retenciones y pólizas **[contador]**.
-- Aceptar o ajustar los ADR 011 (eventos entrantes), 013 (localización) y uno nuevo de custodia de llaves.
+- Revisión legal: contrato de custodia, aviso de privacidad, procedimiento de aviso ante incidente **[abogado]**. Brief: [`11_BRIEF_LEGAL_CFDI.md`](11_BRIEF_LEGAL_CFDI.md).
+- Validación con contador de reglas de IVA, retenciones y pólizas **[contador]**. Cuestionario: [`10_CUESTIONARIO_CONTADOR_CFDI.md`](10_CUESTIONARIO_CONTADOR_CFDI.md).
+- Aceptar o ajustar los ADR 011 (eventos entrantes), 013 (localización) y uno nuevo de custodia de llaves. Redactados: [ADR-011](../decisions/011-eventos-entrantes-e-idempotencia.md) y [ADR-013](../decisions/013-localizacion-mexicana-como-capa.md) (propuestos), [ADR-017](../decisions/017-custodia-llaves-csd.md) custodia de llaves y [ADR-018](../decisions/018-proveedor-de-timbrado.md) proveedor de timbrado (aceptados por D1 y D2).
 - Auditar HRFlow (hecho el 25-11-2026).
 - **Hecho cuando:** hay proveedor elegido con cuenta de pruebas, catálogos cargados, dictamen legal y ADR aceptados.
 

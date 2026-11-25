@@ -29,12 +29,16 @@ Ninguna se modifica.
 | 008 | Estrategia B: monolito modular con límites de módulo | **Aceptada** (2026-11-23) |
 | 009 | Versionado de API | Propuesta |
 | 010 | Datos maestros entre suites | Propuesta |
-| 011 | Eventos entrantes e idempotencia | Propuesta |
+| 011 | Eventos entrantes e idempotencia | Propuesta; redacción formal en `docs/decisions/011-eventos-entrantes-e-idempotencia.md` (2026-11-25) |
 | 012 | Outbox para eventos salientes | Propuesta, diferida |
-| 013 | Localización mexicana como capa | Propuesta |
+| 013 | Localización mexicana como capa | Propuesta; redacción formal en `docs/decisions/013-localizacion-mexicana-como-capa.md` (2026-11-25) |
 | 014 | Entitlements y presets | Propuesta |
 | 015 | Planeación y consolidación fuera de Financials | Propuesta |
 | 016 | Sesión y almacenamiento de tokens | Propuesta |
+| 017 | Custodia de la llave del certificado de sello digital | **Aceptada** (D1, 2026-11-25): `docs/decisions/017-custodia-llaves-csd.md` |
+| 018 | Proveedor de timbrado detrás de una interfaz propia, con contingencia | **Aceptada** (D2, 2026-11-25): `docs/decisions/018-proveedor-de-timbrado.md` |
+
+Numeración: 009 a 016 quedan reservados para las propuestas de este documento aunque aún no tengan archivo. 011 y 013 ya tienen redacción formal en `docs/decisions/` con estado propuesta, porque la fase 0 del megaplan de CFDI los necesita; su aceptación sigue pendiente. Las decisiones nuevas de CFDI toman los siguientes números libres (017 y 018).
 
 ---
 
