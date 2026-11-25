@@ -36,7 +36,11 @@ Un proveedor que no acepte XML ya sellado, o que exija el CSD para cancelar, no 
 ### Primario y contingencia
 
 - **Primario a cotizar: Prodigia** (acepta XML sellado, ambiente de pruebas de autoservicio, conector en `satcfdi`).
-- **Contingencia: uno de SIFEI, Solución Factible o Formas Digitales**, según cotización y pruebas.
+- **Contingencia: Formas Digitales**, con Solución Factible como reserva. Formas Digitales publica precios, vende timbres sin caducidad, ofrece REST y SOAP y tiene credenciales de prueba públicas; falta una prueba de carga.
+- **SIFEI queda descartado** mientras su cancelación documentada exija el PFX con su contraseña: rompe ADR-017.
+- Cotejo de la lista oficial del SAT al 2026-11-25 (archivo JSON del portal, modificado el 20-11-2026): los cuatro candidatos siguen autorizados; las ocho revocaciones de 2026 se confirmaron en la relación oficial. Detalle en `research_notes/Timbrado CFDI y conexión Atlas/pac_fase0.md` (local, fuera de git).
+- `satcfdi` sólo trae conector para Prodigia y únicamente para timbrar: la cancelación y el adaptador de contingencia se escriben aquí.
+- **Manifiesto por proveedor.** La regla 2.7.2.7 de la RMF 2026 permite varios proveedores si el cliente entrega a cada uno su manifiesto, que Prodigia y Solución Factible piden firmado con la e.firma del cliente en su portal. Se piden los dos desde el alta de la empresa, para que la contingencia sirva sin demora.
 - Condiciones para contratar cualquiera: aparece como autorizado en la lista oficial del SAT, cotejada a mano el día de la firma; acepta XML sellado; acepta cancelación con solicitud ya firmada; tiene mecanismo contra doble timbrado o consulta por identificador; ofrece timbres sin caducidad o pospago; entrega por escrito su política de confidencialidad y sus niveles de servicio.
 - Los dos proveedores quedan con credenciales, saldo y adaptador vivos en producción. Se compran paquetes pequeños o pospago mientras siga la ola de revocaciones.
 - El proveedor activo se configura por organización, con un valor por defecto global.

@@ -55,7 +55,7 @@ Se hace con un certificado de prueba del SAT, en la cuenta del servicio de llave
 | 1 | Importación | El `.key` del SAT, convertido a PKCS#8 DER, se importa sin error como llave RSA 2048 de firma |
 | 2 | Sello válido | El sello del servicio verifica con la llave pública del `.cer` (OpenSSL y `satcfdi`) y coincide byte a byte con el sello que produce `satcfdi` con la llave local sobre la misma cadena |
 | 3 | Aceptación del proveedor | El proveedor de timbrado acepta el XML y lo timbra; no lo rechaza por sello (CFDI40102 ni códigos 302 a 304) |
-| 4 | Cancelación | Una solicitud de cancelación firmada con la misma llave es aceptada por el proveedor |
+| 4 | Cancelación | Una solicitud de cancelación firmada con la misma llave es aceptada por el proveedor. Ojo: `satcfdi` firma la cancelación con RSA-SHA1 y AWS KMS no ofrece SHA-1; hay que confirmar qué algoritmo acepta el SAT y, si exige SHA-1, si Google Cloud KMS (firma PKCS#1 sin resumen) lo resuelve. Si ningún servicio puede, el modo A no pasa |
 | 5 | Llave ausente | Búsqueda en base, respaldos, variables y logs de la prueba: la llave no aparece en ningún lado |
 | 6 | Latencia | Tiempo de firma medido en 100 llamadas; el umbral aceptable se fija antes de correr la prueba, pensando en el lote de nómina |
 | 7 | Costo y cuotas | Costo mensual por certificado y cuota de llaves por cuenta compatibles con el número de clientes esperado |
