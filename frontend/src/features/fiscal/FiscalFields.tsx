@@ -18,7 +18,7 @@ export function useSatCatalog(name: SatCatalog, params: { rfc?: string; regimen?
   })
 }
 
-function asOptions(items: SatOption[] | undefined, current: string) {
+export function asOptions(items: SatOption[] | undefined, current: string) {
   const options = (items ?? []).map((item) => ({ value: item.clave, label: `${item.clave} · ${item.descripcion}` }))
   // Un valor guardado que ya no aparece (otro tipo de persona, clave vencida) se
   // sigue mostrando para que el indicador explique qué hay que corregir.

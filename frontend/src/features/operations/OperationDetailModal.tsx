@@ -15,9 +15,11 @@ import { Modal } from '@/components/ui/Modal'
 import { Money } from '@/components/ui/Money'
 import { Segmented } from '@/components/ui/Segmented'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { CfdiFields, EMPTY_CFDI, cfdiChanges, cfdiFrom } from '@/features/fiscal/CfdiOperationFields'
 import { formatDate } from '@/lib/format'
+import type { CfdiOperationFields, Contact } from '@/types/api'
 
-interface Operation {
+interface Operation extends CfdiOperationFields {
   id: string
   date: string
   description: string
@@ -26,6 +28,7 @@ interface Operation {
   financial_account_id: string | null
   status: string
   notes: string | null
+  customer_id?: string | null
 }
 
 type Tab = 'detail' | 'history'
@@ -41,6 +44,7 @@ export function OperationDetailModal({
   accountName,
   onClose,
   onSaved,
+  customers,
 }: {
   operation: Operation | null
   endpoint: string
@@ -52,6 +56,8 @@ export function OperationDetailModal({
   accountName: (id: string | null) => string
   onClose: () => void
   onSaved: () => void
+  /** Sólo ingresos: con los clientes se muestran los datos para la factura. */
+  customers?: Contact[]
 }) {
   const [tab, setTab] = useState<Tab>('detail')
   const [error, setError] = useState<string | null>(null)
@@ -63,6 +69,7 @@ export function OperationDetailModal({
     financial_account_id: '',
     notes: '',
   })
+  const [cfdi, setCfdi] = useState(EMPTY_CFDI)
 
   // Abrir otra operación vuelve a la pestaña de detalle; recargar la misma no.
   useEffect(() => {
@@ -80,13 +87,19 @@ export function OperationDetailModal({
       financial_account_id: operation.financial_account_id ?? '',
       notes: operation.notes ?? '',
     })
+    setCfdi(cfdiFrom(operation))
   }, [operation])
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!operation) return
       // Sólo lo que cambió: el historial registra exactamente lo que se tocó.
-      const payload: Record<string, unknown> = {}
+      const payload: Record<string, unknown> = customers ? cfdiChanges(cfdi, operation) : {}
+      if (operation.status !== 'PENDING') {
+        // Cobrado o cancelado: sólo los datos para la factura, que no tocan el libro.
+        if (Object.keys(payload).length > 0) await api.patch(`${endpoint}/${operation.id}`, payload)
+        return
+      }
       if (form.date !== operation.date) payload.date = form.date
       if (form.description.trim() !== operation.description) payload.description = form.description.trim()
       if (Number(form.amount) !== Number(operation.amount)) payload.amount = form.amount
@@ -107,6 +120,7 @@ export function OperationDetailModal({
 
   if (!operation) return null
   const editable = operation.status === 'PENDING'
+  const customer = customers?.find((item) => item.id === operation.customer_id)
 
   return (
     <Modal title={operation.description} open onClose={onClose}>
@@ -178,6 +192,14 @@ export function OperationDetailModal({
             value={form.notes}
             onChange={(event) => setForm({ ...form, notes: event.target.value })}
           />
+          {customers ? (
+            <CfdiFields
+              title="¿Vas a facturar este ingreso?"
+              value={cfdi}
+              onChange={setCfdi}
+              customer={customer}
+            />
+          ) : null}
           <p className="text-xs text-muted">
             Cada cambio queda en el historial con su valor anterior.
           </p>
@@ -216,6 +238,27 @@ export function OperationDetailModal({
               ? 'Está cancelada: ya no se puede modificar.'
               : 'Ya movió dinero: para corregirla, cancélala y regístrala de nuevo. Así la contabilidad conserva el rastro.'}
           </p>
+          {customers ? (
+            <form
+              className="space-y-3 border-t border-border pt-4"
+              onSubmit={(event) => {
+                event.preventDefault()
+                saveMutation.mutate()
+              }}
+            >
+              <div>
+                <h3 className="text-sm font-semibold">Datos para la factura</h3>
+                <p className="text-xs text-muted">Se pueden corregir siempre: no cambian tus números.</p>
+              </div>
+              <CfdiFields collapsible={false} value={cfdi} onChange={setCfdi} customer={customer} />
+              {error ? <p className="text-sm text-neg">{error}</p> : null}
+              <div className="flex justify-end">
+                <Button type="submit" disabled={saveMutation.isPending}>
+                  {saveMutation.isPending ? 'Guardando…' : 'Guardar datos de factura'}
+                </Button>
+              </div>
+            </form>
+          ) : null}
         </div>
       )}
     </Modal>
