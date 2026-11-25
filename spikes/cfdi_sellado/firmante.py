@@ -75,6 +75,10 @@ class FirmanteLocal:
     def firmar(self, datos: bytes) -> bytes:
         return self._llave.sign(datos, padding.PKCS1v15(), hashes.SHA256())
 
+    def firmar_sha1(self, datos: bytes) -> bytes:
+        """RSA-SHA1: sólo para la solicitud de cancelación (ver ``cancelacion.py``)."""
+        return self._llave.sign(datos, padding.PKCS1v15(), hashes.SHA1())
+
     def certificado(self) -> x509.Certificate:
         return self._cert
 
