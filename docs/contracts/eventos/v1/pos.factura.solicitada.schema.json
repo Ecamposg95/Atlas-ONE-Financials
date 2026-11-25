@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/pos.factura.solicitada.schema.json",
+  "title": "pos.factura.solicitada",
+  "description": "Un cliente pide la factura de un ticket, en caja o después por el portal. No repite los renglones: Financials usa los de pos.venta.registrada (de la que depende) y aquí sólo recibe los datos del receptor. Financials responde con financials.cfdi.actualizado.",
+  "allOf": [
+    { "$ref": "sobre.schema.json" },
+    {
+      "properties": {
+        "tipo": { "const": "pos.factura.solicitada" },
+        "emisor": { "const": "atlas-one" },
+        "organizacion_origen": { "properties": { "id": { "pattern": "^[0-9]{1,18}$" } } },
+        "datos": { "$ref": "#/$defs/datos" }
+      }
+    }
+  ],
+  "$defs": {
+    "datos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id_solicitud_origen", "venta", "total_ticket", "canal", "receptor", "metodo_pago"],
+      "properties": {
+        "id_solicitud_origen": { "$ref": "comunes.schema.json#/$defs/id_origen" },
+        "venta": { "$ref": "comunes.schema.json#/$defs/venta_ref" },
+        "total_ticket": {
+          "$ref": "comunes.schema.json#/$defs/monto_positivo",
+          "description": "Control: debe coincidir con totales.total de la venta menos lo devuelto. Si no, Financials rechaza."
+        },
+        "canal": { "enum": ["caja", "portal"] },
+        "receptor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rfc", "nombre", "regimen_fiscal", "codigo_postal", "uso_cfdi"],
+          "properties": {
+            "id_cliente_origen": { "$ref": "comunes.schema.json#/$defs/id_origen" },
+            "rfc": { "$ref": "comunes.schema.json#/$defs/rfc" },
+            "nombre": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 254,
+              "description": "Razón social o nombre tal como aparece en la constancia de situación fiscal, sin régimen societario."
+            },
+            "regimen_fiscal": { "$ref": "comunes.schema.json#/$defs/regimen_fiscal" },
+            "codigo_postal": { "$ref": "comunes.schema.json#/$defs/codigo_postal", "description": "Código postal del domicilio fiscal del receptor." },
+            "uso_cfdi": { "$ref": "comunes.schema.json#/$defs/uso_cfdi" },
+            "correo": { "$ref": "comunes.schema.json#/$defs/correo" }
+          }
+        },
+        "metodo_pago": {
+          "enum": ["PUE", "PPD"],
+          "description": "PUE si el ticket está pagado completo; PPD si es venta a crédito con saldo."
+        },
+        "forma_pago_sat": {
+          "$ref": "comunes.schema.json#/$defs/forma_pago_sat",
+          "description": "Opcional: si falta, Financials toma la del pago de mayor importe de la venta usando el mapeo de la conexión. En PPD es 99."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "metodo_pago": { "const": "PPD" } }, "required": ["forma_pago_sat"] },
+          "then": { "properties": { "forma_pago_sat": { "const": "99" } } }
+        }
+      ]
+    }
+  }
+}

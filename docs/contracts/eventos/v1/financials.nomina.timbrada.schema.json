@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/financials.nomina.timbrada.schema.json",
+  "title": "financials.nomina.timbrada",
+  "description": "Resultado por recibo de una versión de corrida de nómina. Un rechazo se corrige enviando una versión nueva con alcance 'correccion' y sólo ese recibo: nunca se repite el lote.",
+  "allOf": [
+    { "$ref": "sobre.schema.json" },
+    {
+      "required": ["causado_por"],
+      "properties": {
+        "tipo": { "const": "financials.nomina.timbrada" },
+        "emisor": { "const": "atlas-financials" },
+        "organizacion_destino": { "required": ["id", "slug"] },
+        "datos": { "$ref": "#/$defs/datos" }
+      }
+    }
+  ],
+  "$defs": {
+    "resultado_recibo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id_recibo_origen", "id_empleado_origen", "estado"],
+      "properties": {
+        "id_recibo_origen": { "$ref": "comunes.schema.json#/$defs/id_origen" },
+        "id_empleado_origen": { "$ref": "comunes.schema.json#/$defs/id_origen" },
+        "estado": { "enum": ["timbrado", "rechazado", "pendiente"], "description": "pendiente: el proveedor no respondió aún; llegará otro evento." },
+        "uuid": { "$ref": "comunes.schema.json#/$defs/uuid" },
+        "serie": { "type": "string", "maxLength": 25 },
+        "folio": { "type": "string", "maxLength": 40 },
+        "fecha_timbrado": { "$ref": "comunes.schema.json#/$defs/fecha_hora" },
+        "neto": { "$ref": "comunes.schema.json#/$defs/monto" },
+        "enlaces": { "$ref": "comunes.schema.json#/$defs/enlaces" },
+        "motivo_rechazo": { "$ref": "comunes.schema.json#/$defs/motivo_rechazo" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "estado": { "const": "timbrado" } } },
+          "then": { "required": ["uuid", "fecha_timbrado", "neto", "enlaces"], "not": { "required": ["motivo_rechazo"] } }
+        },
+        {
+          "if": { "properties": { "estado": { "const": "rechazado" } } },
+          "then": { "required": ["motivo_rechazo"], "not": { "anyOf": [{ "required": ["uuid"] }, { "required": ["enlaces"] }] } }
+        },
+        {
+          "if": { "properties": { "estado": { "const": "pendiente" } } },
+          "then": { "not": { "anyOf": [{ "required": ["uuid"] }, { "required": ["enlaces"] }, { "required": ["motivo_rechazo"] }] } }
+        }
+      ]
+    },
+    "datos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["corrida", "estado_corrida", "recibos", "resumen"],
+      "properties": {
+        "corrida": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id_origen", "version"],
+          "properties": {
+            "id_origen": { "$ref": "comunes.schema.json#/$defs/id_origen" },
+            "version": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "estado_corrida": {
+          "enum": ["completa", "parcial", "rechazada", "en_proceso"],
+          "description": "completa: todos timbrados. parcial: hay rechazados. rechazada: ninguno timbró. en_proceso: hay pendientes."
+        },
+        "recibos": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/resultado_recibo" } },
+        "resumen": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["timbrados", "rechazados", "pendientes", "total_neto_timbrado"],
+          "properties": {
+            "timbrados": { "type": "integer", "minimum": 0 },
+            "rechazados": { "type": "integer", "minimum": 0 },
+            "pendientes": { "type": "integer", "minimum": 0 },
+            "total_neto_timbrado": { "$ref": "comunes.schema.json#/$defs/monto" }
+          }
+        }
+      }
+    }
+  }
+}

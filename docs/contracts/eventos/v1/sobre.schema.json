@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/sobre.schema.json",
+  "title": "Sobre común de todo evento",
+  "description": "Campos que lleva todo evento, venga de Atlas ONE, de RRHH o de Financials. La firma HMAC y la marca de tiempo viajan en cabeceras HTTP (cabeceras.schema.json) porque firman el cuerpo crudo.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id_evento", "tipo", "version_esquema", "emisor", "organizacion_origen",
+    "ocurrido_en", "zona_horaria", "clave_idempotencia", "datos"
+  ],
+  "properties": {
+    "id_evento": {
+      "$ref": "comunes.schema.json#/$defs/uuid",
+      "description": "Generado por el emisor al crear el evento y guardado en su cola. Un reintento reenvía el mismo id."
+    },
+    "tipo": {
+      "type": "string",
+      "pattern": "^(pos|rrhh|financials)\\.[a-z_]+\\.[a-z_]+$",
+      "description": "<dominio>.<entidad>.<hecho en participio>, por ejemplo pos.venta.registrada."
+    },
+    "version_esquema": {
+      "type": "string",
+      "pattern": "^1\\.[0-9]+$",
+      "description": "Mayor.menor. La mayor es la carpeta (v1); la menor sube con campos opcionales nuevos."
+    },
+    "emisor": {
+      "enum": ["atlas-one", "hrflow", "atlas-financials"],
+      "description": "Sistema que emite. Junto con organizacion_origen.id identifica la conexión."
+    },
+    "organizacion_origen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "$ref": "comunes.schema.json#/$defs/id_origen",
+          "description": "Id de la empresa en el sistema emisor: entero de Atlas ONE como cadena, Empresa.id (cuid) de HRFlow, UUID de Financials."
+        },
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]{2,20}$",
+          "description": "Slug de HRFlow. Obligatorio cuando el emisor es hrflow."
+        }
+      }
+    },
+    "organizacion_destino": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "$ref": "comunes.schema.json#/$defs/id_origen" },
+        "slug": { "type": "string", "pattern": "^[a-z0-9-]{2,20}$" }
+      },
+      "description": "Sólo en eventos de Financials: la empresa tal como la conoce el sistema que recibe."
+    },
+    "ocurrido_en": {
+      "$ref": "comunes.schema.json#/$defs/fecha_hora",
+      "description": "Cuándo pasó el hecho de negocio, en hora local con su desfase."
+    },
+    "zona_horaria": {
+      "$ref": "comunes.schema.json#/$defs/zona_horaria",
+      "description": "Zona con la que se calcula la fecha de negocio (la de la sucursal o la de la empresa)."
+    },
+    "clave_idempotencia": {
+      "type": "string",
+      "pattern": "^(atlas-one|hrflow|atlas-financials):[A-Za-z0-9_-]{1,64}:[a-z_]{1,32}:[A-Za-z0-9_-]{1,64}:[a-z0-9_-]{1,32}$",
+      "description": "<emisor>:<organización>:<entidad>:<id de la entidad>:<hecho>. Única por emisor y organización: dos eventos con la misma clave son el mismo hecho."
+    },
+    "causado_por": {
+      "$ref": "comunes.schema.json#/$defs/uuid",
+      "description": "id_evento que provocó éste (respuestas de Financials)."
+    },
+    "datos": {
+      "type": "object",
+      "description": "Contenido propio de cada tipo de evento."
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "emisor": { "const": "hrflow" } } },
+      "then": { "properties": { "organizacion_origen": { "required": ["id", "slug"] } } }
+    },
+    {
+      "if": { "properties": { "emisor": { "const": "atlas-financials" } } },
+      "then": {
+        "required": ["organizacion_destino"],
+        "properties": { "organizacion_origen": { "properties": { "id": { "$ref": "comunes.schema.json#/$defs/uuid" } } } }
+      },
+      "else": { "not": { "required": ["organizacion_destino"] } }
+    }
+  ]
+}

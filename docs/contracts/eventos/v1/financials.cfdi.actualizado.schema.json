@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/financials.cfdi.actualizado.schema.json",
+  "title": "financials.cfdi.actualizado",
+  "description": "Financials avisa al punto de venta que un comprobante cambió de estado: timbrado, rechazado, en cancelación o cancelado. Se emite una vez por cambio de estado; la clave de idempotencia incluye el estado.",
+  "allOf": [
+    { "$ref": "sobre.schema.json" },
+    {
+      "required": ["causado_por"],
+      "properties": {
+        "tipo": { "const": "financials.cfdi.actualizado" },
+        "emisor": { "const": "atlas-financials" },
+        "datos": { "$ref": "#/$defs/datos" }
+      }
+    }
+  ],
+  "$defs": {
+    "datos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origen", "estado", "tipo_comprobante"],
+      "properties": {
+        "origen": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tipo", "id_origen"],
+          "properties": {
+            "tipo": {
+              "enum": ["venta", "solicitud_factura", "devolucion", "abono", "cancelacion", "factura_global"],
+              "description": "Qué registro del punto de venta originó el comprobante."
+            },
+            "id_origen": { "$ref": "comunes.schema.json#/$defs/id_origen" },
+            "venta": { "$ref": "comunes.schema.json#/$defs/venta_ref" }
+          }
+        },
+        "tipo_comprobante": { "enum": ["I", "E", "P"], "description": "Ingreso, egreso (nota de crédito) o pago (complemento de pagos)." },
+        "estado": {
+          "enum": ["timbrado", "rechazado", "cancelacion_en_proceso", "cancelado", "cancelacion_rechazada"]
+        },
+        "uuid": { "$ref": "comunes.schema.json#/$defs/uuid" },
+        "serie": { "type": "string", "maxLength": 25 },
+        "folio": { "type": "string", "maxLength": 40 },
+        "fecha_timbrado": { "$ref": "comunes.schema.json#/$defs/fecha_hora" },
+        "total": { "$ref": "comunes.schema.json#/$defs/monto" },
+        "receptor_rfc": { "$ref": "comunes.schema.json#/$defs/rfc" },
+        "enlaces": { "$ref": "comunes.schema.json#/$defs/enlaces" },
+        "relacionados": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["uuid", "tipo_relacion"],
+            "properties": {
+              "uuid": { "$ref": "comunes.schema.json#/$defs/uuid" },
+              "tipo_relacion": { "type": "string", "pattern": "^0[1-7]$", "description": "c_TipoRelacion: 01 nota de crédito, 04 sustitución, 07 anticipo..." }
+            }
+          }
+        },
+        "ventas_cubiertas": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "comunes.schema.json#/$defs/venta_ref" },
+          "description": "Sólo en factura global: los tickets que ampara. El punto de venta los marca para no facturarlos dos veces."
+        },
+        "motivo_cancelacion": { "type": "string", "pattern": "^0[1-4]$", "description": "Motivo SAT de cancelación." },
+        "motivo_rechazo": { "$ref": "comunes.schema.json#/$defs/motivo_rechazo" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "estado": { "const": "rechazado" } } },
+          "then": {
+            "required": ["motivo_rechazo"],
+            "not": { "anyOf": [{ "required": ["uuid"] }, { "required": ["enlaces"] }] }
+          },
+          "else": { "required": ["uuid", "serie", "folio", "fecha_timbrado", "total"] }
+        },
+        {
+          "if": { "properties": { "estado": { "const": "timbrado" } } },
+          "then": { "required": ["enlaces"] }
+        },
+        {
+          "if": { "properties": { "estado": { "enum": ["cancelacion_en_proceso", "cancelado"] } } },
+          "then": { "required": ["motivo_cancelacion"] }
+        },
+        {
+          "if": { "properties": { "estado": { "const": "cancelacion_rechazada" } } },
+          "then": { "required": ["motivo_rechazo"] }
+        },
+        {
+          "if": { "properties": { "origen": { "properties": { "tipo": { "const": "factura_global" } } } } },
+          "then": { "required": ["ventas_cubiertas"] },
+          "else": { "not": { "required": ["ventas_cubiertas"] } }
+        }
+      ]
+    }
+  }
+}

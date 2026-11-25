@@ -1,0 +1,278 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/comunes.schema.json",
+  "title": "Definiciones comunes del contrato de eventos v1",
+  "description": "Tipos compartidos por todos los eventos. Ningún monto, cantidad ni tasa viaja como número JSON: siempre como cadena decimal, para que nadie pase por punto flotante.",
+  "$defs": {
+    "monto": {
+      "description": "Importe en pesos con exactamente dos decimales, no negativo. Cabe en Numeric(14,2).",
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,11})\\.[0-9]{2}$"
+    },
+    "monto_positivo": {
+      "description": "Importe mayor que cero con dos decimales.",
+      "allOf": [
+        { "$ref": "#/$defs/monto" },
+        { "not": { "const": "0.00" } }
+      ]
+    },
+    "monto_con_signo": {
+      "description": "Importe con dos decimales que puede ser negativo (diferencias de caja).",
+      "type": "string",
+      "pattern": "^-?(0|[1-9][0-9]{0,11})\\.[0-9]{2}$"
+    },
+    "valor_unitario": {
+      "description": "Precio unitario sin impuestos, de dos a seis decimales (el CFDI admite hasta seis).",
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,11})\\.[0-9]{2,6}$"
+    },
+    "cantidad": {
+      "description": "Cantidad mayor que cero como cadena decimal, hasta seis decimales. Nunca número JSON.",
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,11})(\\.[0-9]{1,6})?$",
+      "not": { "pattern": "^0(\\.0+)?$" }
+    },
+    "tasa": {
+      "description": "Tasa como fracción con cuatro decimales: 16 % se escribe \"0.1600\". \"16\", \"16.0\" y \"0.16\" se rechazan.",
+      "type": "string",
+      "pattern": "^[0-9]\\.[0-9]{4}$"
+    },
+    "dias": {
+      "description": "Número de días con hasta tres decimales (NumDiasPagados del complemento de nómina).",
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,4})(\\.[0-9]{1,3})?$",
+      "not": { "pattern": "^0(\\.0+)?$" }
+    },
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    },
+    "id_origen": {
+      "description": "Identificador del registro en el sistema que lo creó, siempre como cadena (los enteros de Atlas ONE viajan como \"42\").",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,64}$"
+    },
+    "fecha": {
+      "description": "Fecha de calendario sin hora (AAAA-MM-DD), en la zona de la empresa.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
+    },
+    "fecha_hora": {
+      "description": "Instante RFC 3339 con desfase numérico explícito (por ejemplo -06:00). No se acepta 'Z' ni hora sin zona: la fecha de negocio se lee en hora local.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\\.[0-9]{1,6})?[+-]([01][0-9]|2[0-3]):[0-5][0-9]$"
+    },
+    "zona_horaria": {
+      "description": "Zona IANA, por ejemplo America/Mexico_City o America/Tijuana.",
+      "type": "string",
+      "pattern": "^[A-Za-z]+(/[A-Za-z0-9_+-]+)+$"
+    },
+    "rfc": {
+      "description": "RFC de 12 (moral) o 13 (física) caracteres, en mayúsculas.",
+      "type": "string",
+      "pattern": "^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$"
+    },
+    "curp": {
+      "type": "string",
+      "pattern": "^[A-Z][AEIOUX][A-Z]{2}[0-9]{6}[HMX][A-Z]{2}[B-DF-HJ-NP-TV-Z]{3}[A-Z0-9][0-9]$"
+    },
+    "codigo_postal": {
+      "type": "string",
+      "pattern": "^[0-9]{5}$"
+    },
+    "correo": {
+      "type": "string",
+      "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+      "maxLength": 254
+    },
+    "url_https": {
+      "type": "string",
+      "pattern": "^https://[^\\s]+$",
+      "maxLength": 2048
+    },
+    "texto_corto": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "clave_prod_serv": {
+      "description": "c_ClaveProdServ del SAT (8 dígitos).",
+      "type": "string",
+      "pattern": "^[0-9]{8}$"
+    },
+    "clave_unidad": {
+      "description": "c_ClaveUnidad del SAT (por ejemplo H87, KGM, E48, ACT).",
+      "type": "string",
+      "pattern": "^[A-Z0-9]{1,3}$"
+    },
+    "objeto_impuesto": {
+      "description": "c_ObjetoImp del SAT: 01 no objeto, 02 sí objeto, 03 sí objeto y no obligado al desglose, etc.",
+      "type": "string",
+      "pattern": "^0[1-8]$"
+    },
+    "regimen_fiscal": {
+      "description": "c_RegimenFiscal del SAT (3 dígitos).",
+      "type": "string",
+      "pattern": "^[0-9]{3}$"
+    },
+    "uso_cfdi": {
+      "description": "c_UsoCFDI del SAT (G01, G03, S01, CN01...).",
+      "type": "string",
+      "pattern": "^[A-Z]{1,2}[0-9]{2}$"
+    },
+    "forma_pago_sat": {
+      "description": "c_FormaPago del SAT. 04 tarjeta de crédito, 28 tarjeta de débito; confirmar contra el catálogo vigente.",
+      "enum": ["01", "02", "03", "04", "05", "06", "08", "12", "13", "14", "15", "17", "23", "24", "25", "26", "27", "28", "29", "30", "31", "99"]
+    },
+    "metodo_pago_pos": {
+      "description": "Medio de pago tal como lo guarda Atlas ONE hoy. TARJETA no distingue crédito de débito: por eso existe forma_pago_sat opcional y el mapeo de la conexión.",
+      "enum": ["CASH", "CARD", "TRANSFER", "OTHER"]
+    },
+    "traslado": {
+      "description": "Impuesto trasladado por renglón. IVA (002) sólo admite tasas 0.0000, 0.0800 y 0.1600; exento no lleva tasa ni importe. IEPS por cuota queda fuera de v1.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["impuesto", "tipo_factor", "base"],
+      "properties": {
+        "impuesto": { "enum": ["002", "003"], "description": "002 IVA, 003 IEPS." },
+        "tipo_factor": { "enum": ["Tasa", "Exento"] },
+        "tasa": { "$ref": "#/$defs/tasa" },
+        "base": { "$ref": "#/$defs/monto" },
+        "importe": { "$ref": "#/$defs/monto" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "tipo_factor": { "const": "Tasa" } } },
+          "then": { "required": ["tasa", "importe"] },
+          "else": { "not": { "anyOf": [{ "required": ["tasa"] }, { "required": ["importe"] }] } }
+        },
+        {
+          "if": { "properties": { "impuesto": { "const": "002" }, "tipo_factor": { "const": "Tasa" } } },
+          "then": { "properties": { "tasa": { "enum": ["0.0000", "0.0800", "0.1600"] } } }
+        },
+        {
+          "if": { "properties": { "impuesto": { "const": "003" } } },
+          "then": {
+            "properties": {
+              "tipo_factor": { "const": "Tasa" },
+              "tasa": { "pattern": "^[0-2]\\.[0-9]{4}$" }
+            }
+          }
+        }
+      ]
+    },
+    "resumen_impuesto": {
+      "description": "Suma por combinación impuesto + tipo de factor + tasa a nivel documento.",
+      "$ref": "#/$defs/traslado"
+    },
+    "renglon_venta": {
+      "description": "Renglón con fotografía fiscal del momento de la venta: claves SAT, base e impuesto por tasa. Las reglas de cuadre están en el README.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "numero", "id_variante_origen", "descripcion", "clave_prod_serv", "clave_unidad",
+        "objeto_impuesto", "cantidad", "valor_unitario", "importe", "descuento", "impuestos", "total"
+      ],
+      "properties": {
+        "numero": { "type": "integer", "minimum": 1, "description": "Posición del renglón dentro de la venta; las devoluciones lo referencian." },
+        "id_variante_origen": { "$ref": "#/$defs/id_origen" },
+        "sku": { "type": "string", "maxLength": 100 },
+        "descripcion": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "clave_prod_serv": { "$ref": "#/$defs/clave_prod_serv" },
+        "clave_unidad": { "$ref": "#/$defs/clave_unidad" },
+        "unidad": { "type": "string", "maxLength": 20, "description": "Texto libre del punto de venta (pza, kg)." },
+        "objeto_impuesto": { "$ref": "#/$defs/objeto_impuesto" },
+        "cantidad": { "$ref": "#/$defs/cantidad" },
+        "valor_unitario": { "$ref": "#/$defs/valor_unitario" },
+        "importe": { "$ref": "#/$defs/monto", "description": "cantidad × valor_unitario redondeado a dos decimales, sin impuestos ni descuento." },
+        "descuento": { "$ref": "#/$defs/monto" },
+        "impuestos": { "type": "array", "items": { "$ref": "#/$defs/traslado" } },
+        "total": { "$ref": "#/$defs/monto", "description": "importe − descuento + suma de importes de impuestos." }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "objeto_impuesto": { "const": "02" } } },
+          "then": { "properties": { "impuestos": { "minItems": 1 } } },
+          "else": { "properties": { "impuestos": { "maxItems": 0 } } }
+        }
+      ]
+    },
+    "totales_documento": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subtotal", "descuento", "impuestos", "total"],
+      "properties": {
+        "subtotal": { "$ref": "#/$defs/monto", "description": "Suma de importe de los renglones." },
+        "descuento": { "$ref": "#/$defs/monto", "description": "Suma de descuento de los renglones." },
+        "impuestos": { "type": "array", "items": { "$ref": "#/$defs/resumen_impuesto" } },
+        "total": { "$ref": "#/$defs/monto", "description": "subtotal − descuento + impuestos. Igual a la suma de total de los renglones." }
+      }
+    },
+    "sucursal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id_origen", "nombre", "codigo_postal", "zona_horaria"],
+      "properties": {
+        "id_origen": { "$ref": "#/$defs/id_origen" },
+        "nombre": { "$ref": "#/$defs/texto_corto" },
+        "codigo_postal": { "$ref": "#/$defs/codigo_postal", "description": "Lugar de expedición de la sucursal." },
+        "zona_horaria": { "$ref": "#/$defs/zona_horaria" }
+      }
+    },
+    "persona_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id_origen"],
+      "properties": {
+        "id_origen": { "$ref": "#/$defs/id_origen" },
+        "nombre": { "$ref": "#/$defs/texto_corto" }
+      }
+    },
+    "venta_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id_origen", "folio_ticket"],
+      "properties": {
+        "id_origen": { "$ref": "#/$defs/id_origen" },
+        "folio_ticket": { "type": "string", "pattern": "^[A-Za-z0-9-]{1,100}$" }
+      }
+    },
+    "pago_pos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id_origen", "metodo_origen", "importe"],
+      "properties": {
+        "id_origen": { "$ref": "#/$defs/id_origen" },
+        "metodo_origen": { "$ref": "#/$defs/metodo_pago_pos" },
+        "forma_pago_sat": { "$ref": "#/$defs/forma_pago_sat", "description": "Si el punto de venta lo sabe (débito o crédito). Si falta, Financials usa el mapeo de la conexión." },
+        "importe": { "$ref": "#/$defs/monto_positivo", "description": "Importe aplicado a la operación, ya sin cambio." },
+        "referencia": { "type": "string", "maxLength": 100 }
+      }
+    },
+    "enlaces": {
+      "description": "Enlaces firmados y con caducidad. El receptor descarga y guarda su copia; no debe depender de ellos después de expiran_en.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["xml", "pdf", "expiran_en"],
+      "properties": {
+        "xml": { "$ref": "#/$defs/url_https" },
+        "pdf": { "$ref": "#/$defs/url_https" },
+        "expiran_en": { "$ref": "#/$defs/fecha_hora" },
+        "xml_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "motivo_rechazo": {
+      "description": "Por qué Financials o el SAT no aceptaron algo. El mensaje va en español y en lenguaje de empresario.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["codigo", "mensaje", "reintentable"],
+      "properties": {
+        "codigo": { "type": "string", "pattern": "^[a-z0-9_]{3,64}$" },
+        "mensaje": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "ruta": { "type": "string", "maxLength": 255, "description": "Campo afectado en notación de puntos, por ejemplo datos.recibos.1.empleado.rfc." },
+        "codigo_sat": { "type": "string", "maxLength": 20, "description": "Código de la matriz de errores del SAT o del proveedor, si lo hubo." },
+        "reintentable": { "type": "boolean", "description": "true: Financials lo reintentará solo. false: hay que corregir datos y enviar un evento nuevo." }
+      }
+    }
+  }
+}

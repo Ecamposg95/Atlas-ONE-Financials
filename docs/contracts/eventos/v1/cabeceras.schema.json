@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/cabeceras.schema.json",
+  "title": "Cabeceras HTTP de una entrega firmada",
+  "description": "La firma es HMAC-SHA256 con el secreto de la conexión sobre la cadena '<X-Atlas-Timestamp>.<cuerpo crudo>'. Ver README, sección Firma.",
+  "type": "object",
+  "required": ["X-Atlas-Event-Id", "X-Atlas-Timestamp", "X-Atlas-Key-Id", "X-Atlas-Signature", "Content-Type"],
+  "properties": {
+    "X-Atlas-Event-Id": {
+      "$ref": "comunes.schema.json#/$defs/uuid",
+      "description": "Igual a id_evento del cuerpo."
+    },
+    "X-Atlas-Timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{10}$",
+      "description": "Segundos Unix del momento de firmar (no del hecho). Se rechaza fuera de ±300 s del reloj del receptor."
+    },
+    "X-Atlas-Key-Id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,64}$",
+      "description": "Qué secreto de la conexión se usó. Permite rotar con dos secretos vigentes a la vez."
+    },
+    "X-Atlas-Signature": {
+      "type": "string",
+      "pattern": "^sha256=[0-9a-f]{64}$",
+      "description": "sha256=<hex en minúsculas de HMAC-SHA256(secreto, timestamp + '.' + cuerpo)>."
+    },
+    "Content-Type": {
+      "enum": ["application/json", "application/json; charset=utf-8"],
+      "description": "El cuerpo siempre es UTF-8."
+    }
+  }
+}

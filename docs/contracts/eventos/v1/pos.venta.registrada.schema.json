@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/pos.venta.registrada.schema.json",
+  "title": "pos.venta.registrada",
+  "description": "Atlas ONE cobró (o dejó a crédito) una venta. Se emite para TODA venta, pida factura o no, con su IVA calculado: es el insumo de la póliza, de la factura global y de la factura por ticket.",
+  "allOf": [
+    { "$ref": "sobre.schema.json" },
+    {
+      "properties": {
+        "tipo": { "const": "pos.venta.registrada" },
+        "emisor": { "const": "atlas-one" },
+        "organizacion_origen": { "properties": { "id": { "pattern": "^[0-9]{1,18}$" } } },
+        "datos": { "$ref": "#/$defs/datos" }
+      }
+    }
+  ],
+  "$defs": {
+    "datos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "venta", "serie", "folio", "sucursal", "id_sesion_caja", "moneda", "condicion",
+        "requiere_factura", "renglones", "totales", "propina", "recargo_tarjeta", "pagos", "saldo_pendiente"
+      ],
+      "properties": {
+        "venta": { "$ref": "comunes.schema.json#/$defs/venta_ref" },
+        "serie": { "type": "string", "pattern": "^[A-Za-z0-9]{1,25}$" },
+        "folio": { "type": "string", "pattern": "^[0-9]{1,40}$" },
+        "sucursal": { "$ref": "comunes.schema.json#/$defs/sucursal" },
+        "id_sesion_caja": { "$ref": "comunes.schema.json#/$defs/id_origen" },
+        "vendedor": { "$ref": "comunes.schema.json#/$defs/persona_ref" },
+        "cliente": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id_origen"],
+          "properties": {
+            "id_origen": { "$ref": "comunes.schema.json#/$defs/id_origen" },
+            "nombre": { "$ref": "comunes.schema.json#/$defs/texto_corto" },
+            "rfc": { "$ref": "comunes.schema.json#/$defs/rfc" }
+          },
+          "description": "Opcional en contado; obligatorio en crédito (se exige abajo)."
+        },
+        "moneda": { "const": "MXN", "description": "v1 sólo pesos. El equivalente en dólares del ticket es informativo y no viaja." },
+        "condicion": { "enum": ["contado", "credito"] },
+        "requiere_factura": {
+          "type": "boolean",
+          "description": "El cliente pidió factura al cobrar. Si es false la venta entra a la factura global de su sucursal. El IVA viene calculado en ambos casos."
+        },
+        "precios_incluyen_impuestos": {
+          "type": "boolean",
+          "description": "Informativo: cómo capturó el precio la caja. No cambia las reglas de cuadre."
+        },
+        "renglones": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "comunes.schema.json#/$defs/renglon_venta" }
+        },
+        "totales": { "$ref": "comunes.schema.json#/$defs/totales_documento" },
+        "propina": {
+          "$ref": "comunes.schema.json#/$defs/monto",
+          "description": "Fuera de totales.total: no es ingreso gravado de la empresa [contador]. Va a su propia cuenta."
+        },
+        "recargo_tarjeta": {
+          "$ref": "comunes.schema.json#/$defs/monto",
+          "description": "Comisión que la caja cobra al cliente por pagar con tarjeta. Fuera de totales.total hasta que el contador defina su tratamiento [contador]."
+        },
+        "pagos": {
+          "type": "array",
+          "items": { "$ref": "comunes.schema.json#/$defs/pago_pos" },
+          "description": "Pagos aplicados al cobrar. Su suma es total + propina + recargo_tarjeta − saldo_pendiente."
+        },
+        "cambio": { "$ref": "comunes.schema.json#/$defs/monto", "description": "Informativo: efectivo devuelto. Los pagos ya vienen netos de cambio." },
+        "saldo_pendiente": { "$ref": "comunes.schema.json#/$defs/monto", "description": "Lo que queda a crédito. 0.00 en contado." },
+        "notas": { "type": "string", "maxLength": 1000 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "condicion": { "const": "credito" } } },
+          "then": { "required": ["cliente"] },
+          "else": { "properties": { "saldo_pendiente": { "const": "0.00" }, "pagos": { "minItems": 1 } } }
+        }
+      ]
+    }
+  }
+}

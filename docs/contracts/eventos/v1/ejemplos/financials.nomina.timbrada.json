@@ -1,0 +1,58 @@
+{
+  "id_evento": "b8d0f2a4-6c1e-4b3d-9f5a-7e2c4a6b8d91",
+  "tipo": "financials.nomina.timbrada",
+  "version_esquema": "1.0",
+  "emisor": "atlas-financials",
+  "organizacion_origen": {
+    "id": "8d3f2b1a-6e4c-4a9f-b2d7-1c5e9a0f3b68"
+  },
+  "organizacion_destino": {
+    "id": "cm3k9x2ab0001qz8r7t6y5w4v",
+    "slug": "rmazh"
+  },
+  "ocurrido_en": "2026-11-14T18:24:40-06:00",
+  "zona_horaria": "America/Mexico_City",
+  "clave_idempotencia": "atlas-financials:8d3f2b1a-6e4c-4a9f-b2d7-1c5e9a0f3b68:corrida:cm3nq1r4z0007ab2c3d4e5f6g:v1",
+  "causado_por": "1d4b7e2a-9c3f-4a6d-8e1b-5c7a9f2d4e68",
+  "datos": {
+    "corrida": {
+      "id_origen": "cm3nq1r4z0007ab2c3d4e5f6g",
+      "version": 1
+    },
+    "estado_corrida": "parcial",
+    "recibos": [
+      {
+        "id_recibo_origen": "cm3nq1r4z0008ab2c3d4e5f6h",
+        "id_empleado_origen": "cm1a2b3c40001xy7z8w9v0u1t",
+        "estado": "timbrado",
+        "uuid": "4e6a8c0b-2d4f-4a1c-9b3e-5f7a9c1d3e80",
+        "serie": "N",
+        "folio": "211",
+        "fecha_timbrado": "2026-11-14T18:24:31-06:00",
+        "neto": "5684.25",
+        "enlaces": {
+          "xml": "https://atlas-one-financials.up.railway.app/api/cfdi/4e6a8c0b-2d4f-4a1c-9b3e-5f7a9c1d3e80/xml?firma=ejemplo",
+          "pdf": "https://atlas-one-financials.up.railway.app/api/cfdi/4e6a8c0b-2d4f-4a1c-9b3e-5f7a9c1d3e80/pdf?firma=ejemplo",
+          "expiran_en": "2026-11-21T18:24:40-06:00"
+        }
+      },
+      {
+        "id_recibo_origen": "cm3nq1r4z0009ab2c3d4e5f6i",
+        "id_empleado_origen": "cm1a2b3c40002xy7z8w9v0u1s",
+        "estado": "rechazado",
+        "motivo_rechazo": {
+          "codigo": "receptor_rfc_no_inscrito",
+          "mensaje": "El RFC del trabajador no aparece en la lista de contribuyentes inscritos del SAT. Revisa su constancia de situación fiscal.",
+          "ruta": "datos.recibos.1.empleado.rfc",
+          "reintentable": false
+        }
+      }
+    ],
+    "resumen": {
+      "timbrados": 1,
+      "rechazados": 1,
+      "pendientes": 0,
+      "total_neto_timbrado": "5684.25"
+    }
+  }
+}
