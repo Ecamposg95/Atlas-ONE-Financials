@@ -1,0 +1,53 @@
+{
+  "catalogo": "c_Meses",
+  "grupo": "cfdi40",
+  "titulo": "Catálogo meses.",
+  "sat": {
+    "version_cfdi": "4.0",
+    "version": "1",
+    "revision": "0",
+    "fecha_publicacion": null,
+    "vigencia_inicio": "2022-01-01",
+    "vigencia_fin": null
+  },
+  "origen": {
+    "archivo": "catCFDI_V_4_20261120.xls",
+    "url": "http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/catCFDI_V_4_20261120.xls",
+    "version_archivo": "2026-11-20",
+    "fecha_descarga": "2026-11-25",
+    "sha256": "b8c156b356d378ab1f31b319a74b8caf04267b33edf04c910b9715474af96571",
+    "hojas": [
+      "c_Meses"
+    ]
+  },
+  "llave": [
+    "clave"
+  ],
+  "claves_solo_en_xsd": [],
+  "columnas": [
+    "clave",
+    "descripcion",
+    "vigencia_inicio",
+    "vigencia_fin"
+  ],
+  "registros": [
+    ["01", "Enero", "2022-01-01", null],
+    ["02", "Febrero", "2022-01-01", null],
+    ["03", "Marzo", "2022-01-01", null],
+    ["04", "Abril", "2022-01-01", null],
+    ["05", "Mayo", "2022-01-01", null],
+    ["06", "Junio", "2022-01-01", null],
+    ["07", "Julio", "2022-01-01", null],
+    ["08", "Agosto", "2022-01-01", null],
+    ["09", "Septiembre", "2022-01-01", null],
+    ["10", "Octubre", "2022-01-01", null],
+    ["11", "Noviembre", "2022-01-01", null],
+    ["12", "Diciembre", "2022-01-01", null],
+    ["13", "Enero-Febrero", "2022-01-01", null],
+    ["14", "Marzo-Abril", "2022-01-01", null],
+    ["15", "Mayo-Junio", "2022-01-01", null],
+    ["16", "Julio-Agosto", "2022-01-01", null],
+    ["17", "Septiembre-Octubre", "2022-01-01", null],
+    ["18", "Noviembre-Diciembre", "2022-01-01", null]
+  ]
+}

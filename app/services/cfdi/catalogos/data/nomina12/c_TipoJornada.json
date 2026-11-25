@@ -1,0 +1,42 @@
+{
+  "catalogo": "c_TipoJornada",
+  "grupo": "nomina12",
+  "titulo": "Catálogo de tipos de jornada laboral.",
+  "sat": {
+    "version_cfdi": null,
+    "version": "1",
+    "revision": "A",
+    "fecha_publicacion": null,
+    "vigencia_inicio": "2017-01-01",
+    "vigencia_fin": null
+  },
+  "origen": {
+    "archivo": "catNomina.xls",
+    "url": "http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/catNomina.xls",
+    "version_archivo": null,
+    "fecha_descarga": "2026-11-25",
+    "sha256": "6e61a49d7b966dbcf730ef46a5fde1cb3b505114b69b4ecbf8fa2ba5d882a3c3",
+    "hojas": [
+      "c_TipoJornada"
+    ]
+  },
+  "llave": [
+    "clave"
+  ],
+  "claves_solo_en_xsd": [],
+  "columnas": [
+    "clave",
+    "descripcion"
+  ],
+  "registros": [
+    ["01", "Diurna"],
+    ["02", "Nocturna"],
+    ["03", "Mixta"],
+    ["04", "Por hora"],
+    ["05", "Reducida"],
+    ["06", "Continuada"],
+    ["07", "Partida"],
+    ["08", "Por turnos"],
+    ["99", "Otra Jornada"]
+  ]
+}

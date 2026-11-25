@@ -1,0 +1,43 @@
+{
+  "catalogo": "c_ObjetoImp",
+  "grupo": "cfdi40",
+  "titulo": "Catálogo Objeto impuesto.",
+  "sat": {
+    "version_cfdi": "4.0",
+    "version": "4",
+    "revision": "0",
+    "fecha_publicacion": "2024-12-13",
+    "vigencia_inicio": "2022-01-01",
+    "vigencia_fin": null
+  },
+  "origen": {
+    "archivo": "catCFDI_V_4_20261120.xls",
+    "url": "http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/catCFDI_V_4_20261120.xls",
+    "version_archivo": "2026-11-20",
+    "fecha_descarga": "2026-11-25",
+    "sha256": "b8c156b356d378ab1f31b319a74b8caf04267b33edf04c910b9715474af96571",
+    "hojas": [
+      "c_ObjetoImp"
+    ]
+  },
+  "llave": [
+    "clave"
+  ],
+  "claves_solo_en_xsd": [],
+  "columnas": [
+    "clave",
+    "descripcion",
+    "vigencia_inicio",
+    "vigencia_fin"
+  ],
+  "registros": [
+    ["01", "No objeto de impuesto.", "2022-01-01", null],
+    ["02", "Sí objeto de impuesto.", "2022-01-01", null],
+    ["03", "Sí objeto del impuesto y no obligado al desglose.", "2022-01-01", null],
+    ["04", "Sí objeto del impuesto y no causa impuesto.", "2022-10-07", null],
+    ["05", "Sí objeto del impuesto, IVA crédito PODEBI.", "2023-12-06", null],
+    ["06", "Sí objeto del IVA, No traslado IVA.", "2024-12-13", null],
+    ["07", "No traslado del IVA, Sí desglose IEPS.", "2024-12-13", null],
+    ["08", "No traslado del IVA, No desglose IEPS.", "2024-12-13", null]
+  ]
+}

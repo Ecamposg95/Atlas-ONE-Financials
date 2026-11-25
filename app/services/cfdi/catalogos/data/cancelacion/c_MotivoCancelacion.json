@@ -1,0 +1,37 @@
+{
+  "catalogo": "c_MotivoCancelacion",
+  "grupo": "cancelacion",
+  "titulo": "Motivos de cancelación de CFDI (art. 29-A CFF)",
+  "sat": {
+    "version": null,
+    "revision": null,
+    "fecha_publicacion": null,
+    "vigencia_inicio": "2022-01-01",
+    "vigencia_fin": null
+  },
+  "origen": {
+    "archivo": "Esquema_de_cancelacion_de_CFDI_2026.pdf",
+    "url": "https://www.sat.gob.mx/minisitio/Factura/documentos/Esquema_de_cancelacion_de_CFDI_2026.pdf",
+    "version_archivo": "2026",
+    "fecha_descarga": "2026-11-25",
+    "sha256": "91c4c4027e2106f4753db2849a58ff5e7c5ab2933d4e2c55cc8477e498a0d267",
+    "hojas": [],
+    "nota": "Transcrito del PDF y cotejado textualmente por convertir.py"
+  },
+  "llave": [
+    "clave"
+  ],
+  "claves_solo_en_xsd": [],
+  "columnas": [
+    "clave",
+    "descripcion",
+    "vigencia_inicio",
+    "vigencia_fin"
+  ],
+  "registros": [
+    ["01", "Comprobante emitido con errores con relación", "2022-01-01", null],
+    ["02", "Comprobante emitido con errores sin relación", "2022-01-01", null],
+    ["03", "No se llevó a cabo la operación", "2022-01-01", null],
+    ["04", "Operación nominativa relacionada en una factura global", "2022-01-01", null]
+  ]
+}

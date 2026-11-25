@@ -1,0 +1,46 @@
+{
+  "catalogo": "c_PeriodicidadPago",
+  "grupo": "nomina12",
+  "titulo": "Catálogo de tipos de periodicidad del pago.",
+  "sat": {
+    "version_cfdi": null,
+    "version": "1.1",
+    "revision": "0",
+    "fecha_publicacion": null,
+    "vigencia_inicio": "2017-01-01",
+    "vigencia_fin": null
+  },
+  "origen": {
+    "archivo": "catNomina.xls",
+    "url": "http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/catNomina.xls",
+    "version_archivo": null,
+    "fecha_descarga": "2026-11-25",
+    "sha256": "6e61a49d7b966dbcf730ef46a5fde1cb3b505114b69b4ecbf8fa2ba5d882a3c3",
+    "hojas": [
+      "c_PeriodicidadPago"
+    ]
+  },
+  "llave": [
+    "clave"
+  ],
+  "claves_solo_en_xsd": [],
+  "columnas": [
+    "clave",
+    "descripcion",
+    "vigencia_inicio",
+    "vigencia_fin"
+  ],
+  "registros": [
+    ["01", "Diario", "2016-11-01", null],
+    ["02", "Semanal", "2016-11-01", null],
+    ["03", "Catorcenal", "2016-11-01", null],
+    ["04", "Quincenal", "2016-11-01", null],
+    ["05", "Mensual", "2016-11-01", null],
+    ["06", "Bimestral", "2016-11-01", null],
+    ["07", "Unidad obra", "2016-11-01", null],
+    ["08", "Comisión", "2016-11-01", null],
+    ["09", "Precio alzado", "2016-11-01", null],
+    ["10", "Decenal", "2017-01-19", null],
+    ["99", "Otra Periodicidad", "2016-11-01", null]
+  ]
+}
