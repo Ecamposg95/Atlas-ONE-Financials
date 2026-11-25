@@ -17,6 +17,13 @@ from app.models.change_log import ChangeLog  # noqa: F401
 from app.models.contact import Customer, Vendor  # noqa: F401
 from app.models.expense import Expense  # noqa: F401
 from app.models.financial_account import FinancialAccount  # noqa: F401
+from app.models.fiscal_document import (  # noqa: F401
+    FiscalDocument,
+    FiscalDocumentConcept,
+    FiscalDocumentConceptTax,
+    FiscalDocumentXml,
+    FiscalSeries,
+)
 from app.models.fiscal_entity import FiscalEntity  # noqa: F401
 from app.models.fiscal_year import FiscalYearLock  # noqa: F401
 from app.models.fixed_asset import FixedAsset  # noqa: F401

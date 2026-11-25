@@ -1,0 +1,234 @@
+{
+  "archivos": {
+    "http://www.sat.gob.mx/sitio_internet/cfd/2/cadenaoriginal_2_0/utilerias.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/2/cadenaoriginal_2_0/utilerias.xslt",
+      "bytes": 920,
+      "estado": "ok",
+      "sha256": "1f7e9c9c04b2239cdf0928e6471d4f48165535c4d4d3ea445ec310b65cdf6c2c"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/4/cadenaoriginal_4_0/cadenaoriginal_4_0.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/4/cadenaoriginal_4_0/cadenaoriginal_4_0.xslt",
+      "bytes": 21324,
+      "estado": "ok",
+      "sha256": "b0559b380e73b850ca8a3da53b077a6051a09d87068d8d98e82dfd4acfba7565"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd",
+      "bytes": 50607,
+      "estado": "ok",
+      "sha256": "2489b5b535f5cbc6a6c2db6132620de1833f85372512d01deea62880e700e276"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/CartaPorte/CartaPorte20.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/CartaPorte/CartaPorte20.xslt",
+      "bytes": 27549,
+      "estado": "ok",
+      "sha256": "0f8fa95e65eaf1fbfaba34ee7c0b78396dd04c920b1b54facddd178fad55add5"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/CartaPorte/CartaPorte30.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/CartaPorte/CartaPorte30.xslt",
+      "bytes": 33207,
+      "estado": "ok",
+      "sha256": "3da384b7797ab037c0fc37d79716e0f4eb7704c6a585353aa2d73c6f76892e35"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/CartaPorte/CartaPorte31.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/CartaPorte/CartaPorte31.xslt",
+      "bytes": 34063,
+      "estado": "ok",
+      "sha256": "6ef3db6a004a7b27014bf8f03b9762f337479f0694525b193eaa9e3ff058fa0f"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/ComercioExterior11/ComercioExterior11.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/ComercioExterior11/ComercioExterior11.xslt",
+      "bytes": 7293,
+      "estado": "ok",
+      "sha256": "c96afd3f14e8c1802a653ffe71d7147f2f74eb4f5daf9e0b21afca0b2c80c7f7"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/ComercioExterior20/ComercioExterior20.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/ComercioExterior20/ComercioExterior20.xslt",
+      "bytes": 7039,
+      "estado": "ok",
+      "sha256": "b7540d6878c8d1e14b3d7f8a8bf3889dc03b0dfb6dfbfc6d6b30e27a094b8446"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/EstadoDeCuentaCombustible/ecc12.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/EstadoDeCuentaCombustible/ecc12.xslt",
+      "bytes": 4122,
+      "estado": "ok",
+      "sha256": "ad76f5a5c726df61fe82c1db5e3a189b1026fa0cd87518ea225498e24f4014fb"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/GastosHidrocarburos10/GastosHidrocarburos10.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/GastosHidrocarburos10/GastosHidrocarburos10.xslt",
+      "bytes": 5930,
+      "estado": "ok",
+      "sha256": "dc295079d9884a2afec09d63819eb874b4bede35ca8d4fe713625d0973e78a6b"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/HidrocarburosPetro/hidrocarburospetroliferos.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/HidrocarburosPetro/hidrocarburospetroliferos.xslt",
+      "bytes": 1208,
+      "estado": "ok",
+      "sha256": "b212b9df8119de4278a24d5258b27ac295746b7476cc6aef969a3ad1d6c55a4b"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/IngresosHidrocarburos10/IngresosHidrocarburos.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/IngresosHidrocarburos10/IngresosHidrocarburos.xslt",
+      "bytes": 1647,
+      "estado": "ok",
+      "sha256": "8dc9fb24cb47162da3d6fb831a1aa57a12571986eb123adfad2471370d56c10f"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/Pagos/Pagos20.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/Pagos/Pagos20.xslt",
+      "bytes": 9827,
+      "estado": "ok",
+      "sha256": "9277a0a5049fbd56e3123e6489ffb16f6ccfbca30943aa7dbd0f969f3b70bd0f"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/TuristaPasajeroExtranjero/TuristaPasajeroExtranjero.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/TuristaPasajeroExtranjero/TuristaPasajeroExtranjero.xslt",
+      "bytes": 1931,
+      "estado": "ok",
+      "sha256": "5a65dd5bd8d340fdc547b92ff2797199a97674bf2c78feacb69186c91338a68b"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/aerolineas/aerolineas.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/aerolineas/aerolineas.xslt",
+      "bytes": 1912,
+      "estado": "ok",
+      "sha256": "b197afab9535802b04d5e614a2320c10b8b67180e97f120b51d7bb60e61e028d"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/arteantiguedades/obrasarteantiguedades.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/arteantiguedades/obrasarteantiguedades.xslt",
+      "bytes": 1603,
+      "estado": "ok",
+      "sha256": "0823ab4e0ad86ffc6b674680981f4471a60c8ab72431b8dedacd08b1e61ba8e8"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/catalogos/catCFDI.xsd": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/catalogos/catCFDI.xsd.gz",
+      "bytes": 5984046,
+      "estado": "ok",
+      "sha256": "6c58936cb77576f839a4d7915953ceaf252b9eb9319f9458fe5bb67ae2bb0bb1"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/certificadodestruccion/certificadodedestruccion.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/certificadodestruccion/certificadodedestruccion.xslt",
+      "bytes": 2882,
+      "estado": "ok",
+      "sha256": "e4b09099c1453b47bb286a69b05e60d5a5bccaaac466a4a2aebf788601f69349"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/cfdiregistrofiscal/cfdiregistrofiscal.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/cfdiregistrofiscal/cfdiregistrofiscal.xslt",
+      "bytes": 823,
+      "estado": "ok",
+      "sha256": "6f47783bfeafa3920cbb452a3adee0239efd2250c13b9d91d242930416d1dee2"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/consumodecombustibles/consumodeCombustibles11.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/consumodecombustibles/consumodeCombustibles11.xslt",
+      "bytes": 4192,
+      "estado": "ok",
+      "sha256": "f43a77f25aba6ea7ce48769a5c700d2edce78e75914fbe866eafdb816ac2a9c1"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/detallista/detallista.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/detallista/detallista.xslt",
+      "bytes": 2176,
+      "estado": "ok",
+      "sha256": "e09906ef78afc077aa3318ca87bf2469e8570f97299d2f0237a2bc81da1e5e12"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/divisas/divisas.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/divisas/divisas.xslt",
+      "bytes": 120,
+      "estado": "sustituido_por_hoja_vacia",
+      "sha256": "4e98c630f75dba3fcc6c9a76a3d1d584c12b541f48c6a281bc458bb8ec0eb30a"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/donat/donat11.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/donat/donat11.xslt",
+      "bytes": 994,
+      "estado": "ok",
+      "sha256": "608a65b07c5841857562026c244c81f9cf3ddd32ff1d28bebab347bb4230fee3"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/iedu/iedu.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/iedu/iedu.xslt",
+      "bytes": 1244,
+      "estado": "ok",
+      "sha256": "ef5e7e6cc0666cfc67d0c41ad865c2a044947289013ca2add0f89dea7fde667f"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/implocal/implocal.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/implocal/implocal.xslt",
+      "bytes": 1827,
+      "estado": "ok",
+      "sha256": "f99e91c983b7a43b72dc41129afca7342a30e6e45de71b34f7d4e5b6154439d4"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/ine/ine11.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/ine/ine11.xslt",
+      "bytes": 1966,
+      "estado": "ok",
+      "sha256": "4098bf77bfee89e870604b7bc96ba4bdb19df78341f5e0cbffdd094eb916bcad"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/leyendasFiscales/leyendasFisc.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/leyendasFiscales/leyendasFisc.xslt",
+      "bytes": 1410,
+      "estado": "ok",
+      "sha256": "1588e059a3fdfc29bcca4de27f99dcf52abbaa7d815f428f2353a3105f52328c"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/nomina/nomina12.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/nomina/nomina12.xslt",
+      "bytes": 17105,
+      "estado": "ok",
+      "sha256": "4130bdb7f62d0987caa5af754ca0704c9e2693e3b454adfff02ba6146d673a08"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/notariospublicos/notariospublicos.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/notariospublicos/notariospublicos.xslt",
+      "bytes": 11323,
+      "estado": "ok",
+      "sha256": "7d2609b4b2977ace634d022e83f49bb20534bf137d7bdba014a40ee4b85e1d21"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/pagoenespecie/pagoenespecie.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/pagoenespecie/pagoenespecie.xslt",
+      "bytes": 1484,
+      "estado": "ok",
+      "sha256": "685854e25f091ebcb95a4865a7df80630949b2f400e47676ff8dfa2f3019a404"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/pfic/pfic.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/pfic/pfic.xslt",
+      "bytes": 1010,
+      "estado": "ok",
+      "sha256": "5f18f835cf6007e92b156ad4cc65ab9167becdcfb1742f6cd655fd2f173e8b1b"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/renovacionysustitucionvehiculos/renovacionysustitucionvehiculos.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/renovacionysustitucionvehiculos/renovacionysustitucionvehiculos.xslt",
+      "bytes": 6777,
+      "estado": "ok",
+      "sha256": "1cda351ecbe8c4ddb4c6bb6508e7ea9c36b11627317870f04939765274979aba"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/servicioparcialconstruccion/servicioparcialconstruccion.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/servicioparcialconstruccion/servicioparcialconstruccion.xslt",
+      "bytes": 2145,
+      "estado": "ok",
+      "sha256": "692f0470dd0fd57e4c6ea87012296b78d67c31b00c3120eaba446d29219b29e4"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/tipoDatos/tdCFDI/tdCFDI.xsd": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/tipoDatos/tdCFDI/tdCFDI.xsd",
+      "bytes": 7315,
+      "estado": "ok",
+      "sha256": "b3b81fe4017b95d5477f23a32f47e8b0571683cfddfff1330508c75e02b504cd"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/valesdedespensa/valesdedespensa.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/valesdedespensa/valesdedespensa.xslt",
+      "bytes": 2806,
+      "estado": "ok",
+      "sha256": "dff69b6c188c1332b6908936767050121571952a09b99f881c39e41773392b92"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/vehiculousado/vehiculousado.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/vehiculousado/vehiculousado.xslt",
+      "bytes": 3029,
+      "estado": "ok",
+      "sha256": "683b2a66cfd07d67f3c19c48499692e648079d663475f2f04f14d37131a29235"
+    },
+    "http://www.sat.gob.mx/sitio_internet/cfd/ventavehiculos/ventavehiculos11.xslt": {
+      "archivo": "www.sat.gob.mx/sitio_internet/cfd/ventavehiculos/ventavehiculos11.xslt",
+      "bytes": 1864,
+      "estado": "ok",
+      "sha256": "77a103915ea66d6ade5a23e5db7e3c66467abf744acef5f9ac8cafdc16362c7d"
+    }
+  },
+  "descripcion": "XSD y XSLT oficiales de CFDI 4.0 del SAT. Generado por scripts/sat_recursos/actualizar.py; no editar a mano.",
+  "faltantes": [
+    {
+      "http": 404,
+      "url": "http://www.sat.gob.mx/sitio_internet/cfd/divisas/divisas.xslt"
+    }
+  ],
+  "fecha_descarga": "2026-11-25"
+}
