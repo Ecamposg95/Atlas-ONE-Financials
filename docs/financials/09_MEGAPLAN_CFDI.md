@@ -22,7 +22,7 @@ La recomendación es sellar en nuestro lado, con la llave del cliente dentro de 
 | # | Decisión | Recomendación | Por qué |
 |---|---|---|---|
 | D1 | ¿Quién custodia la llave del certificado de sello digital? | Nosotros, con un servicio de llaves externo (AWS KMS o Google Cloud KMS). Primera opción: la llave firma dentro del servicio y nunca sale. Si la prueba de la fase 1 falla, respaldo: llave cifrada por empresa con la llave maestra en ese servicio, descifrada sólo en memoria al sellar | Cambiar de proveedor no obliga a mover llaves; los revendedores que exigen subir el certificado no documentan cómo lo guardan. Firmar dentro del servicio está documentado pero nadie lo ha probado con un certificado del SAT |
-| D2 | ¿Proveedor de timbrado? | Uno autorizado que acepte XML ya sellado, más un segundo de contingencia. Candidatos a cotizar: Prodigia como primario (acepta XML sellado y tiene conector en `satcfdi`); SIFEI, Solución Factible o Formas Digitales como secundario | Ocho revocaciones en un año; Facturapi y Facturama son revendedores y exigen el certificado |
+| D2 | ¿Proveedor de timbrado? | Uno autorizado que acepte XML ya sellado, más un segundo de contingencia. Candidatos a cotizar: Prodigia como primario (acepta XML sellado y tiene conector en `satcfdi`); Formas Digitales como contingencia y Solución Factible de reserva; SIFEI descartado porque su cancelación exige el certificado (cotejo del 25-11-2026) | Ocho revocaciones en un año; Facturapi y Facturama son revendedores y exigen el certificado |
 | D3 | ¿CFDI antes que la importación de CFDI recibidos (E-01)? | Emitir primero | Es lo que piden el punto de venta y nómina; la importación reutiliza después el mismo modelo de documento |
 | D4 | ¿Se integra también el punto de venta anterior (`Atlas-Rmazh`)? | No; esperar a que sus tiendas terminen de mudarse a Atlas ONE | Tiene el mismo modelo pero sin cola durable de eventos; sería trabajo doble |
 | D5 | ¿Cómo se resuelve la factura de un ticket que ya entró en una global? | Emitir egreso contra la global y luego la factura nominativa **[contador]** | Las guías del SAT se contradicen; este camino no obliga a cancelar y reexpedir la global completa |
@@ -106,9 +106,9 @@ Tamaños relativos: S, M, L, XL. No son fechas.
 
 - Cotejar a mano la lista oficial de proveedores y cotizar a los candidatos de D2; abrir cuenta de pruebas.
 - Leer catálogos y matriz de errores del SAT y cargarlos como datos versionados.
-- Revisión legal: contrato de custodia, aviso de privacidad, procedimiento de aviso ante incidente **[abogado]**.
-- Validación con contador de reglas de IVA, retenciones y pólizas **[contador]**.
-- Aceptar o ajustar los ADR 011 (eventos entrantes), 013 (localización) y uno nuevo de custodia de llaves.
+- Revisión legal: contrato de custodia, aviso de privacidad, procedimiento de aviso ante incidente **[abogado]**. Brief: [`11_BRIEF_LEGAL_CFDI.md`](11_BRIEF_LEGAL_CFDI.md).
+- Validación con contador de reglas de IVA, retenciones y pólizas **[contador]**. Cuestionario: [`10_CUESTIONARIO_CONTADOR_CFDI.md`](10_CUESTIONARIO_CONTADOR_CFDI.md).
+- Aceptar o ajustar los ADR 011 (eventos entrantes), 013 (localización) y uno nuevo de custodia de llaves. Redactados: [ADR-011](../decisions/011-eventos-entrantes-e-idempotencia.md) y [ADR-013](../decisions/013-localizacion-mexicana-como-capa.md) (propuestos), [ADR-017](../decisions/017-custodia-llaves-csd.md) custodia de llaves y [ADR-018](../decisions/018-proveedor-de-timbrado.md) proveedor de timbrado (aceptados por D1 y D2).
 - Auditar HRFlow (hecho el 25-11-2026).
 - **Hecho cuando:** hay proveedor elegido con cuenta de pruebas, catálogos cargados, dictamen legal y ADR aceptados.
 
