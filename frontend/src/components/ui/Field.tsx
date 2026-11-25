@@ -51,15 +51,17 @@ export function SelectInput({
   required,
   options,
   placeholder,
+  hint,
   ...props
 }: {
   label: string
   required?: boolean
   options: { value: string; label: string }[]
   placeholder?: string
+  hint?: string
 } & SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <Field label={label} required={required}>
+    <Field label={label} required={required} hint={hint}>
       {(id) => (
         <select id={id} aria-required={required} required={required} className={inputClass} {...props}>
           {placeholder !== undefined ? <option value="">{placeholder}</option> : null}

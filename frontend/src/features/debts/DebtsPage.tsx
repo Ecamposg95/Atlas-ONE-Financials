@@ -10,6 +10,12 @@ import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SelectInput, TextInput } from '@/components/ui/Field'
 import { DebtDetailPanel } from '@/features/debts/DebtDetailPanel'
+import {
+  CfdiFields,
+  EMPTY_CFDI,
+  cfdiCreatePayload,
+  withCustomerDefault,
+} from '@/features/fiscal/CfdiOperationFields'
 import { JournalEntryModal } from '@/components/ui/JournalEntryModal'
 import { Modal } from '@/components/ui/Modal'
 import { Money } from '@/components/ui/Money'
@@ -160,6 +166,8 @@ export function DebtsPage({ config }: { config: Config }) {
   const [batchAccountId, setBatchAccountId] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [payError, setPayError] = useState<string | null>(null)
+  // Datos para la factura: sólo en cuentas por cobrar, opcionales.
+  const [cfdi, setCfdi] = useState(EMPTY_CFDI)
   const [form, setForm] = useState({
     contact_id: '',
     description: '',
@@ -217,6 +225,7 @@ export function DebtsPage({ config }: { config: Config }) {
       if (form.notes) payload.notes = form.notes
       if (form.business_unit_id) payload.business_unit_id = form.business_unit_id
       if (form.fiscal_entity_id) payload.fiscal_entity_id = form.fiscal_entity_id
+      if (config.kind === 'receivables') Object.assign(payload, cfdiCreatePayload(cfdi))
       await api.post(config.endpoint, payload)
     },
     onSuccess: () => {
@@ -251,6 +260,7 @@ export function DebtsPage({ config }: { config: Config }) {
   function closeModal() {
     setModalOpen(false)
     setError(null)
+    setCfdi(EMPTY_CFDI)
     setForm({
       contact_id: '',
       description: '',
@@ -591,6 +601,8 @@ export function DebtsPage({ config }: { config: Config }) {
           debt={items.find((item) => item.id === detailFor.id) ?? detailFor}
           kind={config.kind}
           contactName={contactName(detailFor)}
+          customer={(contacts ?? []).find((contact) => contact.id === detailFor.customer_id)}
+          onSaved={invalidate}
           payLabel={config.payAction}
           onClose={() => setDetailFor(null)}
           onPay={() => {
@@ -622,7 +634,13 @@ export function DebtsPage({ config }: { config: Config }) {
             placeholder="Elige uno"
             options={(contacts ?? []).map((contact) => ({ value: contact.id, label: contact.name }))}
             value={form.contact_id}
-            onChange={(event) => setForm({ ...form, contact_id: event.target.value })}
+            onChange={(event) => {
+              if (config.kind === 'receivables') {
+                const find = (id: string) => (contacts ?? []).find((contact) => contact.id === id)
+                setCfdi(withCustomerDefault(cfdi, find(form.contact_id), find(event.target.value)))
+              }
+              setForm({ ...form, contact_id: event.target.value })
+            }}
           />
           <TextInput
             label="Concepto"
@@ -670,6 +688,14 @@ export function DebtsPage({ config }: { config: Config }) {
             value={form.notes}
             onChange={(event) => setForm({ ...form, notes: event.target.value })}
           />
+          {config.kind === 'receivables' ? (
+            <CfdiFields
+              title="¿Vas a facturar esta venta?"
+              value={cfdi}
+              onChange={setCfdi}
+              customer={(contacts ?? []).find((contact) => contact.id === form.contact_id)}
+            />
+          ) : null}
           {error ? <p className="text-sm text-neg">{error}</p> : null}
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="ghost" onClick={closeModal}>

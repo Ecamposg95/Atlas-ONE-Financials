@@ -6,15 +6,16 @@
  *  cambió y cuáles eran los valores anteriores (HU-09).
  */
 
-import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { api } from '@/api/client'
+import { useEffect, useMemo, useState } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { api, errorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { HistoryTimeline } from '@/components/ui/HistoryTimeline'
 import { Money } from '@/components/ui/Money'
+import { CfdiFields, cfdiChanges, cfdiFrom } from '@/features/fiscal/CfdiOperationFields'
 import { formatDate, formatMoney } from '@/lib/format'
 import { useAccounts } from '@/lib/hooks'
-import type { Debt, JournalEntry, LedgerAccount, Page, Transaction } from '@/types/api'
+import type { Contact, Debt, JournalEntry, LedgerAccount, Page, Transaction } from '@/types/api'
 
 function daysBetween(iso: string): number {
   const due = new Date(`${iso}T00:00:00`)
@@ -30,6 +31,8 @@ export function DebtDetailPanel({
   onClose,
   onPay,
   payLabel,
+  customer,
+  onSaved,
 }: {
   debt: Debt
   kind: 'receivables' | 'payables'
@@ -37,6 +40,9 @@ export function DebtDetailPanel({
   onClose: () => void
   onPay: () => void
   payLabel: string
+  /** Cuentas por cobrar: el cliente filtra los usos de CFDI. */
+  customer?: Contact
+  onSaved?: () => void
 }) {
   const sourceType = kind === 'receivables' ? 'receivable' : 'payable'
 
@@ -74,6 +80,23 @@ export function DebtDetailPanel({
     )
     return (id: string) => map.get(id) ?? id
   }, [ledgerAccounts])
+
+  const [cfdi, setCfdi] = useState(() => cfdiFrom(debt))
+  const [cfdiMessage, setCfdiMessage] = useState<{ tone: 'pos' | 'neg'; text: string } | null>(null)
+  useEffect(() => {
+    setCfdi(cfdiFrom(debt))
+  }, [debt])
+  const cfdiPending = Object.keys(cfdiChanges(cfdi, debt)).length > 0
+  const saveCfdi = useMutation({
+    mutationFn: async () => {
+      await api.patch(`/${kind}/${debt.id}`, cfdiChanges(cfdi, debt))
+    },
+    onSuccess: () => {
+      setCfdiMessage({ tone: 'pos', text: 'Datos de factura guardados.' })
+      onSaved?.()
+    },
+    onError: (err) => setCfdiMessage({ tone: 'neg', text: errorMessage(err) }),
+  })
 
   const days = daysBetween(debt.due_date)
   const open = ['OPEN', 'PARTIAL', 'OVERDUE'].includes(debt.display_status)
@@ -194,6 +217,45 @@ export function DebtDetailPanel({
               </div>
             )}
           </section>
+
+          {kind === 'receivables' ? (
+            <section>
+              <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
+                Datos para la factura
+              </h3>
+              <p className="mb-3 text-xs text-muted">
+                Opcionales. Se pueden corregir en cualquier momento: no cambian tus números.
+              </p>
+              <form
+                className="space-y-3"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  setCfdiMessage(null)
+                  saveCfdi.mutate()
+                }}
+              >
+                <CfdiFields
+                  collapsible={false}
+                  value={cfdi}
+                  onChange={(next) => {
+                    setCfdiMessage(null)
+                    setCfdi(next)
+                  }}
+                  customer={customer}
+                />
+                {cfdiMessage ? (
+                  <p className={`text-sm ${cfdiMessage.tone === 'pos' ? 'text-pos' : 'text-neg'}`}>
+                    {cfdiMessage.text}
+                  </p>
+                ) : null}
+                <div className="flex justify-end">
+                  <Button type="submit" variant="secondary" disabled={!cfdiPending || saveCfdi.isPending}>
+                    {saveCfdi.isPending ? 'Guardando…' : 'Guardar datos de factura'}
+                  </Button>
+                </div>
+              </form>
+            </section>
+          ) : null}
 
           <section>
             <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
