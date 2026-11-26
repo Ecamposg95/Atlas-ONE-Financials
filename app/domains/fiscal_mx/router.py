@@ -1,8 +1,9 @@
-"""Localización MX: catálogos para captura y facturas (CFDI 4.0) en borrador.
+"""Localización MX: catálogos para captura y facturas (CFDI 4.0).
 
-No hay endpoint de sellado ni de timbrado: dependen del servicio de llaves
-(ADR-017) y del proveedor (ADR-018). El XML que se descarga aquí es un
-borrador sin sello y sin validez fiscal.
+``/xml`` descarga un borrador sin sello y sin validez fiscal. Sellar, timbrar
+y cancelar (al final del archivo) dependen del servicio de llaves (ADR-017) y
+del proveedor (ADR-018), y responden 503 mientras ``CFDI_TIMBRADO_HABILITADO``
+esté apagado.
 """
 
 from __future__ import annotations
@@ -159,4 +160,100 @@ def download_draft_xml(documento_id: str, db: Session = Depends(get_db), org_id:
             "Content-Disposition": f'attachment; filename="{nombre}"',
             "X-Validez-Fiscal": "ninguna; borrador sin sello ni timbre",
         },
+    )
+
+
+# ---------------------------------------------------------------- sellado, timbrado y cancelación (ADR-017/018)
+
+from app.config import get_settings  # noqa: E402
+from app.domains.fiscal_mx import timbrado as timbrado_service  # noqa: E402
+from app.domains.fiscal_mx.schemas import CancelacionIn, EstatusRead  # noqa: E402
+from app.models.organization import ROLE_ADMIN, ROLE_OWNER  # noqa: E402
+from app.services.cfdi import configuracion as cfdi_config  # noqa: E402
+
+# Sellar usa el certificado de la empresa: sólo dueño o administrador.
+ROLES_TIMBRADO = (ROLE_OWNER, ROLE_ADMIN)
+
+
+def servicios_timbrado() -> cfdi_config.ServiciosTimbrado:
+    """Firmante y proveedor configurados; 503 en español mientras el timbrado no esté disponible."""
+    try:
+        return cfdi_config.construir(get_settings())
+    except cfdi_config.TimbradoNoDisponible as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+def servicios_timbrado_opcional() -> cfdi_config.ServiciosTimbrado | None:
+    try:
+        return cfdi_config.construir(get_settings())
+    except cfdi_config.TimbradoNoDisponible:
+        return None
+
+
+@router.post("/documents/{documento_id}/stamp", response_model=DocumentoRead)
+def stamp_document(
+    documento_id: str,
+    db: Session = Depends(get_db),
+    org_id: str = Depends(get_current_org_id),
+    user: User = Depends(get_current_user),
+    _membership=Depends(require_role(ROLES_TIMBRADO)),
+    servicios: cfdi_config.ServiciosTimbrado = Depends(servicios_timbrado),
+):
+    """Sella con el certificado de la empresa y timbra con el proveedor. Idempotente."""
+    try:
+        doc = timbrado_service.timbrar(db, org_id, documento_id, servicios, user_id=user.id)
+    except docs.DocumentoError as exc:
+        raise _http(exc) from exc
+    return DocumentoRead.model_validate(doc)
+
+
+@router.post("/documents/{documento_id}/cancel", response_model=DocumentoRead)
+def cancel_document(
+    documento_id: str,
+    payload: CancelacionIn,
+    db: Session = Depends(get_db),
+    org_id: str = Depends(get_current_org_id),
+    user: User = Depends(get_current_user),
+    _membership=Depends(require_role(ROLES_TIMBRADO)),
+    servicios: cfdi_config.ServiciosTimbrado = Depends(servicios_timbrado),
+):
+    """Solicita la cancelación ante el SAT (motivo 01 a 04). No cancela el ingreso ni toca el libro."""
+    try:
+        doc = timbrado_service.cancelar(
+            db, org_id, documento_id, payload.motivo, payload.folio_sustitucion, servicios, user_id=user.id
+        )
+    except docs.DocumentoError as exc:
+        raise _http(exc) from exc
+    return DocumentoRead.model_validate(doc)
+
+
+@router.get("/documents/{documento_id}/status", response_model=EstatusRead)
+def document_status(
+    documento_id: str,
+    db: Session = Depends(get_db),
+    org_id: str = Depends(get_current_org_id),
+    user: User = Depends(get_current_user),
+    servicios: cfdi_config.ServiciosTimbrado | None = Depends(servicios_timbrado_opcional),
+):
+    """Estado del documento; si está timbrado y el timbrado está disponible, consulta al SAT por el proveedor."""
+    try:
+        doc = timbrado_service.consultar_estatus(db, org_id, documento_id, servicios, user_id=user.id)
+    except docs.DocumentoError as exc:
+        raise _http(exc) from exc
+    leido = EstatusRead.model_validate(doc)
+    leido.timbrado_disponible = servicios is not None
+    return leido
+
+
+@router.get("/documents/{documento_id}/stamped-xml")
+def download_stamped_xml(documento_id: str, db: Session = Depends(get_db), org_id: str = Depends(get_current_org_id)):
+    """XML timbrado tal como lo devolvió el proveedor (byte por byte)."""
+    try:
+        doc, xml = timbrado_service.xml_timbrado(db, org_id, documento_id)
+    except docs.DocumentoError as exc:
+        raise _http(exc) from exc
+    return Response(
+        content=xml,
+        media_type="application/xml",
+        headers={"Content-Disposition": f'attachment; filename="{doc.serie}-{doc.folio}-{doc.uuid_fiscal}.xml"'},
     )

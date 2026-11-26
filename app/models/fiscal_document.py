@@ -36,14 +36,17 @@ from sqlalchemy.orm import relationship
 from app.database import Base
 from app.models.mixins import AuditMixin, TenantMixin, UUIDPKMixin, _utcnow
 
-# Ciclo de vida. En este PR sólo se alcanzan BORRADOR y LISTO_PARA_TIMBRAR;
-# los demás quedan para el sellado y el timbrado (ADR-017 y ADR-018).
+# Ciclo de vida (ADR-017 y ADR-018):
+#   BORRADOR → LISTO_PARA_TIMBRAR (validado) → SELLADO → TIMBRADO
+#   TIMBRADO → CANCELACION_EN_PROCESO → CANCELADO | CANCELACION_RECHAZADA
+# Un rechazo del proveedor por datos regresa a BORRADOR (no hubo UUID).
 FD_BORRADOR = "BORRADOR"
 FD_LISTO = "LISTO_PARA_TIMBRAR"
 FD_SELLADO = "SELLADO"
 FD_TIMBRADO = "TIMBRADO"
 FD_CANCELACION_EN_PROCESO = "CANCELACION_EN_PROCESO"
 FD_CANCELADO = "CANCELADO"
+FD_CANCELACION_RECHAZADA = "CANCELACION_RECHAZADA"
 FD_DESCARTADO = "DESCARTADO"
 FISCAL_DOCUMENT_STATUSES = (
     FD_BORRADOR,
@@ -52,12 +55,15 @@ FISCAL_DOCUMENT_STATUSES = (
     FD_TIMBRADO,
     FD_CANCELACION_EN_PROCESO,
     FD_CANCELADO,
+    FD_CANCELACION_RECHAZADA,
     FD_DESCARTADO,
 )
 # Estados que todavía se pueden rearmar desde la operación.
 FD_EDITABLES = (FD_BORRADOR, FD_LISTO)
 # Estados que ocupan la operación: no se prepara otro documento mientras exista uno.
-FD_ACTIVOS = (FD_BORRADOR, FD_LISTO, FD_SELLADO, FD_TIMBRADO, FD_CANCELACION_EN_PROCESO)
+FD_ACTIVOS = (FD_BORRADOR, FD_LISTO, FD_SELLADO, FD_TIMBRADO, FD_CANCELACION_EN_PROCESO, FD_CANCELACION_RECHAZADA)
+# Estados con UUID: el CFDI existe ante el SAT.
+FD_CON_UUID = (FD_TIMBRADO, FD_CANCELACION_EN_PROCESO, FD_CANCELACION_RECHAZADA, FD_CANCELADO)
 
 ORIGEN_INGRESO = "income"
 ORIGEN_CXC = "receivable"
@@ -133,13 +139,29 @@ class FiscalDocument(Base, UUIDPKMixin, TenantMixin, AuditMixin):
     validado_at = Column(DateTime(timezone=True), nullable=True)
     validacion = Column(JSON, nullable=True)  # último resultado: {listo, problemas, advertencias}
 
-    # Timbre (siguiente PR).
+    # Sello y timbre (ADR-017/018).
+    no_certificado = Column(String(20), nullable=True)
+    # Identificador idempotente del envío: "{id}:{secuencia del XML sellado}".
+    id_idempotente = Column(String(80), nullable=True)
+    timbrado_intentos = Column(Integer, nullable=False, default=0)
+    # Se fija ANTES de llamar al proveedor; con él, un reintento consulta antes de reenviar.
+    timbrado_enviado_at = Column(DateTime(timezone=True), nullable=True)
+    # Último rechazo o falta de respuesta: {categoria, mensaje, codigo_proveedor, codigo_sat, mensaje_proveedor, at}.
+    ultimo_error = Column(JSON, nullable=True)
     uuid_fiscal = Column(String(36), nullable=True, unique=True)
     proveedor_timbrado = Column(String(40), nullable=True)
     rfc_prov_certif = Column(String(13), nullable=True)
     fecha_timbrado = Column(DateTime(timezone=False), nullable=True)
     cancelled_at = Column(DateTime(timezone=True), nullable=True)
     cancellation_reason = Column(String(500), nullable=True)
+    cancelacion_motivo = Column(String(2), nullable=True)  # c_MotivoCancelacion
+    cancelacion_folio_sustitucion = Column(String(36), nullable=True)
+    cancelacion_solicitada_at = Column(DateTime(timezone=True), nullable=True)
+    # Última consulta de estatus ante el SAT (vía proveedor).
+    estatus_sat = Column(String(40), nullable=True)
+    es_cancelable = Column(String(60), nullable=True)
+    estatus_cancelacion_sat = Column(String(60), nullable=True)
+    estatus_consultado_at = Column(DateTime(timezone=True), nullable=True)
     created_by = Column(String(36), ForeignKey("users.id"), nullable=True)
 
     @property
@@ -197,10 +219,15 @@ class FiscalDocumentXml(Base, UUIDPKMixin, TenantMixin):
     """Bytes de un XML con valor fiscal. Se escriben una vez y no cambian."""
 
     __tablename__ = "documentos_fiscales_xml"
-    __table_args__ = (UniqueConstraint("documento_id", "tipo", name="uq_documentos_fiscales_xml_tipo"),)
+    __table_args__ = (
+        UniqueConstraint("documento_id", "tipo", "secuencia", name="uq_documentos_fiscales_xml_tipo_secuencia"),
+    )
 
     documento_id = Column(String(36), ForeignKey("documentos_fiscales.id"), nullable=False, index=True)
     tipo = Column(String(20), nullable=False)  # XML_TIPOS
+    # Un rechazo por datos obliga a sellar de nuevo; el sellado anterior se conserva.
+    # El vigente es el de secuencia mayor. TIMBRADO sólo existe una vez.
+    secuencia = Column(Integer, nullable=False, default=1)
     contenido = Column(LargeBinary, nullable=False)
     sha256 = Column(String(64), nullable=False)
     bytes = Column(Integer, nullable=False)
@@ -230,3 +257,53 @@ class FiscalSeries(Base, UUIDPKMixin, TenantMixin):
     emisor_clave = Column(String(36), nullable=False)
     serie = Column(String(25), nullable=False)
     siguiente_folio = Column(Integer, nullable=False, default=1)
+
+
+# ---------------------------------------------------------------- bitácora de firmas y del proveedor
+
+BITACORA_SELLO = "SELLO"
+BITACORA_FIRMA_CANCELACION = "FIRMA_CANCELACION"
+BITACORA_TIMBRADO = "TIMBRADO"
+BITACORA_CONSULTA_TIMBRADO = "CONSULTA_TIMBRADO"
+BITACORA_CANCELACION = "CANCELACION"
+BITACORA_ESTATUS = "ESTATUS"
+
+
+class FiscalSignatureLog(Base, UUIDPKMixin, TenantMixin):
+    """Bitácora de sólo agregar de cada uso del certificado y de cada respuesta del proveedor (ADR-017).
+
+    Nunca guarda material de llave ni contraseña: sólo el SHA-256 de lo que se
+    firmó (cadena original o solicitud de cancelación). Un evento de
+    SQLAlchemy y un disparador de PostgreSQL impiden actualizarla o borrarla.
+    """
+
+    __tablename__ = "documentos_fiscales_bitacora"
+    __table_args__ = (Index("ix_documentos_fiscales_bitacora_doc", "organization_id", "documento_id", "created_at"),)
+
+    documento_id = Column(String(36), ForeignKey("documentos_fiscales.id"), nullable=False)
+    evento = Column(String(30), nullable=False)  # BITACORA_*
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=True)
+    no_certificado = Column(String(20), nullable=True)
+    sha256 = Column(String(64), nullable=True)
+    firmante = Column(String(30), nullable=True)  # tipo de firmante (local_pruebas, kms…)
+    proveedor = Column(String(40), nullable=True)
+    uuid_fiscal = Column(String(36), nullable=True)
+    resultado = Column(String(30), nullable=True)
+    codigo = Column(String(40), nullable=True)
+    mensaje = Column(String(500), nullable=True)
+    segundos = Column(Numeric(8, 3), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=False)
+
+
+class BitacoraInmutable(RuntimeError):
+    pass
+
+
+@event.listens_for(FiscalSignatureLog, "before_update")
+def _bitacora_no_se_actualiza(_mapper, _connection, _target):
+    raise BitacoraInmutable("La bitácora de firmas no se modifica.")
+
+
+@event.listens_for(FiscalSignatureLog, "before_delete")
+def _bitacora_no_se_borra(_mapper, _connection, _target):
+    raise BitacoraInmutable("La bitácora de firmas no se borra.")

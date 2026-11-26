@@ -1,11 +1,13 @@
-# CFDI 4.0: documento fiscal, armado y validación previa
+# CFDI 4.0: documento fiscal, armado, validación, sellado y timbrado
 
 Capa de localización mexicana (ADR-013). Fase 2 del megaplan
-(`docs/financials/09_MEGAPLAN_CFDI.md`): **armar y validar** el CFDI de
-ingreso de un ingreso o una cuenta por cobrar. **No sella ni timbra**: eso
-depende del servicio de llaves (ADR-017) y del proveedor (ADR-018) y llega en
-el siguiente PR. Nada aquí crea pólizas, mueve dinero ni cambia la operación
-(una prueba lo vigila: `test_el_modulo_fiscal_no_toca_el_libro`).
+(`docs/financials/09_MEGAPLAN_CFDI.md`): **armar, validar, sellar, timbrar y
+cancelar** el CFDI de ingreso de un ingreso o una cuenta por cobrar. El
+sellado y el timbrado están construidos contra interfaces propias
+(`Firmante`, ADR-017; `ProveedorTimbrado`, ADR-018) y **apagados** hasta que
+existan la cuenta del servicio de llaves y la del proveedor (ver "Sellado y
+timbrado"). Nada aquí crea pólizas, mueve dinero ni cambia la operación (una
+prueba lo vigila: `test_el_modulo_fiscal_no_toca_el_libro`).
 
 ## Piezas
 
@@ -18,8 +20,16 @@ el siguiente PR. Nada aquí crea pólizas, mueve dinero ni cambia la operación
 | `validacion.py` | Validación previa determinista: lista de problemas con código del SAT |
 | `zona_horaria.py` | Hora local del lugar de expedición con las columnas de huso de `c_CodigoPostal` |
 | `xml_sat.py` + `recursos_sat/` | Cadena original con la XSLT oficial y validación contra `cfdv40.xsd`, sin red |
+| `firmante.py` | Protocolo `Firmante`; `FirmanteLocalPruebas` (sólo pruebas, se niega en producción); `FirmanteKms` (hueco) |
+| `sellado.py` | `NoCertificado`, `Certificado`, cadena original con la XSLT oficial y `Sello`; verifica antes de devolver |
+| `cancelacion.py` | Solicitud de cancelación firmada por nosotros (XML-DSig, SHA-256 o SHA-1), motivos 01–04 |
+| `proveedor_timbrado.py` | Protocolo `ProveedorTimbrado`, resultados normalizados y errores en español con código del SAT |
+| `pac_simulado.py` | `ProveedorSimulado` para pruebas y desarrollo (sin validez fiscal) |
+| `pac_formas_digitales.py` | Adaptador de Formas Digitales, **sólo ambiente de pruebas** (contingencia, ADR-018) |
+| `configuracion.py` | Qué firmante y proveedor usa la app según `CFDI_*`; candado de producción |
 | `app/domains/fiscal_mx/documentos.py` | Servicio: borrador desde la operación, rearmar, validar, XML |
-| `app/models/fiscal_document.py` | Tablas `documentos_fiscales*` (migración `20261125_02`) |
+| `app/domains/fiscal_mx/timbrado.py` | Servicio: sellar, timbrar (idempotente), cancelar, consultar estatus |
+| `app/models/fiscal_document.py` | Tablas `documentos_fiscales*` (migraciones `20261125_02` y `20261126_01`) |
 
 ## Modelo
 
@@ -40,10 +50,20 @@ el siguiente PR. Nada aquí crea pólizas, mueve dinero ni cambia la operación
   disparador de PostgreSQL impiden actualizarlos o borrarlos: reconstruir un
   XML sellado desde la base invalida el sello (ADR-018, "guardar antes de
   enviar"). El XML **sin sellar no se guarda**: se regenera del documento.
-- Estados: `BORRADOR` → `LISTO_PARA_TIMBRAR` (al validar sin problemas). Los
-  demás (`SELLADO`, `TIMBRADO`, `CANCELACION_EN_PROCESO`, `CANCELADO`,
-  `DESCARTADO`) quedan definidos para los siguientes pasos. Una operación sólo
-  tiene una factura activa.
+- Estados: `BORRADOR` → `LISTO_PARA_TIMBRAR` (validado) → `SELLADO` →
+  `TIMBRADO` → `CANCELACION_EN_PROCESO` → `CANCELADO` o
+  `CANCELACION_RECHAZADA`. Un rechazo del proveedor por datos regresa a
+  `BORRADOR` (no hubo UUID); uno ajeno a la factura (saldo, credenciales,
+  falla del proveedor) deja `SELLADO` para reenviar el mismo XML.
+  `DESCARTADO` sigue sin usarse. Una operación sólo tiene una factura activa.
+- `documentos_fiscales_xml.secuencia`: un rechazo por datos obliga a sellar
+  otra vez; el sellado anterior se conserva. El vigente es el de secuencia
+  mayor.
+- `documentos_fiscales_bitacora`: sólo agregar (evento de SQLAlchemy y
+  disparador en PostgreSQL). Un renglón por cada firma (sello o solicitud de
+  cancelación: usuario, documento, número de certificado, SHA-256 de lo
+  firmado, tipo de firmante) y por cada respuesta del proveedor. Nunca
+  material de llave.
 
 ## API (`/api/fiscal-mx/documents`)
 
@@ -55,8 +75,68 @@ el siguiente PR. Nada aquí crea pólizas, mueve dinero ni cambia la operación
 | POST | `/documents/{id}/rebuild` | Vuelve a tomar datos de la operación y el cliente y refecha; conserva serie y folio |
 | POST | `/documents/{id}/validate` | Validación previa; `{listo, problemas, advertencias}` |
 | GET | `/documents/{id}/xml` | XML **sin sellar**, nombre `BORRADOR-SIN-VALIDEZ-FISCAL-…`, encabezado `X-Validez-Fiscal: ninguna` y comentario al inicio. `NoCertificado` en ceros, `Sello` y `Certificado` vacíos |
+| POST | `/documents/{id}/stamp` | Sella y timbra. Sólo OWNER o ADMIN. Idempotente. 503 mientras el timbrado esté apagado |
+| POST | `/documents/{id}/cancel` | `{motivo: "01".."04", folio_sustitucion?}`. Sólo OWNER o ADMIN. No cancela el ingreso |
+| GET | `/documents/{id}/status` | Estado guardado y, si hay UUID y el timbrado está disponible, consulta al SAT por el proveedor |
+| GET | `/documents/{id}/stamped-xml` | XML timbrado byte por byte |
 
-No hay endpoint de sellado ni de timbrado.
+## Sellado y timbrado
+
+Configuración en `configuracion.py` (`CFDI_TIMBRADO_HABILITADO`,
+`CFDI_FIRMANTE`, `CFDI_PROVEEDOR`; ver `.env.example`). Por omisión todo está
+apagado y `stamp`/`cancel` responden 503 "El timbrado aún no está
+disponible". En producción sólo valen `kms` y un proveedor real; el firmante
+local, el simulado y Formas Digitales de pruebas se rechazan.
+
+Flujo de `stamp`:
+
+1. Revalida (la validación pudo envejecer: 72 horas, catálogos).
+2. Revisa que el certificado sea del RFC emisor y esté vigente en la fecha.
+3. Sella, verifica el sello, valida el XSD, **guarda el XML sellado** y la
+   firma en la bitácora, y hace commit (`SELLADO`).
+4. Marca `timbrado_enviado_at` y hace commit **antes** de llamar al proveedor.
+5. Timbrado: guarda el XML timbrado tal como llegó, UUID, fecha,
+   `RfcProvCertif` y proveedor. Rechazo: error en español con el código del
+   SAT. Sin respuesta: 504 y queda `SELLADO` con la marca de envío.
+
+Reintento después de un envío sin desenlace: **primero `consultar_timbrado`**
+con el mismo XML e identificador idempotente (`{id}:{secuencia}`); sólo si el
+proveedor no lo tiene se reenvía. Si la consulta tampoco responde, no se
+reenvía. Un envío sin respuesta registrada y de menos de tres minutos se trata
+como en curso (409). Un documento enviado a un proveedor sin respuesta no se
+manda a otro (ADR-018). En Formas Digitales la consulta es reenviar los mismos
+bytes: deduplica por sello.
+
+Cancelación: firma la solicitud con el mismo `Firmante` (SHA-256 por omisión;
+cada proveedor declara su algoritmo y si rearma `FolioSustitucion=""`), la
+registra en la bitácora, guarda el acuse y queda `CANCELACION_EN_PROCESO`. El
+desenlace (`CANCELADO` o `CANCELACION_RECHAZADA`) sale sólo de `status`, nunca
+de un plazo calculado. Motivo 01 exige el UUID de una factura **timbrada en
+Atlas Financials y vigente** de la misma empresa.
+
+### Lo que falta para encenderlo
+
+1. **Servicio de llaves**: implementar `FirmanteKms` con
+   `spikes/cfdi_sellado/firmante.py::FirmanteAwsKms` (o Google Cloud KMS),
+   cambiar `DISPONIBLE` y escribir el alta de certificados por empresa (fase 1:
+   `.cer` en base, llave importada no exportable, validación de RFC, vigencia y
+   que sea CSD). `firmante_para(org, rfc)` elige la llave.
+2. **Proveedor**: adaptador de Prodigia (`ProveedorTimbrado`, con su
+   `consultar_timbrado` y su catálogo de errores) conectado en
+   `configuracion._proveedor`; adaptador de producción de Formas Digitales como
+   contingencia (cambian las URL y el contrato).
+3. Variables selladas en Railway y `CFDI_TIMBRADO_HABILITADO=true`.
+
+### Supuestos para el contador o el abogado
+
+- Motivo 01 sólo con una sustituta timbrada en Atlas Financials (no acepta un
+  UUID emitido en otro sistema).
+- Cancelar el CFDI no cancela ni revierte el ingreso o la cuenta por cobrar:
+  la persona decide en la operación.
+- La fecha de la solicitud de cancelación es la hora local del lugar de
+  expedición.
+- Un rechazo por datos reutiliza serie y folio al volver a sellar (no hubo
+  UUID).
 
 ## Supuestos para el contador
 
@@ -126,7 +206,7 @@ de la cancelación, que llegará con su propia función `c14n` que canonicaliza
 
 ## Pendiente
 
-- Sellado con el `Firmante` (ADR-017) y timbrado (ADR-018), guardando el XML
-  sellado antes de enviarlo.
-- Descartar un borrador; PDF; UI ("Preparar factura").
+- Servicio de llaves, alta de certificados y adaptador de Prodigia (arriba).
+- Descartar un borrador; refechar y volver a sellar un `SELLADO` que pasó la
+  ventana de 72 horas sin enviarse; UI de timbrado y cancelación.
 - Renglones en la operación (punto de venta, fase 3) en vez de concepto único.

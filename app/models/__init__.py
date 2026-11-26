@@ -23,6 +23,7 @@ from app.models.fiscal_document import (  # noqa: F401
     FiscalDocumentConceptTax,
     FiscalDocumentXml,
     FiscalSeries,
+    FiscalSignatureLog,
 )
 from app.models.fiscal_entity import FiscalEntity  # noqa: F401
 from app.models.fiscal_year import FiscalYearLock  # noqa: F401

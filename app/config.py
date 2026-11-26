@@ -46,6 +46,11 @@ class Settings:
     ai_effort: str
     ai_max_tokens: int
     ai_budget_default_usd: Decimal
+    # CFDI (ADR-017/018): apagado hasta que haya servicio de llaves y proveedor.
+    # Detalle de valores en app/services/cfdi/configuracion.py.
+    cfdi_timbrado_habilitado: bool = False
+    cfdi_firmante: str = "kms"
+    cfdi_proveedor: str = "prodigia"
 
     @property
     def is_production(self) -> bool:
@@ -93,6 +98,9 @@ def _build_settings() -> Settings:
         ai_effort=os.getenv("AI_EFFORT", "medium"),
         ai_max_tokens=int(os.getenv("AI_MAX_TOKENS", "16000")),
         ai_budget_default_usd=Decimal(os.getenv("AI_BUDGET_DEFAULT_USD", "20")),
+        cfdi_timbrado_habilitado=os.getenv("CFDI_TIMBRADO_HABILITADO", "false").lower() == "true",
+        cfdi_firmante=os.getenv("CFDI_FIRMANTE", "kms").strip().lower(),
+        cfdi_proveedor=os.getenv("CFDI_PROVEEDOR", "prodigia").strip().lower(),
     )
 
 
