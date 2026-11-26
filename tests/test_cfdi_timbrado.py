@@ -368,6 +368,10 @@ def test_timbrar_sella_guarda_y_timbra_sin_tocar_el_libro(client, db, timbrado, 
     estatus = _status(client, headers, doc["id"])
     assert (estatus["estatus_sat"], estatus["timbrado_disponible"]) == ("Vigente", True)
 
+    # La representación impresa sale del XML timbrado.
+    pdf = client.get(f"/api/fiscal-mx/documents/{doc['id']}/pdf", headers=headers)
+    assert pdf.status_code == 200 and "x-validez-fiscal" not in pdf.headers
+
 
 def test_sin_validar_no_se_timbra(client, timbrado):
     headers = _empresa(client)
@@ -419,6 +423,9 @@ def test_rechazo_por_datos_regresa_a_borrador_y_se_vuelve_a_sellar(client, db, t
     leido = client.get(f"/api/fiscal-mx/documents/{doc['id']}", headers=headers).json()
     assert leido["estado"] == "BORRADOR" and leido["uuid_fiscal"] is None
     assert (leido["ultimo_error"]["categoria"], leido["ultimo_error"]["codigo_sat"]) == ("DATOS_RECEPTOR", "CFDI40147")
+    # El sellado rechazado ya no es lo vigente: el PDF vuelve a ser el borrador.
+    pdf = client.get(f"/api/fiscal-mx/documents/{doc['id']}/pdf", headers=headers)
+    assert pdf.status_code == 200 and "ninguna" in pdf.headers["x-validez-fiscal"]
 
     # Corregido (aquí basta validar otra vez), se sella de nuevo: el sellado rechazado se conserva.
     assert client.post(f"/api/fiscal-mx/documents/{doc['id']}/validate", headers=headers).json()["listo"]

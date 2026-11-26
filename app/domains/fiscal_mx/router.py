@@ -8,6 +8,7 @@ esté apagado.
 
 from __future__ import annotations
 
+import re
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
@@ -257,3 +258,25 @@ def download_stamped_xml(documento_id: str, db: Session = Depends(get_db), org_i
         media_type="application/xml",
         headers={"Content-Disposition": f'attachment; filename="{doc.serie}-{doc.folio}-{doc.uuid_fiscal}.xml"'},
     )
+
+
+@router.get("/documents/{documento_id}/pdf")
+def download_pdf(documento_id: str, db: Session = Depends(get_db), org_id: str = Depends(get_current_org_id)):
+    """Representación impresa, armada del XML. Sin timbre lleva la marca "Sin validez fiscal" y no trae QR."""
+    from app.models.fiscal_document import FD_CANCELADO
+    from app.services.cfdi import pdf as cfdi_pdf
+
+    try:
+        doc, xml = docs.xml_para_impresion(db, org_id, documento_id)
+    except docs.DocumentoError as exc:
+        raise _http(exc) from exc
+    try:
+        datos = cfdi_pdf.leer_cfdi(xml)
+        contenido = cfdi_pdf.render_pdf(xml, cancelado=doc.estado == FD_CANCELADO)
+    except cfdi_pdf.CfdiIlegible as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    nombre = re.sub(r"[^A-Za-z0-9_-]", "_", datos.serie_folio)
+    headers = {"Content-Disposition": f'attachment; filename="{nombre}.pdf"'}
+    if not datos.timbrado:
+        headers["X-Validez-Fiscal"] = "ninguna; representacion sin timbre"  # encabezado HTTP: sólo ASCII
+    return Response(content=contenido, media_type="application/pdf", headers=headers)

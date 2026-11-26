@@ -27,6 +27,7 @@ prueba lo vigila: `test_el_modulo_fiscal_no_toca_el_libro`).
 | `pac_simulado.py` | `ProveedorSimulado` para pruebas y desarrollo (sin validez fiscal) |
 | `pac_formas_digitales.py` | Adaptador de Formas Digitales, **sólo ambiente de pruebas** (contingencia, ADR-018) |
 | `configuracion.py` | Qué firmante y proveedor usa la app según `CFDI_*`; candado de producción |
+| `pdf.py` | Representación impresa (PDF, reportlab) leída **del XML**: borrador con marca "Sin validez fiscal", timbrado con UUID, sellos, cadena del TFD y QR del SAT |
 | `app/domains/fiscal_mx/documentos.py` | Servicio: borrador desde la operación, rearmar, validar, XML |
 | `app/domains/fiscal_mx/timbrado.py` | Servicio: sellar, timbrar (idempotente), cancelar, consultar estatus |
 | `app/models/fiscal_document.py` | Tablas `documentos_fiscales*` (migraciones `20261125_02` y `20261126_01`) |
@@ -79,6 +80,22 @@ prueba lo vigila: `test_el_modulo_fiscal_no_toca_el_libro`).
 | POST | `/documents/{id}/cancel` | `{motivo: "01".."04", folio_sustitucion?}`. Sólo OWNER o ADMIN. No cancela el ingreso |
 | GET | `/documents/{id}/status` | Estado guardado y, si hay UUID y el timbrado está disponible, consulta al SAT por el proveedor |
 | GET | `/documents/{id}/stamped-xml` | XML timbrado byte por byte |
+| GET | `/documents/{id}/pdf` | Representación impresa `SERIE-FOLIO.pdf`, del XML timbrado si está guardado, si no del sellado y si no del borrador. Sin timbre: marca "Sin validez fiscal", sin QR y `X-Validez-Fiscal: ninguna` |
+
+### PDF
+
+- Sale del XML, nunca de las filas: lo impreso es lo que tiene el SAT.
+- QR: `https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?id=UUID&re=RFC&rr=RFC&tt=TOTAL&fe=ÚLTIMOS8`.
+  `tt` sin ceros no significativos y con al menos un decimal (`1160.0`), hasta
+  18 enteros y 6 decimales; `&` de un RFC como `&amp;`; `fe` sin codificar.
+  Mismo formato que `phpcfdi/cfdi-expresiones` (Anexo 20). Lado de 3.2 cm
+  (el SAT pide al menos 2.75 cm).
+- Cadena del complemento de certificación: `||1.1|UUID|FechaTimbrado|RfcProvCertif|[Leyenda|]SelloCFD|NoCertificadoSAT||`,
+  armada a mano (no hay XSLT del TFD vendorizada).
+- Total con letra: `MIL CIENTO SESENTA PESOS 00/100 M.N.`, `UN PESO`,
+  `VEINTIÚN PESOS`, `UN MILLÓN DE PESOS`; otra moneda: nombre de `c_Moneda` y
+  su código.
+- Helvetica (estándar de PDF), sólo peso regular; acento ember.
 
 ## Sellado y timbrado
 
@@ -208,5 +225,5 @@ de la cancelación, que llegará con su propia función `c14n` que canonicaliza
 
 - Servicio de llaves, alta de certificados y adaptador de Prodigia (arriba).
 - Descartar un borrador; refechar y volver a sellar un `SELLADO` que pasó la
-  ventana de 72 horas sin enviarse; UI de timbrado y cancelación.
+  ventana de 72 horas sin enviarse; UI ("Preparar factura", timbrado y cancelación).
 - Renglones en la operación (punto de venta, fase 3) en vez de concepto único.

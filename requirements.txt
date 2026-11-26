@@ -13,4 +13,5 @@ anthropic>=0.69.0
 openpyxl>=3.1
 python-multipart>=0.0.20
 lxml==6.1.3  # XSD y XSLT oficiales del SAT (CFDI 4.0); versión fija, ver app/services/cfdi/README.md
+reportlab==4.4.4  # PDF de la representación impresa del CFDI, con su QR; versión fija
 cryptography>=44  # sello del CFDI (RSA-SHA256) y firma de la cancelación; ya llegaba vía python-jose
