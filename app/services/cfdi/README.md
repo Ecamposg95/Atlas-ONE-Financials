@@ -18,6 +18,7 @@ el siguiente PR. Nada aquí crea pólizas, mueve dinero ni cambia la operación
 | `validacion.py` | Validación previa determinista: lista de problemas con código del SAT |
 | `zona_horaria.py` | Hora local del lugar de expedición con las columnas de huso de `c_CodigoPostal` |
 | `xml_sat.py` + `recursos_sat/` | Cadena original con la XSLT oficial y validación contra `cfdv40.xsd`, sin red |
+| `pdf.py` | Representación impresa (PDF, reportlab) leída **del XML**: borrador con marca "Sin validez fiscal", timbrado con UUID, sellos, cadena del TFD y QR del SAT |
 | `app/domains/fiscal_mx/documentos.py` | Servicio: borrador desde la operación, rearmar, validar, XML |
 | `app/models/fiscal_document.py` | Tablas `documentos_fiscales*` (migración `20261125_02`) |
 
@@ -55,6 +56,22 @@ el siguiente PR. Nada aquí crea pólizas, mueve dinero ni cambia la operación
 | POST | `/documents/{id}/rebuild` | Vuelve a tomar datos de la operación y el cliente y refecha; conserva serie y folio |
 | POST | `/documents/{id}/validate` | Validación previa; `{listo, problemas, advertencias}` |
 | GET | `/documents/{id}/xml` | XML **sin sellar**, nombre `BORRADOR-SIN-VALIDEZ-FISCAL-…`, encabezado `X-Validez-Fiscal: ninguna` y comentario al inicio. `NoCertificado` en ceros, `Sello` y `Certificado` vacíos |
+| GET | `/documents/{id}/pdf` | Representación impresa `SERIE-FOLIO.pdf`, del XML timbrado si está guardado, si no del sellado y si no del borrador. Sin timbre: marca "Sin validez fiscal", sin QR y `X-Validez-Fiscal: ninguna` |
+
+### PDF
+
+- Sale del XML, nunca de las filas: lo impreso es lo que tiene el SAT.
+- QR: `https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?id=UUID&re=RFC&rr=RFC&tt=TOTAL&fe=ÚLTIMOS8`.
+  `tt` sin ceros no significativos y con al menos un decimal (`1160.0`), hasta
+  18 enteros y 6 decimales; `&` de un RFC como `&amp;`; `fe` sin codificar.
+  Mismo formato que `phpcfdi/cfdi-expresiones` (Anexo 20). Lado de 3.2 cm
+  (el SAT pide al menos 2.75 cm).
+- Cadena del complemento de certificación: `||1.1|UUID|FechaTimbrado|RfcProvCertif|[Leyenda|]SelloCFD|NoCertificadoSAT||`,
+  armada a mano (no hay XSLT del TFD vendorizada).
+- Total con letra: `MIL CIENTO SESENTA PESOS 00/100 M.N.`, `UN PESO`,
+  `VEINTIÚN PESOS`, `UN MILLÓN DE PESOS`; otra moneda: nombre de `c_Moneda` y
+  su código.
+- Helvetica (estándar de PDF), sólo peso regular; acento ember.
 
 No hay endpoint de sellado ni de timbrado.
 
@@ -128,5 +145,5 @@ de la cancelación, que llegará con su propia función `c14n` que canonicaliza
 
 - Sellado con el `Firmante` (ADR-017) y timbrado (ADR-018), guardando el XML
   sellado antes de enviarlo.
-- Descartar un borrador; PDF; UI ("Preparar factura").
+- Descartar un borrador; UI ("Preparar factura").
 - Renglones en la operación (punto de venta, fase 3) en vez de concepto único.
