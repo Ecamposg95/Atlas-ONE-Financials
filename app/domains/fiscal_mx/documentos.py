@@ -436,3 +436,25 @@ def validar(db: Session, org_id: str, documento_id: str) -> tuple[FiscalDocument
 def xml_borrador(db: Session, org_id: str, documento_id: str) -> tuple[FiscalDocument, bytes]:
     doc = obtener(db, org_id, documento_id)
     return doc, xml_sin_sellar(comprobante(doc), leyenda=LEYENDA_BORRADOR)
+
+
+def xml_para_impresion(db: Session, org_id: str, documento_id: str) -> tuple[FiscalDocument, bytes]:
+    """El XML del que sale el PDF: el timbrado si existe, si no el sellado y, si no, el borrador.
+
+    El PDF se arma del XML (la fuente de verdad), nunca de las filas de la base.
+    """
+    from app.models.fiscal_document import XML_SELLADO, XML_TIMBRADO, FiscalDocumentXml
+
+    doc = obtener(db, org_id, documento_id)
+    guardados = {
+        x.tipo: x.contenido
+        for x in db.query(FiscalDocumentXml).filter(
+            FiscalDocumentXml.organization_id == org_id,
+            FiscalDocumentXml.documento_id == doc.id,
+            FiscalDocumentXml.tipo.in_((XML_TIMBRADO, XML_SELLADO)),
+        )
+    }
+    for tipo in (XML_TIMBRADO, XML_SELLADO):
+        if tipo in guardados:
+            return doc, bytes(guardados[tipo])
+    return doc, xml_sin_sellar(comprobante(doc), leyenda=LEYENDA_BORRADOR)
