@@ -171,8 +171,8 @@ function DsoDelta({
   )
 }
 
-/** Qué reporte sabe exportarse y con qué nombre lo pide el backend. */
-const CSV_REPORTS: Partial<Record<Tab, string>> = {
+/** Qué reporte sabe exportarse a Excel (.xlsx) y con qué nombre lo pide el backend. */
+const EXPORT_REPORTS: Partial<Record<Tab, string>> = {
   pl: 'profit-loss',
   balance: 'balance-sheet',
   cartera: 'aging',
@@ -295,16 +295,16 @@ export function ReportsPage() {
         title="Reportes"
         description="Lo que dicen tus números, directo del libro contable."
         actions={
-          CSV_REPORTS[tab] ? (
+          EXPORT_REPORTS[tab] ? (
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => {
                   // Con la sesión del usuario: el enlace directo respondía 401.
                   downloadFile(
-                    `/reports/${CSV_REPORTS[tab]}/csv`,
+                    `/reports/${EXPORT_REPORTS[tab]}/xlsx`,
                     { start, end, ...dimensionParams(dimensions) },
-                    'reporte.csv',
+                    'reporte.xlsx',
                   ).catch(
                     async (err) => window.alert(await downloadErrorMessage(err)),
                   )

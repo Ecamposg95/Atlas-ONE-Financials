@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.domains.reports import service
-from app.domains.reports.export import to_csv
+from app.domains.reports.export import XLSX_MEDIA_TYPE, to_csv, to_xlsx
 from app.security.deps import get_current_org_id
 
 router = APIRouter(prefix="/reports", tags=["reports"])
@@ -98,20 +98,12 @@ def net_worth(
     return service.net_worth(db, org_id, months)
 
 
-@router.get("/{report}/csv")
-def export_csv(
-    report: str,
-    start: date_type | None = Query(default=None),
-    end: date_type | None = Query(default=None),
-    dims: dict = Depends(dimension_params),
-    db: Session = Depends(get_db),
-    org_id: str = Depends(get_current_org_id),
-):
-    """Descarga del reporte en CSV: lo que se le manda al contador."""
-    default_start, default_end = _default_month_range()
-    start = start or default_start
-    end = end or default_end
-
+def _export_table(
+    db: Session, org_id: str, report: str, start: date_type, end: date_type, dims: dict
+) -> tuple[list[str], list[list], str, str, set[int]]:
+    """Arma la tabla exportable de un reporte: (encabezados, filas, nombre de
+    archivo, título de hoja, columnas de dinero). La usan el CSV y el XLSX, así
+    las dos descargas dicen exactamente lo mismo."""
     if report == "profit-loss":
         data = service.profit_loss(db, org_id, start, end, **dims)
         rows = [["INGRESOS", "", ""]]
@@ -121,10 +113,15 @@ def export_csv(
         rows += [[line["code"], line["name"], line["amount"]] for line in data["expenses"]]
         rows.append(["", "Total de gastos", data["total_expenses"]])
         rows.append(["", "Resultado del periodo", data["net_profit"]])
-        headers = ["Cuenta", "Concepto", "Importe"]
-        name = f"estado-de-resultados-{start}-a-{end}"
+        return (
+            ["Cuenta", "Concepto", "Importe"],
+            rows,
+            f"estado-de-resultados-{start}-a-{end}",
+            "Estado de resultados",
+            {2},
+        )
 
-    elif report == "balance-sheet":
+    if report == "balance-sheet":
         data = service.balance_sheet(db, org_id, end, **dims)
         rows = [["ACTIVO", "", ""]]
         rows += [[line["code"], line["name"], line["amount"]] for line in data["assets"]]
@@ -135,10 +132,9 @@ def export_csv(
         rows.append(["CAPITAL", "", ""])
         rows += [[line["code"], line["name"], line["amount"]] for line in data["equity"]]
         rows.append(["", "Total de capital", data["total_equity"]])
-        headers = ["Cuenta", "Concepto", "Importe"]
-        name = f"balance-general-{end}"
+        return ["Cuenta", "Concepto", "Importe"], rows, f"balance-general-{end}", "Balance general", {2}
 
-    elif report == "aging":
+    if report == "aging":
         data = service.aging_report(db, org_id, "receivable")
         headers = ["Cliente", *data["buckets"], "Total"]
         rows = [
@@ -146,9 +142,10 @@ def export_csv(
             for c in data["contacts"]
         ]
         rows.append(["Total", *[data["totals"][b] for b in data["buckets"]], data["total"]])
-        name = f"antiguedad-cartera-{end}"
+        money = set(range(1, len(headers)))
+        return headers, rows, f"antiguedad-cartera-{end}", "Cartera", money
 
-    elif report == "trial-balance":
+    if report == "trial-balance":
         from app.services.accounting.engine import trial_balance
 
         rows = [
@@ -156,11 +153,36 @@ def export_csv(
             for row in trial_balance(db, org_id, end, **dims)
         ]
         headers = ["Cuenta", "Concepto", "Cargos", "Abonos"]
-        name = f"balanza-de-comprobacion-{end}"
+        return headers, rows, f"balanza-de-comprobacion-{end}", "Balanza", {2, 3}
 
-    else:
-        raise HTTPException(status_code=404, detail="Ese reporte no se puede exportar.")
+    raise HTTPException(status_code=404, detail="Ese reporte no se puede exportar.")
 
+
+@router.get("/{report}/{file_format}")
+def export_report(
+    report: str,
+    file_format: str,
+    start: date_type | None = Query(default=None),
+    end: date_type | None = Query(default=None),
+    dims: dict = Depends(dimension_params),
+    db: Session = Depends(get_db),
+    org_id: str = Depends(get_current_org_id),
+):
+    """Descarga del reporte en Excel (xlsx, con cifras numéricas) o CSV: lo que
+    se le manda al contador."""
+    if file_format not in ("csv", "xlsx"):
+        raise HTTPException(status_code=404, detail="Ese formato no se puede descargar.")
+    default_start, default_end = _default_month_range()
+    start = start or default_start
+    end = end or default_end
+    headers, rows, name, sheet_title, money = _export_table(db, org_id, report, start, end, dims)
+
+    if file_format == "xlsx":
+        return Response(
+            content=to_xlsx(headers, rows, sheet_title=sheet_title, money_columns=money),
+            media_type=XLSX_MEDIA_TYPE,
+            headers={"Content-Disposition": f'attachment; filename="{name}.xlsx"'},
+        )
     return Response(
         content=to_csv(headers, rows),
         media_type="text/csv; charset=utf-8",

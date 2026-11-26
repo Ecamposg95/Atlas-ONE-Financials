@@ -19,6 +19,7 @@ import { Card, Table } from '@/components/ui/Table'
 import { formatDate, formatMoney, today } from '@/lib/format'
 import { useAccounts } from '@/lib/hooks'
 import type { FixedAsset, Loan, LoanSchedule, Page } from '@/types/api'
+import { NO_PERMISSION, usePermissions } from '@/lib/permissions'
 
 const ASSET_CATEGORIES = [
   { value: 'EQUIPO_COMPUTO', label: 'Equipo de cómputo', months: 36 },
@@ -40,6 +41,7 @@ function lastClosedMonth(): { year: number; month: number; label: string } {
 }
 
 export function AssetsPage() {
+  const { canWrite } = usePermissions()
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const tab = searchParams.get('vista') === 'prestamos' ? 'prestamos' : 'activos'
@@ -203,7 +205,7 @@ export function AssetsPage() {
         title="Patrimonio"
         description="Lo que compraste para usar años y lo que debes a plazos."
         actions={
-          tab === 'activos' ? (
+          !canWrite ? undefined : tab === 'activos' ? (
             <Button onClick={() => setAssetModal(true)}>+ Nuevo activo</Button>
           ) : (
             <Button onClick={() => setLoanModal(true)}>+ Nuevo préstamo</Button>
@@ -268,7 +270,8 @@ export function AssetsPage() {
               <Button
                 variant="secondary"
                 className="mt-2 !px-3 !py-1 text-xs"
-                disabled={depreciate.isPending}
+                disabled={!canWrite || depreciate.isPending}
+                title={canWrite ? undefined : NO_PERMISSION.write}
                 onClick={() => depreciate.mutate()}
               >
                 {depreciate.isPending ? 'Registrando…' : 'Registrar depreciación'}
@@ -280,7 +283,7 @@ export function AssetsPage() {
             <EmptyState
               title="Sin activos registrados"
               message="Una laptop, un vehículo o el mobiliario no son gasto del mes: se usan durante años. Regístralos aquí y Atlas Financials los deprecia solo."
-              action={<Button onClick={() => setAssetModal(true)}>Nuevo activo</Button>}
+              action={canWrite ? <Button onClick={() => setAssetModal(true)}>Nuevo activo</Button> : undefined}
             />
           ) : (
             <Table
@@ -350,7 +353,7 @@ export function AssetsPage() {
             <EmptyState
               title="Sin préstamos registrados"
               message="Registra tus créditos para que Atlas Financials separe cuánto de cada pago baja la deuda y cuánto es interés. Sin eso, un crédito distorsiona tu resultado."
-              action={<Button onClick={() => setLoanModal(true)}>Nuevo préstamo</Button>}
+              action={canWrite ? <Button onClick={() => setLoanModal(true)}>Nuevo préstamo</Button> : undefined}
             />
           ) : (
             <Table
@@ -399,7 +402,7 @@ export function AssetsPage() {
                       >
                         Tabla
                       </Button>
-                      {loan.status === 'ACTIVE' ? (
+                      {canWrite && loan.status === 'ACTIVE' ? (
                         <Button
                           variant="secondary"
                           className="!px-2.5 !py-1 text-xs"

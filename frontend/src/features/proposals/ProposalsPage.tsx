@@ -10,6 +10,7 @@ import { formatDate, formatMoney } from '@/lib/format'
 import { useAccounts, useCategories } from '@/lib/hooks'
 import { RecurringPanel, usePendingRecurring } from '@/features/proposals/RecurringPanel'
 import type { Page, Proposal, ProposalSource } from '@/types/api'
+import { usePermissions } from '@/lib/permissions'
 
 const KIND_LABELS: Record<string, string> = {
   INCOME: 'Ingreso',
@@ -120,6 +121,7 @@ function originLabel(proposal: Proposal): string | null {
 }
 
 export function ProposalsPage() {
+  const { canWrite } = usePermissions()
   // La pestaña vive en la URL, como en Reportes: compartible y sobrevive F5.
   const [searchParams, setSearchParams] = useSearchParams()
   const tab = searchParams.get('vista') === 'recurrentes' ? 'recurrentes' : 'bandeja'
@@ -342,7 +344,7 @@ export function ProposalsPage() {
                       <p className="mt-2 text-sm text-neg">Rechazada: {proposal.rejection_reason}</p>
                     ) : null}
                   </div>
-                  {proposal.status === 'PROPOSED' ? (
+                  {canWrite && proposal.status === 'PROPOSED' ? (
                     <div className="flex shrink-0 gap-2">
                       <Button
                         onClick={() => approveMutation.mutate(proposal.id)}

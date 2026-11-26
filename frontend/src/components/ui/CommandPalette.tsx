@@ -7,12 +7,15 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { usePermissions } from '@/lib/permissions'
 
 export interface Command {
   label: string
   hint: string
   to: string
   keywords?: string
+  /** Qué permiso exige: los comandos que el API rechazaría no se ofrecen. */
+  requires?: 'write' | 'accounting'
 }
 
 const NAVIGATE: Command[] = [
@@ -36,24 +39,24 @@ const NAVIGATE: Command[] = [
   { label: 'Cartera y antigüedad', hint: 'Ir a', to: '/reportes?vista=cartera', keywords: 'dso vencido aging' },
   { label: 'Patrimonio neto', hint: 'Ir a', to: '/reportes?vista=patrimonio', keywords: 'net worth' },
   { label: 'IVA', hint: 'Ir a', to: '/reportes?vista=iva', keywords: 'impuestos sat' },
-  { label: 'Contabilidad', hint: 'Ir a', to: '/contabilidad', keywords: 'libro diario polizas' },
-  { label: 'Balanza de comprobación', hint: 'Ir a', to: '/contabilidad?vista=balanza', keywords: 'cargos abonos' },
-  { label: 'Cierre de periodo', hint: 'Ir a', to: '/contabilidad?vista=periodos', keywords: 'cerrar mes candado' },
+  { label: 'Contabilidad', hint: 'Ir a', requires: 'accounting', to: '/contabilidad', keywords: 'libro diario polizas' },
+  { label: 'Balanza de comprobación', hint: 'Ir a', requires: 'accounting', to: '/contabilidad?vista=balanza', keywords: 'cargos abonos' },
+  { label: 'Cierre de periodo', hint: 'Ir a', requires: 'accounting', to: '/contabilidad?vista=periodos', keywords: 'cerrar mes candado' },
   { label: 'Propuestas', hint: 'Ir a', to: '/propuestas', keywords: 'agentes aprobar' },
   { label: 'Configuración', hint: 'Ir a', to: '/configuracion', keywords: 'empresa equipo llaves agentes' },
 ]
 
 const CREATE: Command[] = [
-  { label: 'Nuevo ingreso', hint: 'Crear', to: '/ingresos?nuevo=1', keywords: 'venta cobrar' },
-  { label: 'Nuevo gasto', hint: 'Crear', to: '/gastos?nuevo=1', keywords: 'compra pagar' },
-  { label: 'Nueva cuenta por cobrar', hint: 'Crear', to: '/por-cobrar?nueva=1', keywords: 'factura credito' },
-  { label: 'Nueva cuenta por pagar', hint: 'Crear', to: '/por-pagar?nueva=1' },
-  { label: 'Traspaso entre cuentas', hint: 'Crear', to: '/movimientos?transferir=1', keywords: 'transferencia' },
-  { label: 'Nueva póliza de diario', hint: 'Crear', to: '/contabilidad?nueva=poliza', keywords: 'asiento manual contador' },
-  { label: 'Nuevo cliente', hint: 'Crear', to: '/clientes?nuevo=1' },
-  { label: 'Nuevo proveedor', hint: 'Crear', to: '/proveedores?nuevo=1' },
-  { label: 'Nueva cuenta de dinero', hint: 'Crear', to: '/cuentas?nueva=1', keywords: 'banco tarjeta' },
-  { label: 'Nuevo proyecto', hint: 'Crear', to: '/proyectos?nuevo=1' },
+  { label: 'Nuevo ingreso', hint: 'Crear', requires: 'write', to: '/ingresos?nuevo=1', keywords: 'venta cobrar' },
+  { label: 'Nuevo gasto', hint: 'Crear', requires: 'write', to: '/gastos?nuevo=1', keywords: 'compra pagar' },
+  { label: 'Nueva cuenta por cobrar', hint: 'Crear', requires: 'write', to: '/por-cobrar?nueva=1', keywords: 'factura credito' },
+  { label: 'Nueva cuenta por pagar', hint: 'Crear', requires: 'write', to: '/por-pagar?nueva=1' },
+  { label: 'Traspaso entre cuentas', hint: 'Crear', requires: 'write', to: '/movimientos?transferir=1', keywords: 'transferencia' },
+  { label: 'Nueva póliza de diario', hint: 'Crear', requires: 'accounting', to: '/contabilidad?nueva=poliza', keywords: 'asiento manual contador' },
+  { label: 'Nuevo cliente', hint: 'Crear', requires: 'write', to: '/clientes?nuevo=1' },
+  { label: 'Nuevo proveedor', hint: 'Crear', requires: 'write', to: '/proveedores?nuevo=1' },
+  { label: 'Nueva cuenta de dinero', hint: 'Crear', requires: 'write', to: '/cuentas?nueva=1', keywords: 'banco tarjeta' },
+  { label: 'Nuevo proyecto', hint: 'Crear', requires: 'write', to: '/proyectos?nuevo=1' },
 ]
 
 function normalize(text: string): string {
@@ -65,6 +68,7 @@ function normalize(text: string): string {
 
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const navigate = useNavigate()
+  const permissions = usePermissions()
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -72,7 +76,11 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
 
   const results = useMemo(() => {
     const q = normalize(query.trim())
-    const all = [...CREATE, ...NAVIGATE]
+    const all = [...CREATE, ...NAVIGATE].filter(
+      (command) =>
+        !command.requires ||
+        (command.requires === 'write' ? permissions.canWrite : permissions.canAccounting),
+    )
     if (!q) return all
     // El título manda: "cier" debe poner "Cierre de periodo" antes que un
     // resultado cuyo keyword apenas contiene la subcadena ("finanCIERos").

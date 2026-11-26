@@ -11,6 +11,7 @@ import { Table } from '@/components/ui/Table'
 import { TableFooter } from '@/components/ui/Pagination'
 import { FiscalFields, ReadinessBadge, ReadinessPanel, type FiscalForm } from '@/features/fiscal/FiscalFields'
 import type { Contact, Page } from '@/types/api'
+import { usePermissions } from '@/lib/permissions'
 
 interface Config {
   resource: 'customers' | 'vendors'
@@ -70,6 +71,7 @@ function formFrom(contact: Contact): ContactForm {
 }
 
 export function ContactsPage({ config }: { config: Config }) {
+  const { canWrite } = usePermissions()
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const [modalOpen, setModalOpen] = useState(searchParams.has('nuevo'))
@@ -141,7 +143,7 @@ export function ContactsPage({ config }: { config: Config }) {
       <PageHeader
         title={config.title}
         description={config.description}
-        actions={<Button onClick={() => setModalOpen(true)}>+ {config.singular}</Button>}
+        actions={canWrite ? <Button onClick={() => setModalOpen(true)}>+ {config.singular}</Button> : undefined}
       >
         <input
           type="search"
@@ -161,19 +163,23 @@ export function ContactsPage({ config }: { config: Config }) {
         <EmptyState
           title={config.emptyTitle}
           message={config.emptyMessage}
-          action={<Button onClick={() => setModalOpen(true)}>Agregar {config.singular.toLowerCase()}</Button>}
+          action={
+            canWrite ? (
+              <Button onClick={() => setModalOpen(true)}>Agregar {config.singular.toLowerCase()}</Button>
+            ) : undefined
+          }
         />
       ) : (
         <Table
-          headers={isCustomer ? ['Nombre', 'RFC', 'Correo', 'Teléfono', 'Facturación'] : ['Nombre', 'RFC', 'Correo', 'Teléfono']}
+          headers={isCustomer ? ['Nombre', 'RFC', 'Correo', 'Teléfono', 'Datos fiscales'] : ['Nombre', 'RFC', 'Correo', 'Teléfono']}
           footer={<TableFooter page={data!} onOffsetChange={setOffset} noun={config.title.toLowerCase()} />}
         >
           {items.map((contact) => (
             <tr
               key={contact.id}
-              className="cursor-pointer hover:bg-surface-2/50"
-              onClick={() => openEdit(contact)}
-              title="Ver y editar la ficha"
+              className={canWrite ? 'cursor-pointer hover:bg-surface-2/50' : undefined}
+              onClick={canWrite ? () => openEdit(contact) : undefined}
+              title={canWrite ? 'Ver y editar la ficha' : undefined}
             >
               <td className="px-4 py-2.5">
                 <div className="font-medium">{contact.name}</div>
@@ -246,7 +252,7 @@ export function ContactsPage({ config }: { config: Config }) {
           {isCustomer ? (
             <section className="space-y-3 border-t border-border pt-4">
               <div>
-                <h3 className="text-sm font-semibold">Datos para facturar</h3>
+                <h3 className="text-sm font-semibold">Datos fiscales</h3>
                 <p className="text-xs text-muted">Pídele al cliente su constancia de situación fiscal.</p>
               </div>
               {editing ? <ReadinessPanel readiness={editing.fiscal_readiness} subject="Este cliente" /> : null}

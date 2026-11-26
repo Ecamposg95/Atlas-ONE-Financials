@@ -10,7 +10,7 @@ import { Money } from '@/components/ui/Money'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { TableFooter } from '@/components/ui/Pagination'
 import { Card, Table } from '@/components/ui/Table'
-import { useActiveRole } from '@/lib/companies'
+import { NO_PERMISSION, usePermissions } from '@/lib/permissions'
 import { formatDate, formatMoney, today } from '@/lib/format'
 import { useAccounts, useDimensions } from '@/lib/hooks'
 import { useAuthStore } from '@/stores/authStore'
@@ -23,7 +23,6 @@ const STATUS_LABELS: Record<CashCutStatus, { label: string; className: string }>
   CANCELLED: { label: 'Cancelado', className: 'bg-muted/10 text-muted' },
 }
 
-const ADMIN_ROLES = ['OWNER', 'ADMIN']
 const LIMIT = 20
 
 function CutStatus({ cut }: { cut: CashCut }) {
@@ -38,6 +37,7 @@ function CutStatus({ cut }: { cut: CashCut }) {
 
 /** La página de Caja: hoy por caja, el corte en curso y el historial. */
 export function CashPage() {
+  const { canWrite } = usePermissions()
   const queryClient = useQueryClient()
   const { data: accounts, isLoading: accountsLoading } = useAccounts()
   const { units, hasUnits } = useDimensions()
@@ -102,9 +102,11 @@ export function CashPage() {
           title="Sin cajas de efectivo"
           message="Da de alta una caja de efectivo para hacer cortes."
           action={
-            <Link to="/cuentas?nueva=1">
-              <Button>Agregar caja</Button>
-            </Link>
+            canWrite ? (
+              <Link to="/cuentas?nueva=1">
+                <Button>Agregar caja</Button>
+              </Link>
+            ) : undefined
           }
         />
       ) : (
@@ -138,7 +140,8 @@ export function CashPage() {
                       <span className="text-xs text-muted">Sin corte hoy</span>
                       <Button
                         className="!px-2.5 !py-1 text-xs"
-                        disabled={openMutation.isPending}
+                        disabled={!canWrite || openMutation.isPending}
+                        title={canWrite ? undefined : NO_PERMISSION.write}
                         onClick={() => openMutation.mutate(row.account_id)}
                       >
                         Hacer corte
@@ -269,9 +272,8 @@ function CutModal({
   onClose: () => void
   onChanged: (next: CashCut | null) => void
 }) {
-  const role = useActiveRole()
+  const { canAdmin: isAdmin } = usePermissions()
   const userId = useAuthStore((state) => state.user?.id ?? null)
-  const isAdmin = role !== null && ADMIN_ROLES.includes(role)
   const { data: accounts } = useAccounts()
   const [error, setError] = useState<string | null>(null)
   const [counted, setCounted] = useState(cut.counted_amount ?? '')

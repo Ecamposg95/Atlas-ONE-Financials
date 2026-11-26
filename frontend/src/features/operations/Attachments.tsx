@@ -8,6 +8,7 @@ import { Camera, Download, Eye, FileText, Image, Paperclip, Trash2, Upload, X } 
 import { api, errorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { downloadErrorMessage } from '@/lib/download'
+import { permissionsFor } from '@/lib/permissions'
 import { useAuthStore } from '@/stores/authStore'
 import type { Attachment, Page } from '@/types/api'
 
@@ -21,13 +22,11 @@ const EMPTY_COPY = 'Sube la foto del ticket o la factura (PDF o XML).'
 /** Las subidas grandes desde el teléfono tardan más que el timeout general. */
 const UPLOAD_TIMEOUT_MS = 120_000
 
-const WRITE_ROLES = ['OWNER', 'ADMIN', 'ACCOUNTANT', 'MEMBER']
-
 export function useCanEditExpenses(): boolean {
   return useAuthStore((state) => {
     const role = state.memberships.find((m) => m.organization_id === state.organization?.id)?.role
     // Sin membresía cargada todavía, el backend decide.
-    return role ? WRITE_ROLES.includes(role) : true
+    return role ? permissionsFor(role).canWrite : true
   })
 }
 

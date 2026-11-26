@@ -62,7 +62,7 @@ export function CfdiFields({
   value,
   onChange,
   customer,
-  title = '¿Vas a facturarla?',
+  title = 'Datos para la factura (opcional)',
   collapsible = true,
 }: {
   value: CfdiForm
@@ -135,7 +135,7 @@ export function CfdiFields({
         {current ? <span className="figures ml-2 text-xs text-ink">{current}</span> : null}
       </summary>
       <p className="mb-3 mt-2 text-xs text-muted">
-        Datos del SAT para la factura. Si no facturas, déjalos vacíos: no cambian tus números.
+        Datos del SAT que se guardan para cuando la facturación esté disponible; hoy no se emite ninguna factura. Si no los necesitas, déjalos vacíos: no cambian tus números.
       </p>
       {fields}
     </details>

@@ -13,6 +13,7 @@ import { SettlementsModal } from '@/features/accounts/SettlementsModal'
 import { formatMoney, today } from '@/lib/format'
 import { useAccounts, useDimensions } from '@/lib/hooks'
 import type { FinancialAccount } from '@/types/api'
+import { usePermissions } from '@/lib/permissions'
 
 const TYPE_LABELS: Record<string, string> = {
   CASH: 'Efectivo',
@@ -28,6 +29,7 @@ function formatRate(rate: string): string {
 }
 
 export function AccountsPage() {
+  const { canWrite } = usePermissions()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -133,7 +135,7 @@ export function AccountsPage() {
       <PageHeader
         title="Cuentas de dinero"
         description="Dónde vive tu dinero: caja, bancos y tarjetas."
-        actions={<Button onClick={() => setModalOpen(true)}>+ Nueva cuenta</Button>}
+        actions={canWrite ? <Button onClick={() => setModalOpen(true)}>+ Nueva cuenta</Button> : undefined}
       />
 
       {isLoading ? (
@@ -142,7 +144,7 @@ export function AccountsPage() {
         <EmptyState
           title="Sin cuentas todavía"
           message="Agrega tu caja o tu cuenta de banco para empezar a registrar movimientos."
-          action={<Button onClick={() => setModalOpen(true)}>Agregar cuenta</Button>}
+          action={canWrite ? <Button onClick={() => setModalOpen(true)}>Agregar cuenta</Button> : undefined}
         />
       ) : (
         <>
@@ -248,7 +250,7 @@ export function AccountsPage() {
                             Registrar liquidación
                           </Button>
                         ) : null}
-                        {group.liability && Number(account.current_balance) > 0 ? (
+                        {canWrite && group.liability && Number(account.current_balance) > 0 ? (
                           <Button
                             variant="secondary"
                             className="!px-2.5 !py-1 text-xs"

@@ -5,7 +5,7 @@ import { api, errorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { TextInput } from '@/components/ui/Field'
 import { Card } from '@/components/ui/Table'
-import { useActiveRole } from '@/lib/companies'
+import { usePermissions } from '@/lib/permissions'
 import { useAuthStore } from '@/stores/authStore'
 import type { AssistantStatus, AssistantUsage, Organization } from '@/types/api'
 
@@ -19,13 +19,11 @@ function usd(value: string | number) {
   return `$${Number(value).toFixed(2)} USD`
 }
 
-/** Configuración → Agentes: el asistente de Claude, su gasto del mes y el tope. */
+/** Configuración → Asistente de Claude: el asistente, su gasto del mes y el tope. */
 export function AssistantCard() {
   const queryClient = useQueryClient()
-  const role = useActiveRole()
+  const { isOwner, canAdmin: canSeeUsage } = usePermissions()
   const { organization } = useAuthStore()
-  const isOwner = role === 'OWNER'
-  const canSeeUsage = role === 'OWNER' || role === 'ADMIN'
   const [budget, setBudget] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 

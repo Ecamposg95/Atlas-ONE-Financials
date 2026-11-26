@@ -67,6 +67,35 @@ def test_an_unknown_report_is_rejected(client):
     assert "no se puede exportar" in response.json()["detail"]
 
 
+def test_reports_download_as_real_xlsx(client):
+    """"Descargar Excel" en Reportes baja un .xlsx con cifras numéricas, no un CSV."""
+    headers = _setup(client)
+    for report, stem in (
+        ("profit-loss", "estado-de-resultados"),
+        ("balance-sheet", "balance-general"),
+        ("aging", "antiguedad-cartera"),
+    ):
+        response = client.get(f"/api/reports/{report}/xlsx", headers=headers)
+        assert response.status_code == 200, report
+        assert "spreadsheetml" in response.headers["content-type"], report
+        disposition = response.headers["content-disposition"]
+        assert stem in disposition and disposition.endswith('.xlsx"'), report
+        assert _sheet(response)[0][0] in ("Cuenta", "Cliente"), report
+
+    rows = _sheet(client.get("/api/reports/profit-loss/xlsx", headers=headers))
+    ventas = next(row for row in rows if row[1] == "Ventas")
+    # Cifra de verdad: el IVA no es ingreso, sólo el subtotal llega al reporte.
+    assert isinstance(ventas[2], (int, float)) and ventas[2] == 10000
+    result = next(row for row in rows if row[1] == "Resultado del periodo")
+    assert isinstance(result[2], (int, float))
+
+
+def test_an_unknown_report_format_is_rejected(client):
+    headers = _setup(client)
+    response = client.get("/api/reports/profit-loss/pdf", headers=headers)
+    assert response.status_code == 404
+
+
 def test_export_only_covers_your_own_company(client):
     headers_a = _setup(client)
     assert "Venta de prueba" not in client.get(

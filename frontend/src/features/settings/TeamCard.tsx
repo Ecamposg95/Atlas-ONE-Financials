@@ -7,6 +7,7 @@ import { api, errorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { SelectInput, TextInput } from '@/components/ui/Field'
 import { Card } from '@/components/ui/Table'
+import { ASSIGNABLE_ROLES, NO_PERMISSION, ROLE_INFO, roleLabel, usePermissions } from '@/lib/permissions'
 
 interface Member {
   id: string
@@ -18,21 +19,11 @@ interface Member {
   can_authorize: boolean
 }
 
-/** Los nombres que ve el usuario dicen lo que la persona PUEDE HACER,
- *  no cómo se llama el rol en la base de datos. */
-const ROLES = [
-  { value: 'ADMIN', label: 'Administra todo', hint: 'Puede invitar gente y cambiar la empresa' },
-  { value: 'ACCOUNTANT', label: 'Lleva la contabilidad', hint: 'Registra operaciones y ve pólizas' },
-  { value: 'MEMBER', label: 'Registra operaciones', hint: 'Captura ingresos y gastos' },
-  { value: 'VIEWER', label: 'Sólo mira', hint: 'Consulta sin poder cambiar nada' },
-]
-
-const ROLE_LABELS: Record<string, string> = {
-  OWNER: 'Dueño',
-  ...Object.fromEntries(ROLES.map((role) => [role.value, role.label])),
-}
+/** Nombres y descripciones de los roles: los mismos que en Mis empresas. */
+const ROLES = ASSIGNABLE_ROLES.map((value) => ({ value, ...ROLE_INFO[value] }))
 
 export function TeamCard() {
+  const { canAdmin } = usePermissions()
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -113,10 +104,16 @@ export function TeamCard() {
             {member.role === 'OWNER' ? (
               <div className="flex items-center gap-2">
                 <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">
-                  {ROLE_LABELS.OWNER}
+                  {roleLabel('OWNER')}
                 </span>
                 <span className="text-xs text-muted">Autoriza siempre</span>
               </div>
+            ) : !canAdmin ? (
+              // Cambiar roles o quitar gente es del dueño o un administrador.
+              <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs font-medium text-muted">
+                {roleLabel(member.role)}
+                {member.can_authorize ? ' · autoriza' : ''}
+              </span>
             ) : (
               <div className="flex items-center gap-2">
                 <label className="flex items-center gap-1.5 text-xs text-muted">
@@ -212,10 +209,12 @@ export function TeamCard() {
             </Button>
           </div>
         </form>
-      ) : (
+      ) : canAdmin ? (
         <Button variant="secondary" className="mt-4" onClick={() => setOpen(true)}>
           + Agregar a alguien
         </Button>
+      ) : (
+        <p className="mt-4 text-xs text-muted">{NO_PERMISSION.admin}</p>
       )}
     </Card>
   )

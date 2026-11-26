@@ -349,15 +349,15 @@ function EntitiesSection({ entities }: { entities: FiscalEntity[] }) {
           <TextInput
             label="Etiqueta de régimen (opcional)"
             placeholder="RESICO"
-            hint="Cómo lo llamas tú. El régimen del SAT va en los datos para facturar."
+            hint="Cómo lo llamas tú. El régimen del SAT va en los datos fiscales."
             value={form.regime}
             onChange={(event) => setForm({ ...form, regime: event.target.value })}
           />
           <div className="space-y-3 border-t border-border pt-3">
             <div>
-              <h4 className="text-sm font-semibold">Datos para facturar</h4>
+              <h4 className="text-sm font-semibold">Datos fiscales</h4>
               <p className="text-xs text-muted">
-                Las operaciones de este contribuyente se facturan con su RFC, no con el de la empresa.
+                Las operaciones de este contribuyente llevan su RFC, no el de la empresa.
               </p>
             </div>
             {editing ? <ReadinessPanel readiness={editing.fiscal_readiness} subject="Este contribuyente" /> : null}

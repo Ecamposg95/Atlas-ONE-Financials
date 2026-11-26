@@ -36,7 +36,7 @@ class BudgetExhausted(Exception):
 def budget_message(spent: Decimal, budget: Decimal) -> str:
     return (
         f"Se agotó el presupuesto del asistente de este mes ({_money(spent)} de {_money(budget)} USD). "
-        "Pídele a Atlas que lo amplíe."
+        "El dueño de la empresa puede subir el tope mensual en Configuración, tarjeta «Asistente de Claude»."
     )
 
 

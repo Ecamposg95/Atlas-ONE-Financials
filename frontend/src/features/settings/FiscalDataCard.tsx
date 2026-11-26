@@ -4,15 +4,14 @@ import { api, errorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Table'
 import { FiscalFields, ReadinessPanel, fiscalPayload, type FiscalForm } from '@/features/fiscal/FiscalFields'
-import { useActiveRole } from '@/lib/companies'
+import { usePermissions } from '@/lib/permissions'
 import { useAuthStore } from '@/stores/authStore'
 import type { Organization } from '@/types/api'
 
 /** Datos de la empresa como emisora de facturas, con el indicador de lo que falta. */
 export function FiscalDataCard() {
   const organization = useAuthStore((state) => state.organization)
-  const role = useActiveRole()
-  const canEdit = role === 'OWNER' || role === 'ADMIN'
+  const { canAdmin: canEdit } = usePermissions()
   const [form, setForm] = useState<FiscalForm>({
     legal_name: organization?.legal_name ?? '',
     tax_id: organization?.tax_id ?? '',
@@ -40,9 +39,9 @@ export function FiscalDataCard() {
 
   return (
     <Card className="mt-6 max-w-lg">
-      <h2 className="font-display text-lg font-semibold">Datos para facturar</h2>
+      <h2 className="font-display text-lg font-semibold">Datos fiscales</h2>
       <p className="mt-1 text-sm text-muted">
-        Cópialos de tu constancia de situación fiscal. Son los que llevará cada factura que emitas.
+        Cópialos de tu constancia de situación fiscal. Quedan guardados para cuando puedas facturar desde Atlas Financials; la emisión de facturas todavía no está disponible.
       </p>
       <div className="mt-4">
         <ReadinessPanel readiness={organization?.fiscal_readiness} subject="Tu empresa" />

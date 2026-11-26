@@ -29,6 +29,7 @@ import { FilterChip, FilterToggle } from '@/components/ui/TableTools'
 import { formatDate, formatMoney, today } from '@/lib/format'
 import { useAccounts, useCategories, useDimensions } from '@/lib/hooks'
 import type { Page, Transaction } from '@/types/api'
+import { usePermissions } from '@/lib/permissions'
 
 const TYPE_LABELS: Record<string, { label: string; inflow: boolean }> = {
   INCOME: { label: 'Ingreso', inflow: true },
@@ -61,6 +62,7 @@ type UrlFilterKey = keyof typeof URL_FILTERS
 type UrlFilters = Record<UrlFilterKey, string>
 
 export function TransactionsPage() {
+  const { canWrite } = usePermissions()
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const [transferOpen, setTransferOpen] = useState(searchParams.has('transferir'))
@@ -207,9 +209,11 @@ export function TransactionsPage() {
               params={listParams}
               fallbackName="movimientos.xlsx"
             />
-            <Button variant="secondary" onClick={() => setTransferOpen(true)}>
-              Traspaso entre cuentas
-            </Button>
+            {canWrite ? (
+              <Button variant="secondary" onClick={() => setTransferOpen(true)}>
+                Traspaso entre cuentas
+              </Button>
+            ) : null}
           </>
         }
       >

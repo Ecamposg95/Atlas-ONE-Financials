@@ -9,7 +9,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Money } from '@/components/ui/Money'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Card, Table } from '@/components/ui/Table'
-import { useActiveRole } from '@/lib/companies'
+import { usePermissions } from '@/lib/permissions'
 import { formatDate, formatMoney } from '@/lib/format'
 import { useAccounts } from '@/lib/hooks'
 import type {
@@ -22,8 +22,6 @@ import type {
 } from '@/types/api'
 
 const RECONCILABLE = ['BANK', 'PROCESSOR', 'OTHER']
-const ADMIN_ROLES = ['OWNER', 'ADMIN']
-const WRITE_ROLES = ['OWNER', 'ADMIN', 'ACCOUNTANT', 'MEMBER']
 
 const FIELD_LABELS: Record<string, string> = {
   date: 'Fecha',
@@ -65,8 +63,7 @@ export function ReconciliationPage() {
   const selectedId = params.get('estado')
   const setSelectedId = (id: string | null) => setParams(id ? { estado: id } : {})
   const [uploading, setUploading] = useState(false)
-  const role = useActiveRole()
-  const canWrite = WRITE_ROLES.includes(role ?? '')
+  const { canWrite } = usePermissions()
   const { data: accounts, isLoading: accountsLoading } = useAccounts()
   const bankAccounts = (accounts ?? []).filter((a) => RECONCILABLE.includes(a.type) && a.active)
 
@@ -323,7 +320,7 @@ function UploadModal({
 
 function StatementView({ id, canWrite, onBack }: { id: string; canWrite: boolean; onBack: () => void }) {
   const queryClient = useQueryClient()
-  const role = useActiveRole()
+  const { canAdmin } = usePermissions()
   const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'DIFF'>('ALL')
   const [picking, setPicking] = useState<BankLine | null>(null)
   const [ignoring, setIgnoring] = useState<BankLine | null>(null)
@@ -429,7 +426,7 @@ function StatementView({ id, canWrite, onBack }: { id: string; canWrite: boolean
                 Cerrar conciliación
               </Button>
             ) : null}
-            {statement.status === 'CLOSED' && ADMIN_ROLES.includes(role ?? '') ? (
+            {statement.status === 'CLOSED' && canAdmin ? (
               <Button variant="secondary" disabled={busy} onClick={() => action.mutate({ path: '/reopen' })}>
                 Reabrir
               </Button>
