@@ -1,274 +1,306 @@
-# LaFe — Ronda 2: backlog a partir del feedback de Liza y Abraham
+# LaFe — Ronda 2: backlog de trabajo
 
-_Fuente: backlog de feedback de Liza y Abraham (con validación fiscal de Jessica) y comentarios con capturas de pantalla, entregados por Emmanuel el 2026-11-27. Cotejado ese día contra el código (`main` en `87a5fac`) y contra los datos de La Fe en producción (solo lectura). Continúa [`BACKLOG.md`](BACKLOG.md) (ronda 1) y su matriz [`HAB-01_matriz.md`](HAB-01_matriz.md)._
-
-Los identificadores de esta ronda llevan el prefijo **R2** (R2·HU-01…) para no chocar con los de la ronda 1.
+_Fuente: feedback de Liza y Abraham (con validación fiscal de Jessica) y comentarios con capturas, entregados por Emmanuel el 2026-11-27. Reestructurado el mismo día, después de las entregas #37–#41, cotejando cada pendiente contra el código (`main` en `7dc77e1`) y contra los datos de La Fe en producción (solo lectura). Integra lo que sigue abierto de la ronda 1 ([`BACKLOG.md`](BACKLOG.md), matriz [`HAB-01_matriz.md`](HAB-01_matriz.md))._
 
 **Objetivo:** que La Fe registre su operación financiera de forma ágil, corrija errores con control y consulte información confiable por sucursal.
 
-**Prioridades:** P0 bloquea la operación o compromete la confiabilidad; P1 mejora importante; P2 evolución sujeta a definición o viabilidad. "Por validar" no entra a desarrollo sin resolver sus preguntas. Los roles son funcionales y se mapean a los de Atlas (Dueño, Administrador, Contador, Captura, Consulta).
+**Cómo leer este documento.** El trabajo se organiza por lo que lo detiene, no por épica:
+
+| Sección | Qué hay | Quién lo mueve |
+|---|---|---|
+| [1. Datos de La Fe](#1-lo-que-dicen-los-datos-de-la-fe-27-nov-2026) | El estado real de la operación | — |
+| [2. Listo para desarrollar](#2-listo-para-desarrollar) | Tareas sin preguntas abiertas, agrupadas en lotes | Atlas |
+| [3. Bloqueado](#3-bloqueado-por-una-persona-o-una-decisión) | Tareas que esperan una respuesta, agrupadas por persona | Jessica, Liza, dirección |
+| [4. Operación sin desarrollo](#4-operación-sin-desarrollo-etapa-0) | Lo que La Fe tiene que capturar o revisar con lo que ya existe | La Fe con Atlas |
+| [5. Investigación e integraciones](#5-investigación-e-integraciones) | Dictámenes y conexiones externas | Atlas |
+| [6. Hecho](#6-hecho-en-la-ronda-2) | Lo entregado, con su PR | — |
+| [7. Catálogo de historias](#7-catálogo-de-historias) | Cada historia con sus criterios y sus tareas | — |
+| [8. Decisiones](#8-decisiones-abiertas-unificadas) | Las preguntas de ambas rondas, sin duplicados | Dirección y contabilidad |
+
+**IDs.** Cada historia conserva su ID (R2·HU-05); cada tarea lleva una letra (HU-05.c). Lo que viene de la ronda 1 se marca **R1·**. Tamaño: **S** (horas a un día), **M** (unos días), **L** (una semana o más). Prioridad: **P0** bloquea la operación o la confiabilidad, **P1** mejora importante, **P2** sujeta a viabilidad.
 
 ---
 
 ## 1. Lo que dicen los datos de La Fe (27-nov-2026)
 
-| Hallazgo | Dato | Historias |
+Consulta de solo lectura después de las entregas del día. Nada de esto cambia con desarrollo: cambia cuando La Fe usa lo que ya existe (sección 4).
+
+| Hallazgo | Dato | Tareas |
 |---|---|---|
-| Ninguna cuenta por pagar se ha liquidado | 37 abiertas por $359,788; ninguna pagada ni parcial; 4 vencidas (la más vieja, SEILAB 1876, del 10-oct) | R2·HU-01 |
-| La columna de acciones de "Por pagar" queda cortada | En la captura de "Vencidas" el botón **Registrar pago** aparece como "Re" al borde derecho | R2·HU-01, TEC-01 |
-| Saldos negativos o inflados | Bancomer −$651k, Santander −$697k, Caja central −$934k; NetPay +$1.25 M sin ninguna liquidación registrada; 13 de 15 cuentas con apertura provisional en $0 | R2·HU-12, R2·HU-13, R2·REQ-01 |
-| Las cajas de sucursal nunca se entregan | Un solo corte de caja (cancelado); cajas de sucursal acumulan entre $74k y $323k cada una | R2·HU-16 |
-| IVA sin capturar | 313 de 356 gastos con tasa 0, retenciones en cero en todos; 49 mencionan IVA o retención en notas | R2·HU-05, R2·HU-15 |
-| La nómina es el gasto principal | 178 gastos por $1.26 M (≈ 46 % del gasto), todos en la categoría "Nómina" | R2·HU-06, R2·HU-07 |
-| Nunca se ha cerrado un periodo | 0 meses y 0 ejercicios cerrados | R2·HU-03 |
-| El asistente de IA nunca estuvo activo | Ni Railway ni IONOS tuvieron `ANTHROPIC_API_KEY`; 0 conversaciones y 0 llaves de agente | TEC-06 |
-| Operaciones con fecha futura | 2 ingresos ($9,000) y 2 gastos ($6,620) | R2·HU-13 |
-| Patrimonio y préstamos sin uso | 0 activos fijos y 0 préstamos registrados | R2·HU-17 |
+| Ninguna cuenta por pagar se ha liquidado | 37 abiertas por $359,788; ninguna pagada ni parcial. 4 vencidas por $36,829; la más vieja, SEILAB 1876 ($741.66), del 10-oct | OP-02, HU-01.v |
+| Saldos negativos o inflados | Bancomer −$651k, Santander −$697k, Caja central −$934k; NetPay +$1.25 M sin ninguna liquidación registrada | OP-01 |
+| Aperturas provisionales | 13 de 15 cuentas en $0 provisional; solo Caja central confirmada ($27,407) | OP-01, HU-12.a |
+| Las cajas de sucursal nunca se entregan | Un solo corte de caja (cancelado); cajas entre $74,711 (Haciendas) y $322,775 (Villas) | OP-04, HU-16.a, HU-16.b |
+| IVA sin clasificar | Gastos: 313 sin clasificar y 43 gravados. Ingresos: 363 sin clasificar y 9 gravados. 0 retenciones capturadas | OP-05, HU-04.b, REQ-05 |
+| La nómina es el gasto principal | 178 gastos por $1.26 M: 49 % del gasto | HU-06, HU-07 |
+| Nunca se ha cerrado un periodo | 0 meses y 0 ejercicios cerrados | OP-03 |
+| Operaciones con fecha futura | 2 ingresos ($9,000) y 2 gastos ($6,620) | REQ-04.a, REQ-04.b |
+| El asistente de IA nunca estuvo activo | Sin `ANTHROPIC_API_KEY`; 0 conversaciones | TEC-06 |
+| Patrimonio y préstamos sin uso | 0 activos fijos y 0 préstamos | HU-17 |
+| La bitácora sí se usa | 829 registros desde el 3-nov (786 altas, 34 cambios, 7 cancelaciones) | — |
 
 ---
 
-## 2. Historias del backlog y su estado en la plataforma
+## 2. Listo para desarrollar
 
-Leyenda: **Existe** · **Parcial** · **Falta**.
+Sin preguntas abiertas. El orden de los lotes es la recomendación; dentro de un lote, las tareas son independientes.
+
+### Lote A · Cifras confiables (todo S)
+
+Errores de cálculo que hacen que dos pantallas digan cosas distintas. Ninguno necesita decisión.
+
+| Tarea | Prior. | Qué | Dónde |
+|---|---|---|---|
+| HU-09.b | P0 | "Vencido" con la fecha de la empresa, no la del servidor. Hoy `date.today()` en 9 lugares; el panel de Inicio ya usa `local_today` | `payables/schemas.py:71`, `receivables/schemas.py:79`, `receivables/router.py:56,74`, `dashboard/service.py:52,109,214`, `portfolio/service.py:68`, `reports/router.py:16` |
+| HU-12.a | P0 | Dar de alta una cuenta con saldo inicial registra la póliza hoy, no en la fecha de corte. Usar la fecha de corte, como ya hace el ajuste de apertura | `financial_accounts/service.py:58`, `opening/service.py` |
+| HU-10.b | P1 | El desglose por categoría del resumen suma con IVA y el estado de resultados sin IVA. Sumar `subtotal` | `dashboard/service.py:168,282` |
+| REQ-04.a | P1 | Validar fechas al capturar gastos, ingresos, traspasos, pagos y cobros. Propuesta: avisar y pedir confirmación si la fecha es futura (hoy solo las pólizas manuales la rechazan) | `{expenses,income,transactions,payables,receivables}/schemas.py` |
+| REQ-04.b | P1 | Filtro o aviso "fecha futura" para revisar las 4 operaciones que ya existen | listados de operaciones |
+
+### Lote B · Clasificar lo que ya está capturado
+
+Hoy hay 676 operaciones sin clasificar. El lote de gastos ya existe; faltan ingresos, que son la mitad.
+
+| Tarea | Prior. | Tam. | Qué | Dónde |
+|---|---|---|---|---|
+| HU-02.d | P0 | M | Corregir un ingreso cobrado con motivo (categoría, cliente, referencia, notas), igual que un gasto pagado. Hoy solo acepta proyecto y tratamiento, y el tratamiento no pide motivo | `income/service.py:307` |
+| HU-04.b | P1 | M | Corrección en lote de ingresos (categoría, tratamiento de IVA, cliente, proyecto), con vista previa. Depende de HU-02.d | `expenses/service.py:362` como modelo, `BulkCorrectionModal.tsx` |
+| HU-05.c | P1 | S | Tratamiento de IVA y retenciones en la exportación a Excel de gastos e ingresos | `services/listing.py:22`, `expenses/listing.py:75`, `income/listing.py` |
+| HU-05.d | P1 | S | Exportar el reporte de IVA a Excel | `reports/router.py` |
+| REQ-05.a | P1 | S | Ajuste en la configuración de Toronja para el tratamiento de IVA de lo importado (hoy fijo en tasa 0, sin clasificar). El valor lo decide Jessica (REQ-05.b) | `imports/service.py:593,617,888,909`, `ImportSettingsCard.tsx` |
+
+### Lote C · Efectivo de sucursales
+
+| Tarea | Prior. | Tam. | Qué | Dónde |
+|---|---|---|---|---|
+| HU-16.a | P1 | S | En "Nuevo gasto", proponer Caja central cuando se paga en efectivo | `OperationsPage.tsx:1263` |
+| HU-16.b | P1 | M | Hacer obvio el corte diario → entrega a caja central: recordatorio de sucursales sin corte, entrega en un paso. El backend está completo | `cash_cuts/router.py`, `CashPage.tsx` |
+
+### Lote D · Vencimientos
+
+| Tarea | Prior. | Tam. | Qué |
+|---|---|---|---|
+| HU-09.c | P1 | S | Plazo de vencimiento en las reglas recurrentes, para que lo que generan aparezca en vencimientos |
+| HU-09.d | P1 | S | Anticipación configurable para "por vencer" (hoy, la semana) |
+| HU-02.a | P1 | M | Revertir un solo pago de una cuenta por pagar (y un cobro de una por cobrar). Hoy la cancelación revierte la cuenta completa (`payables/service.py:239`, `reversals.py`) |
+
+### Lote E · Catálogos y edición
+
+| Tarea | Prior. | Tam. | Qué |
+|---|---|---|---|
+| HU-15.a | P1 | M | Alta y edición de categorías desde la app, con bitácora (cierra REQ-03.b). Hoy solo `GET` |
+| HU-18.a | P1 | S | Cliente Particular o Empresa, elegido antes del nombre, que cambia los datos fiscales que se piden |
+| HU-19.a | P1 | M | Editar y eliminar proyectos; eliminar desasigna las operaciones, no las borra |
+| HU-17.a | P1 | M | Editar activos fijos y préstamos (hoy solo crear, depreciar, dar de baja y pagar) |
+| HU-08.a | P1 | S | Filtrar por varios proveedores a la vez (hoy, uno) |
+| HU-08.b | P1 | M | Grupo de proveedores y vista "Laboratorios de referencia" |
+
+### Lote F · Visibilidad
+
+| Tarea | Prior. | Tam. | Qué |
+|---|---|---|---|
+| HU-10.a | P1 | M | Selector de periodo en el resumen (hoy fijo en el mes actual) |
+| HU-13.b | P1 | S | Mostrar la procedencia (archivo y fila importada) en el detalle de la operación |
+| R1·HU-22.a | P2 | S | Proyección de flujo: separar lo registrado de los supuestos |
+| R1·HU-12.a | P2 | M | Detectar duplicados entre estados de cuenta que se traslapan |
+| HU-14.a | P2 | S | Probar la conciliación bancaria actual con un estado de cuenta real (prueba, sin desarrollo; necesita el archivo) |
+
+---
+
+## 3. Bloqueado por una persona o una decisión
+
+Agrupado por quién lo destraba, para llevarlo a una sola reunión con cada uno.
+
+### Jessica (contabilidad y fiscal) — TEC-03
+
+| Tarea | Prior. | Tam. | Qué se necesita de ella |
+|---|---|---|---|
+| HU-05.e | P0 | — | Clasificar los 313 gastos y 363 ingresos sin clasificar (con HU-04.b se hace en lote) |
+| REQ-05.b | P1 | S | Qué tratamiento de IVA llevan las ventas de Toronja (¿servicios médicos exentos?) |
+| HU-05.b | P1 | L | Cuentas y pólizas para retenciones en ingresos (lo que el cliente nos retiene) y en cuentas por pagar. En por pagar las columnas ya existen sin usarse |
+| HU-02.c | P1 | M | Cómo reclasificar la sucursal de un gasto pagado (la póliza lleva una sola unidad) |
+| HU-03.a | P1 | S | Si cancelar algo de un mes cerrado con reversa fechada hoy es el mecanismo compensatorio correcto, y si se permite subir un comprobante nuevo a un mes cerrado |
+| HU-17.b, HU-17.c | P1 | M | Ligar activo con su financiamiento y anticipos; IVA de compras a crédito y de intereses; métodos de depreciación (decisión 4) |
+
+### Liza
+
+| Tarea | Prior. | Tam. | Qué se necesita de ella |
+|---|---|---|---|
+| HU-01.v (TEC-01) | P0 | S | Revisar las 37 cuentas por pagar, el caso SEILAB 1876 y validar los pagos parciales |
+| HU-12.b (TEC-04) | P0 | M | Caso concreto del problema de saldos de apertura; decide si hace falta fecha de apertura por cuenta (decisión 6) |
+| HU-13.a | P1 | M | Confirmar el 1-ago-2026 como fecha confiable para marcar periodos incompletos (decisión 6) |
+| HU-11.a (TEC-07) | P1 | L | Qué significa "cubrir gastos" y cómo se reparten nómina y renta entre sucursales (decisión 10) |
+| R1·HU-15 | P1 | M | Tasas pactadas con NetPay y Mercado Pago para validar comisiones (hoy `fee_rate` se guarda pero no se usa) |
+
+### Dirección (Liza y Abraham)
+
+| Tarea | Prior. | Tam. | Decisión |
+|---|---|---|---|
+| HU-02.b (TEC-02) | P0 | M | Quién autoriza cancelaciones y cambios, quién cierra y reabre (decisiones 1 y 2). Hoy cancelar solo pide rol de captura |
+| HU-09.a | P1 | L | Canal, destinatarios y frecuencia de los recordatorios (decisión 8). No hay proceso programado ni canal |
+| HU-16.c | P1 | S | Si las sucursales pagan gastos menores con su caja (decisión 12) |
+| HU-15.b, HU-15.c | P1 | L | Subcategorías y si los renglones de una factura llevan categoría propia (decisión 11). Destraba la lectura del XML de facturas recibidas, que además completaría el IVA |
+| HU-06.a, HU-07.a (TEC-05) | P1 | L | Formato de la carga de nómina y si HRFlow es la fuente de empleados (decisión 9) |
+
+---
+
+## 4. Operación sin desarrollo (etapa 0)
+
+Con lo que ya existe en la plataforma. Es lo que más mueve las cifras de la sección 1.
+
+| ID | Qué | Herramienta que ya existe | Con quién |
+|---|---|---|---|
+| OP-01 (REQ-01) | Confirmar aperturas de las 13 cuentas provisionales, registrar las liquidaciones de NetPay al banco y conciliar bancos | Aperturas, liquidaciones de procesador, conciliación bancaria | Liza |
+| OP-02 | Revisar y pagar en la plataforma las 37 cuentas por pagar | Por pagar, pago por lote | Liza |
+| OP-03 | Cerrar agosto, septiembre y octubre | Cierre de periodos | Jessica |
+| OP-04 | Cortes de caja diarios con entrega a caja central | Cortes de caja | Sucursales |
+| OP-05 | Clasificar el IVA pendiente | Filtro "IVA: sin clasificar" y corrección en lote | Jessica |
+| TEC-06 | Activar el asistente: cargar `ANTHROPIC_API_KEY` en `/srv/apps/financials/.env` y fijar el tope mensual (ya existe en Configuración) | — | Emmanuel |
+
+---
+
+## 5. Investigación e integraciones
+
+| ID | Prior. | Qué | Nota |
+|---|---|---|---|
+| HU-10.c | P1 | Conservar el número de atenciones de Toronja para tener ticket promedio | Hoy se importa un ingreso por sucursal, día y forma de pago |
+| HU-14.b / TEC-08 | P2 | Conexión directa con el banco | La alternativa por archivo ya existe |
+| R1·HU-21 | P2 | Conectores con NetPay y Mercado Pago | Sin dueño; TEC-09 solo pausa Toronja |
+| R1·HU-12.b | P2 | Lectura de estados de cuenta en PDF | Requiere muestras reales |
+| TEC-09 | Restricción | Pausar la integración con Toronja | No detener la importación de archivos |
+| TEC-10 | Separado | Evaluar la propuesta del nuevo proveedor | Consultoría; no aprueba un ERP |
+| R1·HAB-03 | P2 | Diccionario de movimientos, estados y reglas de saldo | Documento de Atlas |
+
+---
+
+## 6. Hecho en la ronda 2
+
+Todo en producción el 27-nov-2026. Falta la validación funcional con La Fe (criterio de terminado).
+
+| Entrega | PR | Qué quedó |
+|---|---|---|
+| REQ-02 · Por pagar | #37 | Columna de acciones fija; detalle y saldo al día tras pagar; pago con bloqueo de fila (también cobros); lo que espera autorización aparta saldo; pago por lote sin doble envío; aviso de posible duplicado al capturar un gasto |
+| REQ-03 · Bitácora completa | #37 | Cierres y reaperturas, contactos, comprobantes, traspasos, permisos del equipo y reglas de autorización. Falta categorías (REQ-03.b, llega con HU-15.a) |
+| HU-02 · Corregir lo pagado | #38 | Gasto pagado corrige categoría (con póliza de reclasificación), proveedor, referencia y notas con motivo; motivo obligatorio al cancelar; sustituir comprobante con traza |
+| HU-03 · Mes cerrado | #38 | Gastos e ingresos pendientes respetan el mes y el ejercicio cerrados; quitar y sustituir comprobantes también |
+| HU-05 · IVA explícito | #39 | Tratamiento (gravado, tasa 0, exento, no objeto, sin clasificar) en gastos, ingresos y cuentas; retenciones de gasto por tasa; desglose en detalle e historial; reporte de IVA por tratamiento con retenciones; filtro "IVA" |
+| HU-04 · Corrección masiva | #40 | Gastos: categoría, IVA, proveedor y proyecto en lote, hasta 500, con vista previa y resultado por gasto |
+| HU-20 · Totales | #41 | Por pagar y Por cobrar suman todo lo filtrado; Gastos e Ingresos suman sin cancelados; la selección suma entre páginas |
+| HU-21 · Búsqueda | #41 | Búsqueda siempre visible en Gastos e Ingresos; Ctrl K encuentra operaciones, cuentas y contactos por concepto, referencia, RFC o monto |
+
+---
+
+## 7. Catálogo de historias
+
+Cada historia con su origen, criterios de aceptación y tareas. El estado vive en las secciones 2 a 6.
 
 ### Épica 1 · Pagos y correcciones con trazabilidad
 
-**R2·HU-01 · Registrar y visualizar el pago de una cuenta** — P0 · Liza · **Existe, con errores y problema de visibilidad.**
+**R2·HU-01 · Registrar y visualizar el pago de una cuenta** — P0 · Liza. Quiero registrar claramente que una obligación ya fue pagada, para distinguir lo pendiente de lo liquidado sin duplicar registros.
+Criterios: acción visible para pagar; fecha, importe y cuenta de origen; estado y saldo actualizados; pago vinculado a la obligación; sin duplicados. → Hecho (REQ-02); pendiente HU-01.v.
 
-Como responsable de cuentas por pagar, quiero registrar claramente que una obligación ya fue pagada, para distinguir lo pendiente de lo liquidado sin duplicar registros.
+**R2·HU-02 · Corregir o revertir un gasto pagado con autorización** — P0 · Abraham y Liza. Quiero solicitar la corrección o reversa de un gasto pagado, para atender errores o sustituciones de factura sin perder el historial.
+Criterios: distinguir corregir datos, sustituir comprobante y revertir pago; motivo obligatorio; autorización del rol definido; bitácora de quién solicitó, autorizó y qué cambió; sin duplicar efectos. → Hecho en parte; pendientes HU-02.a, .b, .c, .d.
 
-- Criterios: acción visible para pagar; fecha, importe y cuenta de origen; estado y saldo actualizados en detalle y listados; pago vinculado a la obligación; sin pagos duplicados.
-- Existe: "Registrar pago" en la fila y en el detalle (`DebtsPage.tsx`, `DebtDetailPanel.tsx`), pagos parciales, estados PARCIAL/PAGADA, saldo calculado, historial de pagos, pago por lote. Backend `POST /payables/{id}/pay` rechaza pagos mayores al saldo.
-- Errores corregidos (R2·REQ-02):
-  - La columna de acciones queda fija a la derecha; el concepto largo se corta a dos líneas.
-  - El detalle se vuelve a pedir tras un pago y el formulario propone el saldo al día.
-  - El pago bloquea la fila de la cuenta (también el cobro en Por cobrar).
-  - Lo que espera autorización aparta saldo: una propuesta que no cabe se rechaza antes de llegar a la bandeja, y quien autoriza tampoco paga encima de lo apartado.
-  - El botón del pago por lote se desactiva mientras corre.
-- Riesgo de duplicado: si los pagos se capturan como gastos sueltos, el gasto cuenta dos veces y la cuenta sigue abierta. Ya hay aviso en el formulario de gasto cuando proveedor y monto coinciden con una cuenta por pagar abierta, con liga a la cuenta.
-- Por validar: pagos parciales y el caso concreto (TEC-01: revisar SEILAB 1876 con Liza).
+**R2·HU-03 · Cerrar periodos y controlar correcciones posteriores** — P0 · Abraham, Liza y Jessica. Quiero cerrar periodos y controlar sus modificaciones.
+Criterios: cierre por usuario autorizado; sin edición ordinaria en periodo cerrado; correcciones por mecanismo compensatorio; reapertura con permisos y traza; el sistema explica el bloqueo. → Hecho; pendientes HU-03.a y OP-03.
 
-**R2·HU-02 · Corregir o revertir un gasto pagado con autorización** — P0 · Abraham y Liza · **Parcial.** Depende de R2·HU-03.
-
-Como responsable administrativo, quiero solicitar la corrección o reversa de un gasto pagado, para atender errores o sustituciones de factura sin perder el historial.
-
-- Criterios: distinguir corregir datos, sustituir comprobante y revertir pago; motivo obligatorio y relación con el original; autorización del rol definido; bitácora de quién solicitó, autorizó y qué cambió; saldos y reportes sin duplicar efectos.
-- Existe: cancelar un pagado genera la reversa con fecha de hoy y conserva el historial (`reversals.py`); bitácora `change_log`.
-- Hecho (27-nov, con la propuesta de la decisión 1; se ajusta si el refinamiento decide otra cosa):
-  - Un gasto pagado corrige categoría, proveedor, referencia y notas con motivo obligatorio, mientras el mes esté abierto. La categoría genera una póliza de reclasificación en la fecha del gasto, ligada a él: si después se cancela, su reverso también se deshace. Monto, fecha, concepto y cuenta siguen exigiendo reversa.
-  - Motivo obligatorio al cancelar gastos, ingresos, cuentas por pagar y por cobrar.
-  - Sustituir comprobante: el anterior queda dado de baja, el cambio y su motivo en el historial; bloqueado en mes cerrado.
-- Falta:
-  - Corregir la sucursal de un pagado: la póliza lleva una sola unidad y moverla exige una reclasificación entre unidades. Validar con Jessica.
-  - Autorización para cancelar (decisión 2): las autorizaciones solo cubren crear o pagar gastos, pagar cuentas por pagar y traspasos.
-  - Revertir un solo pago de una cuenta por pagar: los pagos comparten origen con la cuenta y hoy el reverso es de todo.
-- Propuesta para la decisión 1: categoría, sucursal, notas y referencia se corrigen directo con bitácora mientras el periodo esté abierto; monto, fecha y cuenta solo con reversa.
-
-**R2·HU-03 · Cerrar periodos y controlar correcciones posteriores** — P0 · Abraham, Liza y Jessica · **Existe, con huecos; sin uso.**
-
-Como responsable contable, quiero cerrar periodos y controlar sus modificaciones, para evitar cambios no autorizados sobre información ya cerrada.
-
-- Criterios: cierre por usuario autorizado; sin edición ordinaria en periodo cerrado; correcciones por mecanismo compensatorio aprobado por contabilidad; reapertura con permisos y trazabilidad; el sistema explica el bloqueo.
-- Existe: cierre y reapertura de meses y ejercicios (roles contables), reapertura con motivo, bloqueo central en el motor contable con mensaje claro.
-- Huecos:
-  - ~~Los gastos pendientes se crean y editan en un mes cerrado, porque no generan póliza.~~ Resuelto: gastos e ingresos pendientes respetan el mes y el ejercicio cerrados al crearse, editarse o cambiar de fecha.
-  - Cancelar algo de un mes cerrado registra la reversa con fecha de hoy. Puede ser justo el mecanismo compensatorio; confirmarlo con Jessica.
-  - ~~Cierre y reapertura no quedan en la bitácora.~~ Resuelto en R2·REQ-03.
-  - ~~El bloqueo de comprobantes solo revisa el ejercicio, no el mes.~~ Quitar y sustituir revisan mes y ejercicio. Subir uno nuevo a un mes cerrado sigue permitido (completar evidencia faltante); confirmar con Jessica.
-- Por validar con Jessica: reglas del periodo abierto, fechas de aplicación y pólizas inversas. Cambiar de mes no equivale a cerrar.
-
-**R2·HU-04 · Corregir gastos de forma masiva** — P1 · Liza · **Falta.** Depende de R2·HU-02 y R2·HU-03.
-
-- Criterios: filtrar y seleccionar; solo campos autorizados; vista previa; respetar permisos, estados y cierres; resultado con actualizados, rechazados y motivos.
-- **Hecho (27-nov):** en Gastos, "Corregir en lote" cambia categoría, tratamiento de IVA, proveedor y proyecto de los gastos seleccionados, con motivo obligatorio. Se puede seleccionar más allá de la página: todos los que coinciden con el filtro, hasta 500. Primero hay una vista previa que no cambia nada; al aplicar, cada gasto pasa por las reglas de la corrección individual (estado, mes cerrado, IVA coherente, reclasificación). El resultado dice cuántos se corrigieron, cuántos ya tenían esos datos y cuáles no se pudieron corregir y por qué (`POST /expenses/bulk-update`).
-- Falta: lo mismo para ingresos; los datos que mueven dinero (monto, fecha, cuenta) siguen sin corregirse en lote, por diseño.
+**R2·HU-04 · Corregir gastos de forma masiva** — P1 · Liza.
+Criterios: filtrar y seleccionar; solo campos autorizados; vista previa; respetar permisos, estados y cierres; resultado con actualizados, rechazados y motivos. → Hecho para gastos; pendiente HU-04.b (ingresos). Monto, fecha y cuenta no se corrigen en lote, por diseño.
 
 ### Épica 2 · Información fiscal estructurada
 
-**R2·HU-05 · Capturar IVA y retenciones de manera explícita** — P0 · Abraham, Liza y Jessica · **Parcial.**
-
-- Criterios: subtotal, trasladados, retenciones y total; retenciones con tipo, tasa o importe; tratamientos exento y no objeto; "sin clasificar" como pendiente de revisión; desglose en detalle y salidas contables; casos aprobados por contabilidad.
-- Existe: en gastos, tasa 16/8/0 % y retenciones ISR e IVA como importes; las pólizas las registran bien (`rules.py`).
-- Hecho (27-nov):
-  - Tratamiento de IVA en gastos, ingresos y cuentas por pagar y por cobrar: gravado, tasa 0, exento, no objeto o sin clasificar. Lo que estaba en 0 % quedó **sin clasificar** (la migración no decide que algo es exento).
-  - Lo pagado se clasifica desde el detalle sin cancelarlo, porque no cambia el IVA; un gasto pide motivo y el mes debe estar abierto.
-  - Retenciones de gasto por tasa sobre la base (ISR 10 % y 1.25 %; IVA 2/3, 4 % y 6 %) o por importe; si vienen ambos y no coinciden, se rechaza.
-  - Desglose en el detalle (base, IVA, tratamiento y retenciones) y en el historial.
-  - Reporte de IVA: retenciones del periodo, base por tratamiento y aviso con liga a lo sin clasificar; filtro "IVA" en Gastos e Ingresos.
-- Falta:
-  - Retenciones en ingresos (lo que el cliente nos retiene) y en cuentas por pagar: requieren cuentas y pólizas que valida Jessica.
-  - Retenciones y tratamiento en la exportación a Excel.
-  - Que Jessica clasifique los gastos e ingresos sin clasificar.
-- Importaciones de Toronja: fijan IVA 0. Muchos servicios médicos podrían ser exentos; lo confirma Jessica, no el sistema.
-- Decisión: la historia pide capturar el subtotal; el sistema pide el total y calcula el desglose.
-- Por validar: no deducibles y efectivo. No inferir impuestos por el medio de pago (hoy no se infiere).
+**R2·HU-05 · Capturar IVA y retenciones de manera explícita** — P0 · Abraham, Liza y Jessica.
+Criterios: subtotal, trasladados, retenciones y total; retenciones con tipo, tasa o importe; exento y no objeto; "sin clasificar" como pendiente; desglose en detalle y salidas contables; casos aprobados por contabilidad. → Hecho en gastos; pendientes HU-05.b, .c, .d, .e. El sistema pide el total y calcula el desglose. No se infieren impuestos por el medio de pago.
 
 ### Épica 3 · Captura eficiente y organización de gastos
 
-**R2·HU-06 · Cargar comprobantes de nómina por lote** — P1 · Abraham · **Falta.**
+**R2·HU-06 · Cargar comprobantes de nómina por lote** — P1 · Abraham. Lote en el formato acordado, revisión previa, duplicados e inválidos detectados, asociación a empleado y periodo, reintento de errores. Si es CFDI de nómina, el duplicado se detecta por UUID. → HU-06.a.
 
-- Criterios: lote en el formato acordado; revisión previa; duplicados e inválidos detectados; asociación a empleado y periodo; reintento solo de los errores.
-- No hay empleados, recibos ni lectura de XML de nómina. Si el formato es el CFDI de nómina timbrado, se lee directo y el duplicado se detecta por UUID.
+**R2·HU-07 · Administrar nómina desde una sección propia** — P1 · Abraham. Consulta por empleado y periodo, sin perder la clasificación como gasto, migración sin recaptura y totales iguales. El agente de Tesorería busca la categoría por el texto "Nómina": renombrarla lo rompe. No calcula ni timbra nómina. → HU-07.a.
 
-**R2·HU-07 · Administrar nómina desde una sección propia** — P1 · Abraham · **Falta.**
+**R2·HU-08 · Administrar gastos de laboratorios de referencia** — P1 · Abraham. Vista propia filtrada por laboratorio, periodo y sucursal; importes consolidados una vez. Basta una vista, no un módulo. → HU-08.a, .b.
 
-- Criterios: acceso propio; consulta por empleado y periodo; se conserva la clasificación como gasto; migración sin recaptura; totales iguales antes y después.
-- Hoy la nómina es solo una categoría de gasto. El agente de Tesorería la busca por el texto literal "Nómina": renombrarla lo rompe.
-- Antes de crear empleados en Financials, acordar que HRFlow sea la fuente de empleados y periodos (eventos `rrhh.nomina.*` del megaplan CFDI, aún sin receptor).
-- Límite: no calcula ni timbra nómina.
-
-**R2·HU-08 · Administrar gastos de laboratorios de referencia** — P1 · Abraham · **Parcial, chica.**
-
-- Criterios: vista propia; filtros por laboratorio, periodo y sucursal; relación con comprobantes y pagos; importes consolidados una sola vez.
-- Los proveedores (SEILAB, Diagnóstica, Duolab) ya existen; sus gastos caen en "Inventario". Falta un grupo o etiqueta de proveedores y filtrar varios a la vez (hoy, uno). Basta una vista; no justifica módulo.
+**R2·HU-15 · Desglosar cada factura de gasto en conceptos** — P1 · comentario sobre "Factura SEILAB RM355". Renglones con pieza, cantidad, precio unitario e importe; subcategorías administrables. La vía más barata es leer el XML de la factura recibida (trae conceptos, IVA y retenciones); el lector de CFDI actual sirve de base. → HU-15.a, .b, .c.
 
 ### Épica 4 · Vencimientos y seguimiento
 
-**R2·HU-09 · Recibir recordatorios de pagos próximos a vencer** — P1 · Abraham · **Parcial.**
-
-- Criterios: vencimiento o plazo; anticipación configurable; próximos y vencidos; lo liquidado deja de avisar; destinatario y canal.
-- Existe: fecha de vencimiento obligatoria en cuentas por pagar y por cobrar, cálculo de vencidos, panel de la semana.
-- Falta: cualquier proceso programado y cualquier canal de aviso. Recurrentes sin fecha de vencimiento.
-- Corregir: "vencido" usa la fecha del servidor y el panel de Inicio la de la empresa.
-- Diseño: reglas de fecha, sin depender de IA.
+**R2·HU-09 · Recibir recordatorios de pagos próximos a vencer** — P1 · Abraham. Anticipación configurable; próximos y vencidos; lo liquidado deja de avisar; destinatario y canal. Reglas de fecha, sin IA. Incluye el aviso del lunes de R1·HU-17. → HU-09.a, .b, .c, .d.
 
 ### Épica 5 · Visibilidad financiera por sucursal
 
-**R2·HU-10 · Dashboard intuitivo por sucursal** — P1 · Abraham y Liza · **Parcial.**
+**R2·HU-10 · Dashboard intuitivo por sucursal** — P1 · Abraham y Liza. Selector de sucursal y periodo; ingresos, gastos y categorías; ticket promedio si hay datos; del resumen al detalle; totales iguales a la fuente. → HU-10.a, .b, .c.
 
-- Criterios: selector de sucursal y periodo; ingresos, gastos y categorías; ticket promedio si hay datos; del resumen al detalle; totales iguales a la fuente.
-- Existe: panel de sucursales (ventas del mes, comparativo, tendencia, estado de cortes), filtro por sucursal en resumen y reportes, liga a ingresos por sucursal.
-- Falta: selector de periodo (el resumen está fijo en el mes actual).
-- Inconsistencia: el desglose por categoría suma con IVA y el estado de resultados sin IVA.
-- Ticket promedio imposible hoy: Toronja se importa como un ingreso por sucursal, día y forma de pago y descarta el número de atenciones. Habría que conservarlo.
+**R2·HU-11 · Visualizar la cobertura de gastos operativos** — P1 · Liza y Abraham. Llamarla "cobertura operativa", no "punto de equilibrio". → HU-11.a.
 
-**R2·HU-11 · Visualizar la cobertura de gastos operativos** — P1 · Liza y Abraham · **Falta; requiere definición.**
+**R2·HU-12 · Gestionar saldos y fechas de apertura por cuenta** — P0 investigación · Liza. → HU-12.a, HU-12.b, OP-01.
 
-- Criterios: gastos incluidos por sucursal y periodo; base usada; avance, diferencia y estado; fecha en que se alcanza; advertencia por falta de datos; sin recuperación de inversión.
-- No hay presupuestos por sucursal. Casi todos los gastos tienen sucursal (355 de 356), pero nómina y renta probablemente deban repartirse; definir la regla.
-- Si se compara ventas contra gastos fijos, llamarlo "cobertura operativa", no "punto de equilibrio".
+**R2·HU-13 · Distinguir históricos completos e incompletos** — P1 · Liza. Fecha confiable documentada, periodos incompletos marcados, procedencia conservada, advertencia en indicadores. → HU-13.a, .b.
 
-**R2·HU-12 · Gestionar saldos y fechas de apertura por cuenta** — P0 investigación · Liza · **Por validar.**
+**R2·HU-16 · Concentrar el efectivo de sucursales en caja central** — P1 · comentario sobre "Nuevo gasto". → HU-16.a, .b, .c, OP-04.
 
-- Hoy hay una sola fecha de corte por empresa; no existe fecha de apertura por cuenta.
-- Error encontrado: dar de alta una cuenta con saldo inicial registra la póliza con fecha de hoy, no en la fecha de corte, y sin movimiento de dinero. Puede ser lo que observó Liza.
-- Los saldos negativos vienen de aperturas pendientes y de que nunca se registró cuándo NetPay deposita al banco (ver R2·REQ-01).
-- Antes de desarrollar: caso concreto con Liza (TEC-04).
+**R2·HU-17 · Vincular patrimonio con su financiamiento y su depreciación** — P1 · comentario sobre patrimonio. Ya existen el IVA de la compra de contado y la separación de capital e intereses en cada pago. → HU-17.a, .b, .c.
 
-**R2·HU-13 · Distinguir históricos completos e incompletos** — P1 · Liza · **Falta.**
+**R2·HU-18 · Clasificar clientes como Particular o Empresa** — P1 · comentario sobre "Nuevo cliente". → HU-18.a.
 
-- Criterios: fecha confiable documentada (Liza propuso agosto); periodos incompletos marcados; lo importado no queda conciliado; procedencia conservada; advertencia en indicadores.
-- Los gastos de La Fe empiezan el 1-ago-2026, lo que respalda agosto. Lo importado no queda conciliado por omisión y la procedencia vive en las filas de importación, no en la operación. No existe concepto de cobertura. Revisar las 4 operaciones con fecha futura.
+**R2·HU-19 · Editar y eliminar proyectos** — P1 · comentario sobre "Proyectos". El monto acordado es el presupuesto del proyecto. → HU-19.a.
+
+**R2·HU-20 · Totales de lo filtrado y lo seleccionado** y **R2·HU-21 · Buscar en ingresos y en general** — P1 · comentarios sobre "Por pagar". → Hechos (#41). Movimientos aún no tiene totales en el pie.
 
 ### Épica 6 · Integraciones controladas
 
-**R2·HU-14 · Conciliar movimientos bancarios con obligaciones** — P2 · Abraham · **Existe casi entera.**
+**R2·HU-14 · Conciliar movimientos bancarios con obligaciones** — P2 · Abraham. Existe casi entera por archivo. → HU-14.a, HU-14.b.
 
-- Existe: importar estados de cuenta CSV/XLSX, sugerencias de coincidencia con justificación, revisión humana, registro de quién confirmó; no inicia transferencias.
-- Falta: conexión directa con el banco. Primer paso: usar la conciliación actual con un estado de cuenta real. La conexión sigue condicionada a viabilidad y seguridad.
+### Requerimientos y trabajo técnico
 
----
-
-## 3. Comentarios adicionales del equipo (27-nov, con capturas)
-
-**R2·HU-15 · Desglosar cada factura de gasto en conceptos** — P1 · origen: comentario sobre "Factura SEILAB RM355".
-
-Como responsable administrativo, quiero desglosar una factura en sus conceptos (pieza o unidad, cantidad, precio unitario e importe), para saber qué se compra y a qué precio sin depender de las notas, que no se ven.
-
-- Hoy un gasto o cuenta por pagar es un solo monto con una categoría; no hay renglones. Las notas no aparecen en el detalle.
-- Pidieron además una subcategoría "Gastos operativos". Las categorías son planas, sin subcategorías ni alta desde la interfaz. En la captura, "Inventario" ya se registra en la cuenta 5100 Gastos Operativos.
-- Propuesta: categorías con subcategorías administrables, y renglones por factura. La vía más barata es **leer el XML de la factura recibida**, que trae conceptos, cantidades, precios, IVA y retenciones. Eso resuelve a la vez esta historia y buena parte de R2·HU-05. En la ronda 1 la lectura de XML quedó fuera del MVP; el plan maestro la tiene como módulo E. Se propone adelantarla.
-- Por validar: si cada renglón lleva su propia categoría o la factura completa una sola.
-
-**R2·HU-16 · Concentrar el efectivo de sucursales en caja central** — P1 · origen: comentario sobre "Nuevo gasto".
-
-Como dirección, quiero que el efectivo de cada sucursal se entregue a caja central y de ahí se distribuyan los pagos, para saber cuánto efectivo hay realmente y desde dónde se paga.
-
-- Existe: corte de caja por sucursal con entrega como traspaso caja → caja central o banco (`cash_cuts`), y pagar desde cualquier cuenta.
-- Uso: La Fe tiene un solo corte, cancelado. Por eso las cajas de sucursal acumulan entre $74k y $323k y Caja central está en −$934k.
-- Falta: hacer el flujo obvio (corte diario → entrega a caja central) y, en "Nuevo gasto", proponer Caja central cuando se paga en efectivo.
-- Por validar: si las sucursales pagan gastos menores con su propia caja.
-
-**R2·HU-17 · Vincular patrimonio con su financiamiento y su depreciación** — P1 · origen: comentario sobre patrimonio.
-
-Como responsable administrativo, quiero que un activo comprado a crédito (por ejemplo, un vehículo) quede ligado a sus pagos futuros, para controlar lo que falta pagar, el IVA, los intereses y la depreciación desde un solo lugar.
-
-- Existe: activos fijos con vida útil en meses, valor de rescate, depreciación en línea recta y baja; préstamos con tabla de amortización y pagos. Ninguno se usa en La Fe.
-- Falta:
-  - Ligar el activo al préstamo o a la cuenta por pagar que lo financia.
-  - Anticipos aplicados a esa deuda.
-  - IVA de la compra y separación de intereses en cada pago.
-  - Elegir el método o plazo de depreciación.
-  - Editar activos y préstamos (hoy solo crear, depreciar, dar de baja y pagar).
-- Por validar con Jessica: tratamiento del IVA de compras a crédito, intereses y métodos de depreciación aceptados.
-
-**R2·HU-18 · Clasificar clientes como Particular o Empresa** — P1 · origen: comentario sobre "Nuevo cliente".
-
-- Criterio: el tipo se elige antes del nombre y cambia qué datos fiscales se piden.
-- Hoy el cliente no tiene tipo. Puede deducirse del RFC (13 caracteres persona física, 12 moral), pero se pidió explícito.
-- Encaja con los datos fiscales del CFDI (régimen, uso de CFDI).
-
-**R2·HU-19 · Editar y eliminar proyectos** — P1 · origen: comentario sobre "Proyectos".
-
-- Criterio: modificar nombre, cliente, monto acordado y costos del proyecto, o eliminarlo.
-- Hoy solo se puede crear y cerrar un proyecto; no hay edición ni eliminación. Los costos salen de los gastos asignados.
-- Eliminar un proyecto con operaciones debe desasignarlas, no borrarlas.
-
-**R2·HU-20 · Totales de lo filtrado y de lo seleccionado** — P1 · origen: comentario sobre "Por pagar".
-
-- Criterio: al filtrar y al seleccionar filas, ver la suma de lo visible y de lo seleccionado, en Por pagar y en las demás listas de operaciones.
-- **Hecho (27-nov):**
-  - Por pagar y Por cobrar: las tarjetas de saldo y vencido suman todo lo filtrado (antes, sólo la página visible).
-  - Gastos e Ingresos: el pie de la tabla suma todo lo filtrado sin contar cancelados.
-  - La barra de selección muestra la suma de lo seleccionado, aunque esté en varias páginas.
-
-**R2·HU-21 · Buscar en ingresos y en general** — P1 · origen: comentario sobre "Por pagar".
-
-- Criterio: buscar por concepto en Ingresos igual que en Gastos, y un buscador general que encuentre ingresos y gastos.
-- **Hecho (27-nov):**
-  - La búsqueda de Gastos e Ingresos estaba escondida dentro del panel "Filtros"; ahora está siempre a la vista.
-  - El buscador general (Ctrl K) encuentra ingresos, gastos, cuentas por pagar y cobrar, clientes y proveedores, por concepto, referencia, notas, nombre, RFC o monto. Abre directo el detalle (`GET /search`).
-
----
-
-## 4. Lo que el backlog no incluía y se agrega
-
-| ID | Prioridad | Trabajo | Por qué |
-|---|---|---|---|
-| R2·REQ-01 | P0 | Saldos confiables: confirmar aperturas, registrar liquidaciones de NetPay al banco y conciliar bancos | Sin esto, ningún tablero ni indicador es confiable |
-| R2·REQ-02 | P0 | Corregir los errores de cuentas por pagar listados en R2·HU-01 | **Hecho.** Falta validar con Liza (TEC-01) |
-| R2·REQ-03 | P0 | Bitácora completa: cierres y reaperturas, cambios de autorizaciones, comprobantes, traspasos, categorías y contactos | **Hecho**, salvo categorías: hoy no se crean ni editan desde la app (llega con R2·HU-15). Faltan las cancelaciones con autorización (R2·HU-02) |
-| R2·REQ-04 | P1 | Revisar las operaciones con fecha futura y validar fechas al capturar | Distorsionan saldos y reportes |
-| R2·REQ-05 | P1 | IVA de lo importado desde Toronja según el tratamiento aprobado | Hoy entra siempre en 0 |
-
-## 5. Trabajo técnico y de descubrimiento
-
-| ID | Prioridad | Trabajo | Resultado esperado | Nota del cotejo |
-|---|---|---|---|---|
-| TEC-01 | P0 | Reproducir el problema de cuentas por pagar | Saber si es funcionalidad, visibilidad o estado | La columna de pago se corta y hay errores; revisar SEILAB 1876 |
-| TEC-02 | P0 | Matriz de permisos y bitácora | Reglas para registrar, corregir, autorizar, cerrar y reabrir | Roles y autorizaciones existen; faltan cancelaciones y bitácora (REQ-03) |
-| TEC-03 | P0 | Fórmulas fiscales con Jessica | Casos aprobados de IVA, retenciones y totales | Incluir tratamiento de Toronja |
-| TEC-04 | P0 | Saldos de apertura con Liza | Ejemplo reproducible y alcance de R2·HU-12 | Revisar el error de fecha al dar de alta cuentas |
-| TEC-05 | P1 | Migración de nómina y reclasificaciones | Respaldo, totales validados y reversión | Decidir antes la fuente de empleados (HRFlow) |
-| TEC-06 | P1 | Acceso y límites de la conexión de IA | Diagnóstico y prueba del agente | Causa: nunca se configuró `ANTHROPIC_API_KEY`. Basta cargarla en `/srv/apps/financials/.env` y fijar el tope mensual |
-| TEC-07 | P1 | Datos del indicador por sucursal | Fórmula, fuentes y ejemplo validado | Incluir regla de reparto de gastos comunes |
-| TEC-08 | P2 | Conexión bancaria | Dictamen de viabilidad, seguridad, costo y alternativa | La alternativa por archivo ya existe |
-| TEC-09 | Restricción | Pausar la integración con Toronja | Atlas opera de forma autónoma hasta definir proveedor | No detener la importación de archivos, que es como entran las ventas |
-| TEC-10 | Separado | Evaluar propuesta del nuevo proveedor | Alcance, seguridad, propiedad, mantenimiento e integración | Consultoría; no aprueba un ERP nuevo |
-
-## 6. Orden recomendado
-
-| Etapa | Alcance | Condición de salida |
+| ID | Qué | Estado |
 |---|---|---|
-| 0. Ordenar los datos (sin desarrollo) | R2·REQ-01; revisar con Liza las 37 cuentas por pagar; cerrar agosto, septiembre y octubre; activar cortes de caja diarios | Saldos que cuadran con bancos y arqueos |
-| 1. Recuperar confianza | R2·REQ-02, R2·REQ-03, R2·HU-01, R2·HU-02, R2·HU-03, R2·HU-05; investigación de R2·HU-12 | Pagos claros, correcciones auditables, reglas fiscales validadas |
-| 2. Reducir trabajo manual | R2·HU-15 (lectura de XML), R2·HU-04, R2·HU-09, R2·HU-16, R2·HU-20, R2·HU-21, y R2·HU-06/07 una vez acordada la fuente de empleados | Menos recaptura y vencimientos visibles |
-| 3. Dar visibilidad | R2·HU-08, R2·HU-10, R2·HU-11, R2·HU-13, R2·HU-17, R2·HU-18, R2·HU-19 | Reportes por sucursal consistentes y con límites explícitos |
-| 4. Integraciones | R2·HU-14 con conexión bancaria y lo que dependa del proveedor elegido | Viabilidad y seguridad aprobadas |
+| REQ-01 | Saldos confiables | OP-01 (las herramientas existen) |
+| REQ-02 | Errores de cuentas por pagar | Hecho (#37) |
+| REQ-03 | Bitácora completa | Hecho (#37); REQ-03.b con HU-15.a |
+| REQ-04 | Operaciones con fecha futura | REQ-04.a, .b |
+| REQ-05 | IVA de lo importado de Toronja | REQ-05.a, .b |
+| TEC-01 a TEC-10 | Descubrimiento y técnicos | Ver secciones 3 a 5 |
 
-No son fechas comprometidas. Se estima después de resolver las definiciones.
+### De la ronda 1
 
-## 7. Criterio de terminado común
+Casi toda la ronda 1 está hecha o la reemplaza una historia de esta ronda. Lo que sigue abierto ya está arriba como **R1·**:
+
+| R1 | Estado |
+|---|---|
+| HU-01, HU-02, HU-04, HU-05, HU-06, HU-08, HU-09, HU-10, HU-11, HU-13, HU-14, HU-16, HU-18, HU-19, HU-20 | Hechas; sus mejoras viven en R2 |
+| HU-03, HU-21 (Toronja), HAB-04 a HAB-08 | Reemplazadas por R2·HU-12, REQ-01, TEC-02 a TEC-10 |
+| HU-07 corte de caja | Construido sin uso → R2·HU-16 |
+| HU-17 planeación semanal | Hecha; el aviso del lunes → R2·HU-09 |
+| HU-12 carga bancaria | Hecha; quedan R1·HU-12.a y .b |
+| HU-15 comisiones | Abierta → R1·HU-15 (bloqueada por Liza) |
+| HU-21 NetPay y Mercado Pago | Abierta → R1·HU-21 |
+| HU-22 proyección de flujo | Casi hecha; queda R1·HU-22.a |
+| HAB-02 inventario de formatos | Parcial; falta nómina y bancos |
+| HAB-03 diccionario de datos | Abierta → R1·HAB-03 |
+
+---
+
+## 8. Decisiones abiertas (unificadas)
+
+Une las 7 de la ronda 1 y las 9 de la ronda 2. Ninguna está cerrada.
+
+| # | Decisión | Quién | Destraba |
+|---|---|---|---|
+| 1 | Qué campos se corrigen directo y cuáles exigen reversa. Propuesta aplicada: categoría, proveedor, referencia y notas directo con motivo; monto, fecha y cuenta con reversa. Sucursal, pendiente de HU-02.c | Dirección y Jessica | Confirmar lo hecho |
+| 2 | Quién autoriza cambios y cancelaciones, quién cierra y reabre periodos; umbral aprobado (¿$100,000?, ¿qué pasa con exactamente $100,000?) y restricciones del auxiliar | Dirección | HU-02.b, TEC-02 |
+| 3 | Criterio contable: base de efectivo o devengo; tratamiento de préstamos e inversiones | Jessica | TEC-03 |
+| 4 | IVA y retenciones: casos aprobados, ventas de Toronja, compras a crédito, intereses y depreciación | Jessica | HU-05.b, REQ-05.b, HU-17.b, HU-17.c |
+| 5 | Conciliación: cuentas, referencias, depósitos agrupados y tiempos de liquidación de NetPay y Mercado Pago | Liza | OP-01, R1·HU-15 |
+| 6 | Arranque: fecha confiable (los datos respaldan el 1-ago-2026), caso concreto de aperturas y quién valida saldos | Liza | HU-12.b, HU-13.a |
+| 7 | Excepciones: devoluciones, contracargos y cancelaciones | Dirección y Jessica | HU-02.a (se puede construir antes) |
+| 8 | Avisos: canal, destinatarios, frecuencia y anticipación | Dirección | HU-09.a |
+| 9 | Nómina: formato de la carga y si HRFlow es la fuente de empleados | Abraham | HU-06.a, HU-07.a |
+| 10 | Cobertura operativa: qué es "cubrir gastos" y cómo se reparten los gastos comunes | Liza y Abraham | HU-11.a |
+| 11 | Factura: categoría por renglón o por factura; qué subcategorías | Dirección y Jessica | HU-15.b, HU-15.c |
+| 12 | Caja de sucursal: ¿pagan gastos menores con su caja o todo sale de caja central? | Dirección | HU-16.c |
+
+## 9. Criterio de terminado común
 
 - Validación funcional con Liza o Abraham; fiscal y contable con Jessica.
 - Permisos comprobados.
@@ -278,16 +310,4 @@ No son fechas comprometidas. Se estima después de resolver las definiciones.
 - Instrucciones de uso actualizadas.
 - Evidencia de pruebas y aceptación del cambio.
 
-## 8. Decisiones para el refinamiento
-
-1. ¿Qué campos se corrigen directamente y cuáles requieren reversa? (propuesta en R2·HU-02)
-2. ¿Quién autoriza cambios y quién cierra o reabre periodos?
-3. ¿Qué formato se usará para la carga masiva de nómina, y HRFlow será la fuente de empleados?
-4. ¿Qué significa exactamente "cubrir gastos" para Liza, y cómo se reparten los gastos comunes?
-5. ¿Cuál es el caso concreto del problema de saldos de apertura?
-6. ¿Qué fecha y cobertura de información se consideran confiables? (los datos respaldan el 1-ago-2026)
-7. ¿Los renglones de una factura llevan categoría propia o una sola por factura? ¿Qué subcategorías se necesitan?
-8. ¿Las sucursales pagan gastos menores con su propia caja o todo sale de caja central?
-9. ¿Cómo se tratan el IVA, los intereses y la depreciación de activos comprados a crédito?
-
-Recomendación: cerrar primero las reglas y fallas del núcleo financiero. Un dashboard más atractivo no resolverá saldos, impuestos o estados de pago ambiguos.
+Recomendación: los lotes A y B y la etapa 0 antes que cualquier tablero. Un dashboard más atractivo no resuelve saldos, impuestos o estados de pago ambiguos.
