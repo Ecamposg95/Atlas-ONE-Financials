@@ -19,3 +19,9 @@ research_notes
 reports
 spikes
 tests
+# Nada de esto corre en producción (y lo que no está en la imagen no se puede leer desde ella).
+docs
+tools
+deploy
+.railway
+*.md

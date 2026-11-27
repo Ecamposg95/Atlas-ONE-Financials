@@ -4,7 +4,7 @@
 # Hace lo mismo que hacía Railway (Railpack):
 #   1. npm ci && npm run build  -> frontend/dist
 #   2. pip install -r requirements.txt
-#   3. alembic upgrade head && uvicorn app.main:app (sirve la SPA desde frontend/dist)
+#   3. alembic upgrade head (antes del cambio de contenedor) y uvicorn app.main:app (sirve la SPA desde frontend/dist)
 
 # --- Etapa 1: la SPA de React ------------------------------------------------
 FROM node:20-alpine AS frontend
@@ -49,7 +49,10 @@ USER app
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/deep', timeout=5)"
 
-# Las migraciones corren al arrancar, igual que en Railway: un solo head, nunca create_all().
-CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips '*'"]
+# Las migraciones corren ANTES de cambiar el contenedor (deploy/ionos/deploy.sh, con MIGRAR_AL_ARRANCAR=0): si una
+# falla, la versión anterior sigue en pie en vez de quedar en un ciclo de reinicios. Sin esa variable se migra al
+# arrancar, como antes (desarrollo y la tarea vieja de deploy). Un solo head, nunca create_all().
+# Las IPs de proxy en las que uvicorn confía salen de FORWARDED_ALLOW_IPS (por omisión sólo 127.0.0.1).
+CMD ["sh", "-c", "if [ \"${MIGRAR_AL_ARRANCAR:-1}\" = 1 ]; then alembic upgrade head; fi && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers"]

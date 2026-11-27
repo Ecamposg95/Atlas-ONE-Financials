@@ -1,20 +1,56 @@
-# Atlas ONE Financials en el VPS de IONOS.
-# Vive en /srv/apps/financials/ (este archivo + .env); el código en ./src lo
-# sube la tarea "Deploy a IONOS" de .github/workflows/ci.yml.
-# Base de datos: el PostgreSQL compartido del servidor (contenedor `postgres`,
-# red `edge`), base `atlas_financials` con su propio usuario. Caddy publica
-# financials.atlasone.com.mx -> financials:8000.
+# Atlas ONE Financials en el VPS de IONOS (atlas-prod-01).
+#
+# Vive en /srv/apps/financials/docker-compose.yml, instalado a mano con dueño root (ver README.md): junto con
+# entrada.sh y deploy.sh decide cómo corre la app, así que no se toma del commit que se despliega.
+# Secretos en /srv/apps/financials/.env (600), fuera del repo.
+# Base de datos: el PostgreSQL compartido del servidor (contenedor `postgres`, red `edge`), base
+# `atlas_financials` con su propio usuario. Caddy publica financials.atlasone.com.mx -> financials:8000.
+#
+# Lo levanta deploy.sh con la imagen del commit: FINANCIALS_TAG=<sha> MIGRAR_AL_ARRANCAR=0.
+# El bloque `build` y los valores por omisión existen sólo para la tarea vieja "Deploy a IONOS (root)" de ci.yml,
+# que construye `financials:latest` y migra al arrancar; se quitan cuando esa tarea desaparezca.
 services:
   financials:
     build:
       context: ./src
       dockerfile: Dockerfile
-    image: financials:latest
+    image: financials:${FINANCIALS_TAG:-latest}
     container_name: financials
     restart: unless-stopped
-    env_file: .env
+    env_file: ${FINANCIALS_APP_DIR:-/srv/apps/financials}/.env
+    environment:
+      # Uvicorn sólo cree en X-Forwarded-For/Proto si la petición llega de aquí: Caddy entra por la red `edge`.
+      # Con '*' cualquier contenedor de esa red podía fingir la IP del cliente y saltarse el límite de login.
+      FORWARDED_ALLOW_IPS: ${FINANCIALS_FORWARDED_ALLOW_IPS:-172.18.0.0/16}
+      # deploy.sh migra antes de cambiar el contenedor y pone 0.
+      MIGRAR_AL_ARRANCAR: ${MIGRAR_AL_ARRANCAR:-1}
     expose: ["8000"]
     networks: [edge]
+    # El servidor es compartido (Postgres, Caddy y las demás apps): un error aquí no debe dejarlas sin recursos.
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+          pids: 256
+    # La app no escribe en disco: los adjuntos viven en la base y las subidas pasan por /tmp.
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      # /api/health/deep consulta la base: 503 si no contesta.
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/api/health/deep', timeout=5).status==200 else 1)\""]
+      interval: 10s
+      timeout: 6s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   edge:
