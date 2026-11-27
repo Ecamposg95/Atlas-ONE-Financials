@@ -31,8 +31,8 @@
     "total": "173.93",
     "receptor_rfc": "EKU9003173C9",
     "enlaces": {
-      "xml": "https://atlas-one-financials.up.railway.app/api/cfdi/2c9a1f7e-0b3d-4e5a-8f6c-7d1b3e9a5c02/xml?firma=ejemplo",
-      "pdf": "https://atlas-one-financials.up.railway.app/api/cfdi/2c9a1f7e-0b3d-4e5a-8f6c-7d1b3e9a5c02/pdf?firma=ejemplo",
+      "xml": "https://financials.atlasone.com.mx/api/cfdi/2c9a1f7e-0b3d-4e5a-8f6c-7d1b3e9a5c02/xml?firma=ejemplo",
+      "pdf": "https://financials.atlasone.com.mx/api/cfdi/2c9a1f7e-0b3d-4e5a-8f6c-7d1b3e9a5c02/pdf?firma=ejemplo",
       "expiran_en": "2026-12-01T13:47:31-06:00",
       "xml_sha256": "a60de48e55aaaa3a416f70d018e7ae9aaf86f301055f47f52405260347915e35"
     }

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/pos.venta.cancelada.schema.json",
+  "$id": "https://financials.atlasone.com.mx/contratos/eventos/v1/pos.venta.cancelada.schema.json",
   "title": "pos.venta.cancelada",
   "description": "La venta completa se anula (DELETE /api/sales/{id} en Atlas ONE). Financials revierte con póliza espejo y, si ya hay CFDI, decide si cancela ante el SAT o emite egreso. Una devolución parcial NO es cancelación: usa pos.devolucion.aprobada.",
   "allOf": [

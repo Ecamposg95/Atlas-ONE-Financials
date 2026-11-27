@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/financials.nomina.timbrada.schema.json",
+  "$id": "https://financials.atlasone.com.mx/contratos/eventos/v1/financials.nomina.timbrada.schema.json",
   "title": "financials.nomina.timbrada",
   "description": "Resultado por recibo de una versión de corrida de nómina. Un rechazo se corrige enviando una versión nueva con alcance 'correccion' y sólo ese recibo: nunca se repite el lote.",
   "allOf": [

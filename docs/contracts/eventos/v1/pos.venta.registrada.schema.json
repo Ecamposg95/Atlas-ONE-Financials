@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/pos.venta.registrada.schema.json",
+  "$id": "https://financials.atlasone.com.mx/contratos/eventos/v1/pos.venta.registrada.schema.json",
   "title": "pos.venta.registrada",
   "description": "Atlas ONE cobró (o dejó a crédito) una venta. Se emite para TODA venta, pida factura o no, con su IVA calculado: es el insumo de la póliza, de la factura global y de la factura por ticket.",
   "allOf": [

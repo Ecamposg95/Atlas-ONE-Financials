@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/rrhh.nomina.autorizada.schema.json",
+  "$id": "https://financials.atlasone.com.mx/contratos/eventos/v1/rrhh.nomina.autorizada.schema.json",
   "title": "rrhh.nomina.autorizada",
   "description": "RRHH autorizó una corrida de nómina, ya calculada y clasificada con claves del SAT. La corrida es inmutable: una corrección es una versión nueva con sólo los recibos que cambian. Financials no recalcula ISR, IMSS ni exenciones; valida forma y cuadre, timbra un CFDI por recibo y responde con financials.nomina.timbrada. Los importes son responsabilidad de RRHH [contador].",
   "allOf": [

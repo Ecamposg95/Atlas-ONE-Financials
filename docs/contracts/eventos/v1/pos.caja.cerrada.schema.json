@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/pos.caja.cerrada.schema.json",
+  "$id": "https://financials.atlasone.com.mx/contratos/eventos/v1/pos.caja.cerrada.schema.json",
   "title": "pos.caja.cerrada",
   "description": "Se cerró una sesión de caja. Financials lo liga a su corte de caja y registra faltante o sobrante. No crea ventas: las ventas llegan una por una en pos.venta.registrada y aquí sólo se concilian.",
   "allOf": [

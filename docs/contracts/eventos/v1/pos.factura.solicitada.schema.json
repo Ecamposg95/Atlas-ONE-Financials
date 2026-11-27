@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/pos.factura.solicitada.schema.json",
+  "$id": "https://financials.atlasone.com.mx/contratos/eventos/v1/pos.factura.solicitada.schema.json",
   "title": "pos.factura.solicitada",
   "description": "Un cliente pide la factura de un ticket, en caja o después por el portal. No repite los renglones: Financials usa los de pos.venta.registrada (de la que depende) y aquí sólo recibe los datos del receptor. Financials responde con financials.cfdi.actualizado.",
   "allOf": [

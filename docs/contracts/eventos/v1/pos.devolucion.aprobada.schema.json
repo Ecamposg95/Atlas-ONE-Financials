@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/pos.devolucion.aprobada.schema.json",
+  "$id": "https://financials.atlasone.com.mx/contratos/eventos/v1/pos.devolucion.aprobada.schema.json",
   "title": "pos.devolucion.aprobada",
   "description": "Un supervisor aprobó una devolución. Viaja con sus propios importes por renglón (base e impuesto), sin reescribir la venta original: Financials la registra como reverso parcial y, si la venta tenía CFDI o estaba en una global, como CFDI de egreso relacionado.",
   "allOf": [

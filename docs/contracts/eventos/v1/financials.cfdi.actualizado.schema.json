@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/financials.cfdi.actualizado.schema.json",
+  "$id": "https://financials.atlasone.com.mx/contratos/eventos/v1/financials.cfdi.actualizado.schema.json",
   "title": "financials.cfdi.actualizado",
   "description": "Financials avisa al punto de venta que un comprobante cambió de estado: timbrado, rechazado, en cancelación o cancelado. Se emite una vez por cambio de estado; la clave de idempotencia incluye el estado.",
   "allOf": [

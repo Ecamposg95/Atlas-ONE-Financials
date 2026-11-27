@@ -89,7 +89,7 @@ Tests obligatorios antes de cerrar cualquier feature financiera: tenant isolatio
 
 ## Cómo desplegar
 
-Railway (proyecto Atlas ONE Financials, antes ARCA; servicio `Atlas-ONE-Financials` + PostgreSQL). El servicio está conectado al repo GitHub `Ecamposg95/Atlas-ONE-Financials`: **push a `main` = deploy automático** (no usar `railway up`; desde /mnt/d además corrompe el upload). Railpack construye (config en `railpack.json`); el arranque ejecuta `alembic upgrade head`. Healthcheck `GET /api/health` (ajustes del servicio en `.railway/railway.ts`; se aplican con `railway config apply`, no al hacer push). Variables obligatorias: `DATABASE_URL`, `SECRET_KEY`, `ENV=production`.
+VPS de IONOS (`atlas-prod-01`, 74.208.190.44), el mismo de Atlas ONE, HRFlow y RMAZH. Dominio: https://financials.atlasone.com.mx (DNS en Cloudflare, sin proxy; Caddy saca el certificado). **push a main = deploy**: la tarea `Deploy a IONOS` de `.github/workflows/ci.yml` (si backend y frontend pasan y la variable del repo `DESPLIEGUE_IONOS=true`) sube el código a `/srv/apps/financials/src`, construye el `Dockerfile` y levanta `deploy/ionos/docker-compose.yml` (contenedor `financials`, red `edge`), y verifica que el contenedor corre el commit nuevo y que `/api/health/deep` ve la base. El arranque ejecuta `alembic upgrade head`. Base: PostgreSQL 18 compartido del servidor (contenedor `postgres`), base `atlas_financials` con usuario propio; entra en el respaldo nocturno `/srv/backups/pg_backup.sh` (14 días). Variables en `/srv/apps/financials/.env` (`ENV`, `DATABASE_URL`, `SECRET_KEY`). Railway quedó retirado el 2026-11-27 (app sin despliegue ni fuente; su PostgreSQL se conserva unos días como respaldo).
 
 ## Migraciones
 
