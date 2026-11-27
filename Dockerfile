@@ -7,7 +7,7 @@
 #   3. alembic upgrade head (antes del cambio de contenedor) y uvicorn app.main:app (sirve la SPA desde frontend/dist)
 
 # --- Etapa 1: la SPA de React ------------------------------------------------
-FROM node:20-alpine AS frontend
+FROM node:26-alpine AS frontend
 
 WORKDIR /frontend
 COPY frontend/package.json frontend/package-lock.json ./
