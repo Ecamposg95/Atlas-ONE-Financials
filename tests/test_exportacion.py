@@ -280,7 +280,7 @@ def test_cancelled_rows_are_listed_but_not_summed(client):
     _body, headers, account, categories = _expense_company(client)
     _expense(client, headers, account, categories["Renta"], "100", "Se queda")
     gone = _expense(client, headers, account, categories["Renta"], "900", "Se cancela")
-    cancelled = client.post(f"/api/expenses/{gone['id']}/cancel", headers=headers, json={})
+    cancelled = client.post(f"/api/expenses/{gone['id']}/cancel", headers=headers, json={"reason": "Captura duplicada"})
     assert cancelled.status_code == 200, cancelled.text
 
     rows = _sheet(client.get("/api/expenses/export", headers=headers))

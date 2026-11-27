@@ -45,6 +45,8 @@ class ExpenseUpdate(BaseModel):
     payment_method: str | None = Field(default=None, max_length=30)
     reference: str | None = Field(default=None, max_length=100)
     notes: str | None = Field(default=None, max_length=1000)
+    # Obligatorio para corregir un gasto pagado (R2·HU-02); queda en el historial.
+    reason: str | None = Field(default=None, max_length=500)
 
 
 class ExpensePay(BaseModel):
@@ -53,7 +55,8 @@ class ExpensePay(BaseModel):
 
 
 class ExpenseCancel(BaseModel):
-    reason: str | None = Field(default=None, max_length=500)
+    # R2·HU-02: cancelar siempre explica por qué; el motivo queda en el historial.
+    reason: str = Field(min_length=3, max_length=500)
 
 
 class ExpenseRead(BaseModel):

@@ -51,7 +51,7 @@ def test_reversing_a_paid_expense_returns_the_money(client):
     ).json()
     assert _balance(client, headers) == before - Decimal("11600")
 
-    response = client.post(f"/api/expenses/{expense['id']}/cancel", headers=headers, json={})
+    response = client.post(f"/api/expenses/{expense['id']}/cancel", headers=headers, json={"reason": "Captura duplicada"})
     assert response.status_code == 200
 
     assert _balance(client, headers) == before
@@ -72,7 +72,7 @@ def test_the_original_entry_is_not_deleted(client):
             "status": "PAID",
         },
     ).json()
-    client.post(f"/api/expenses/{expense['id']}/cancel", headers=headers, json={})
+    client.post(f"/api/expenses/{expense['id']}/cancel", headers=headers, json={"reason": "Captura duplicada"})
 
     entries = client.get(
         f"/api/accounting/journal-entries?source_type=expense&source_id={expense['id']}",
@@ -108,7 +108,7 @@ def test_reversing_a_partially_collected_receivable(client):
     )
     assert _balance(client, headers) == before + Decimal("11600")
 
-    response = client.post(f"/api/receivables/{receivable['id']}/cancel", headers=headers, json={})
+    response = client.post(f"/api/receivables/{receivable['id']}/cancel", headers=headers, json={"reason": "Captura duplicada"})
     assert response.status_code == 200, response.text
 
     # Se revierten el registro Y el cobro: el dinero se va, la cuenta desaparece.
@@ -130,8 +130,8 @@ def test_reversing_twice_is_rejected(client):
             "status": "PAID",
         },
     ).json()
-    client.post(f"/api/expenses/{expense['id']}/cancel", headers=headers, json={})
-    again = client.post(f"/api/expenses/{expense['id']}/cancel", headers=headers, json={})
+    client.post(f"/api/expenses/{expense['id']}/cancel", headers=headers, json={"reason": "Captura duplicada"})
+    again = client.post(f"/api/expenses/{expense['id']}/cancel", headers=headers, json={"reason": "Captura duplicada"})
     assert again.status_code == 400
 
 
@@ -149,7 +149,7 @@ def test_a_reversal_shows_up_as_its_own_movement_type(client):
             "status": "PAID",
         },
     ).json()
-    client.post(f"/api/income/{income['id']}/cancel", headers=headers, json={})
+    client.post(f"/api/income/{income['id']}/cancel", headers=headers, json={"reason": "Captura duplicada"})
 
     movements = client.get("/api/transactions", headers=headers).json()["items"]
     # Un reverso no se disfraza de gasto: tiene su propio tipo.
@@ -178,7 +178,7 @@ def test_a_card_expense_reversal_lowers_the_debt(client):
     ).json()
     assert Decimal(str(client.get("/api/dashboard/summary", headers=headers).json()["card_debt"])) == Decimal("8000")
 
-    client.post(f"/api/expenses/{expense['id']}/cancel", headers=headers, json={})
+    client.post(f"/api/expenses/{expense['id']}/cancel", headers=headers, json={"reason": "Captura duplicada"})
     # La deuda baja, no sube: el reverso respeta la naturaleza del instrumento.
     assert Decimal(str(client.get("/api/dashboard/summary", headers=headers).json()["card_debt"])) == Decimal("0")
 
@@ -207,6 +207,6 @@ def test_a_reversal_cannot_land_in_a_closed_month(client):
 
     # El reverso se fecha HOY, que sigue abierto: cerrar el mes pasado no
     # impide corregir hacia adelante, que es justo lo correcto.
-    response = client.post(f"/api/expenses/{expense['id']}/cancel", headers=headers, json={})
+    response = client.post(f"/api/expenses/{expense['id']}/cancel", headers=headers, json={"reason": "Captura duplicada"})
     assert response.status_code == 200
     assert _ledger_balanced(client, headers)

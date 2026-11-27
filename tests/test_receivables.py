@@ -89,7 +89,7 @@ def test_collection_cannot_exceed_balance(client):
 def test_cancel_unpaid_reverses_ledger(client):
     headers, _account, ventas, customer = _setup(client)
     receivable = _create(client, headers, ventas, customer)
-    cancelled = client.post(f"/api/receivables/{receivable['id']}/cancel", headers=headers, json={})
+    cancelled = client.post(f"/api/receivables/{receivable['id']}/cancel", headers=headers, json={"reason": "Captura duplicada"})
     assert cancelled.status_code == 200
     assert cancelled.json()["status"] == "CANCELLED"
     balances = _trial(client, headers)
@@ -108,7 +108,7 @@ def test_cancelling_with_collections_reverses_everything(client):
         headers=headers,
         json={"amount": "1000", "financial_account_id": account["id"]},
     )
-    response = client.post(f"/api/receivables/{receivable['id']}/cancel", headers=headers, json={})
+    response = client.post(f"/api/receivables/{receivable['id']}/cancel", headers=headers, json={"reason": "Captura duplicada"})
     assert response.status_code == 200
     assert response.json()["status"] == "CANCELLED"
 

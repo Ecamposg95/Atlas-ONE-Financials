@@ -98,7 +98,7 @@ def test_cancelling_a_collected_income_reverses_it(client):
         },
     ).json()
 
-    response = client.post(f"/api/income/{income['id']}/cancel", headers=headers, json={})
+    response = client.post(f"/api/income/{income['id']}/cancel", headers=headers, json={"reason": "Captura duplicada"})
     assert response.status_code == 200
     assert response.json()["status"] == "CANCELLED"
 

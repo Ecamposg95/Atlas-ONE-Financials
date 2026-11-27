@@ -13,6 +13,7 @@ from app.models.contact import Customer
 from app.models.financial_account import FinancialAccount
 from app.models.income import Income
 from app.models.project import Project
+from app.domains.periods.service import assert_month_open
 from app.services.accounting.rules import income_paid_entry
 from app.services.taxes import split_total
 from app.services.change_log import record_change, snapshot
@@ -77,6 +78,7 @@ def build_income(db: Session, org_id: str, payload, created_by: str) -> Income:
 
     No hace commit: la importación crea decenas en un solo lote, todos o ninguno.
     """
+    assert_month_open(db, org_id, payload.date, "registrar un ingreso con esa fecha")
     _validate_category(db, org_id, payload.category_id)
     if payload.customer_id:
         _validate_customer(db, org_id, payload.customer_id)
@@ -308,6 +310,11 @@ def update_income(db: Session, org_id: str, income: Income, changes: dict, user_
             "Un ingreso cobrado o cancelado sólo admite cambiar el proyecto. "
             "Para corregir otra cosa, cancélalo y regístralo de nuevo."
         )
+    if locked:
+        # Pendiente no tiene póliza ni candado del motor: el mes cerrado se respeta aquí.
+        assert_month_open(db, org_id, income.date, "corregir este ingreso")
+        if changes.get("date"):
+            assert_month_open(db, org_id, changes["date"], "mover el ingreso a esa fecha")
     before = snapshot(income)
     if "project_id" in changes:
         validate_project(db, org_id, changes["project_id"])

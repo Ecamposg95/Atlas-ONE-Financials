@@ -11,7 +11,8 @@ from app.models.category import Category
 from app.models.contact import Vendor
 from app.models.expense import Expense
 from app.domains.income.service import resolve_tax, validate_money_account, validate_project
-from app.services.accounting.rules import expense_paid_entry
+from app.domains.periods.service import assert_month_open
+from app.services.accounting.rules import expense_paid_entry, expense_reclassification_entry
 from app.services.change_log import record_change, snapshot
 from app.services.taxes import split_total
 from app.services.reversals import reverse_operation
@@ -66,6 +67,7 @@ def create_expense(db: Session, org_id: str, payload, created_by: str, commit: b
 
 def build_expense(db: Session, org_id: str, payload, created_by: str) -> Expense:
     """Crea el gasto (y lo paga si viene PAID) en la transacción del caller, sin commit."""
+    assert_month_open(db, org_id, payload.date, "registrar un gasto con esa fecha")
     _validate_category(db, org_id, payload.category_id)
     if payload.vendor_id:
         _validate_vendor(db, org_id, payload.vendor_id)
@@ -222,8 +224,11 @@ def cancel_expense(
 
 
 # Mientras no se paga, un gasto no tiene movimiento ni póliza: corregirlo no
-# toca la contabilidad. Una vez pagado, sólo la etiqueta analítica es editable;
-# lo demás exige cancelar (reverso) y volver a registrar.
+# toca la contabilidad. Una vez pagado (R2·HU-02, decisión 1), con el mes
+# abierto y un motivo se corrige lo que no mueve dinero: proveedor, referencia,
+# notas y categoría (ésta con póliza de reclasificación). Monto, fecha, cuenta y
+# concepto exigen cancelar (reverso) y volver a registrar.
+PAID_CORRECTABLE = ("category_id", "vendor_id", "reference", "notes")
 PENDING_EDITABLE = (
     "date",
     "description",
@@ -238,15 +243,52 @@ PENDING_EDITABLE = (
 )
 
 
-def update_expense(db: Session, org_id: str, expense: Expense, changes: dict, user_id: str) -> Expense:
+def _reclassify(db: Session, org_id: str, expense: Expense, old_category_id: str, user_id: str) -> None:
+    """La base del gasto pasa de la cuenta de la categoría anterior a la nueva,
+    en la fecha del gasto. Ligada al gasto: si después se cancela, su reverso
+    también deshace la reclasificación."""
+    old = db.get(Category, old_category_id)
+    new = db.get(Category, expense.category_id)
+    if old is None or new is None or old.account_code == new.account_code:
+        return
+    entry = expense_reclassification_entry(
+        db,
+        org_id,
+        description=f"Reclasificación: {expense.description} ({old.name} → {new.name})",
+        amount=Decimal(expense.amount) - Decimal(expense.tax_amount),
+        date=expense.date,
+        from_account_code=old.account_code,
+        to_account_code=new.account_code,
+        source_id=expense.id,
+        created_by=user_id,
+    )
+    tag_entry(entry, expense.business_unit_id, expense.fiscal_entity_id)
+
+
+def update_expense(
+    db: Session, org_id: str, expense: Expense, changes: dict, user_id: str, reason: str | None = None
+) -> Expense:
     """Aplica una edición y la deja en la bitácora con sus valores anteriores."""
-    locked = [field for field in changes if field in PENDING_EDITABLE]
-    if locked and expense.status != "PENDING":
-        raise ValueError(
-            "Un gasto pagado o cancelado sólo admite cambiar el proyecto. "
-            "Para corregir otra cosa, cancélalo y regístralo de nuevo."
-        )
+    reason = (reason or "").strip() or None
+    touched = [field for field in changes if field in PENDING_EDITABLE]
+    if expense.status == "CANCELLED" and touched:
+        raise ValueError("Un gasto cancelado sólo admite cambiar el proyecto.")
+    if expense.status == "PAID" and touched:
+        locked = [field for field in touched if field not in PAID_CORRECTABLE]
+        if locked:
+            raise ValueError(
+                "De un gasto pagado se corrigen categoría, proveedor, referencia y notas. "
+                "Para cambiar monto, fecha, concepto o cuenta, cancélalo y regístralo de nuevo."
+            )
+        if not reason or len(reason) < 3:
+            raise ValueError("Explica el motivo de la corrección: queda en el historial.")
+    if touched or "project_id" in changes:
+        # Sin póliza no hay candado del motor: el mes cerrado se respeta aquí.
+        assert_month_open(db, org_id, expense.date, "corregir este gasto")
+        if changes.get("date"):
+            assert_month_open(db, org_id, changes["date"], "mover el gasto a esa fecha")
     before = snapshot(expense)
+    old_category_id = expense.category_id
     if "project_id" in changes:
         validate_project(db, org_id, changes["project_id"])
         expense.project_id = changes["project_id"]
@@ -275,7 +317,9 @@ def update_expense(db: Session, org_id: str, expense: Expense, changes: dict, us
         expense.subtotal = tax.subtotal
         expense.tax_rate = tax.tax_rate
         expense.tax_amount = tax.tax_amount
-    record_change(db, org_id, expense, "UPDATE", user_id, before=before, after=snapshot(expense))
+    if expense.status == "PAID" and expense.category_id != old_category_id:
+        _reclassify(db, org_id, expense, old_category_id, user_id)
+    record_change(db, org_id, expense, "UPDATE", user_id, before=before, after=snapshot(expense), reason=reason)
     db.commit()
     db.refresh(expense)
     return expense
