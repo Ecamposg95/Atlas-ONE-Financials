@@ -657,7 +657,8 @@ def test_migracion_documentos_fiscales_es_el_unico_head():
 
     raiz = Path(__file__).resolve().parents[1]
     script = ScriptDirectory.from_config(Config(str(raiz / "alembic.ini")))
-    assert script.get_heads() == ["20261125_02"]
+    assert script.get_heads() == ["20261126_01"]
+    assert script.get_revision("20261126_01").down_revision == "20261125_02"
     assert script.get_revision("20261125_02").down_revision == "20261125_01"
 
 

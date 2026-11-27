@@ -120,6 +120,16 @@ class ValidacionRead(BaseModel):
     advertencias: list[ProblemaRead]
 
 
+class ErrorTimbradoRead(BaseModel):
+    """Último rechazo o falta de respuesta del proveedor, ya en español."""
+
+    categoria: str
+    mensaje: str
+    codigo_proveedor: str | None = None
+    codigo_sat: str | None = None
+    at: str | None = None
+
+
 class DocumentoRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -156,7 +166,50 @@ class DocumentoRead(BaseModel):
     validado_at: datetime | None
     validacion: ValidacionRead | None
     uuid_fiscal: str | None
+    no_certificado: str | None = None
+    proveedor_timbrado: str | None = None
+    rfc_prov_certif: str | None = None
+    fecha_timbrado: datetime | None = None
+    ultimo_error: ErrorTimbradoRead | None = None
+    cancelacion_motivo: str | None = None
+    cancelacion_folio_sustitucion: str | None = None
+    cancelacion_solicitada_at: datetime | None = None
+    cancelled_at: datetime | None = None
+    estatus_sat: str | None = None
+    estatus_cancelacion_sat: str | None = None
     conceptos: list[ConceptoRead]
     created_at: datetime
     # Hasta timbrar, nada de esto tiene validez fiscal.
     validez_fiscal: bool = False
+
+
+# ---------------------------------------------------------------- timbrado y cancelación
+
+
+class CancelacionIn(BaseModel):
+    motivo: Literal["01", "02", "03", "04"]
+    # Sólo con motivo 01: UUID de la factura (ya timbrada) que sustituye a ésta.
+    folio_sustitucion: str | None = Field(default=None, max_length=36)
+
+
+class EstatusRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    estado: str
+    validez_fiscal: bool
+    uuid_fiscal: str | None
+    proveedor_timbrado: str | None
+    rfc_prov_certif: str | None
+    fecha_timbrado: datetime | None
+    timbrado_intentos: int
+    ultimo_error: ErrorTimbradoRead | None
+    cancelacion_motivo: str | None
+    cancelacion_solicitada_at: datetime | None
+    cancelled_at: datetime | None
+    estatus_sat: str | None
+    es_cancelable: str | None
+    estatus_cancelacion_sat: str | None
+    estatus_consultado_at: datetime | None
+    # False mientras el timbrado esté apagado: el estatus es sólo el guardado, sin consultar al SAT.
+    timbrado_disponible: bool = False

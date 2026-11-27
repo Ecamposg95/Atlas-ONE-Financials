@@ -24,6 +24,7 @@ from app.models.fiscal_document import (
     FD_BORRADOR,
     FD_EDITABLES,
     FD_LISTO,
+    FD_SELLADO,
     IMPUESTO_RETENCION,
     IMPUESTO_TRASLADO,
     ORIGEN_CXC,
@@ -446,15 +447,21 @@ def xml_para_impresion(db: Session, org_id: str, documento_id: str) -> tuple[Fis
     from app.models.fiscal_document import XML_SELLADO, XML_TIMBRADO, FiscalDocumentXml
 
     doc = obtener(db, org_id, documento_id)
+    # Puede haber varios sellados (un rechazo por datos obliga a sellar otra vez):
+    # vale el de secuencia mayor, y sólo mientras el documento siga SELLADO; si
+    # volvió a borrador, lo vigente es el borrador.
     guardados = {
         x.tipo: x.contenido
-        for x in db.query(FiscalDocumentXml).filter(
+        for x in db.query(FiscalDocumentXml)
+        .filter(
             FiscalDocumentXml.organization_id == org_id,
             FiscalDocumentXml.documento_id == doc.id,
             FiscalDocumentXml.tipo.in_((XML_TIMBRADO, XML_SELLADO)),
         )
+        .order_by(FiscalDocumentXml.secuencia)
     }
-    for tipo in (XML_TIMBRADO, XML_SELLADO):
-        if tipo in guardados:
-            return doc, bytes(guardados[tipo])
+    if XML_TIMBRADO in guardados:
+        return doc, bytes(guardados[XML_TIMBRADO])
+    if XML_SELLADO in guardados and doc.estado == FD_SELLADO:
+        return doc, bytes(guardados[XML_SELLADO])
     return doc, xml_sin_sellar(comprobante(doc), leyenda=LEYENDA_BORRADOR)
