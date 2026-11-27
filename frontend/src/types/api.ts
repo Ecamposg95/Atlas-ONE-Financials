@@ -881,7 +881,16 @@ export interface ImportSettings {
   }
 }
 
-export type HistoryAction = 'CREATE' | 'UPDATE' | 'CANCEL' | 'PAY' | 'APPROVE' | 'REJECT' | 'DELETE'
+export type HistoryAction =
+  | 'CREATE'
+  | 'UPDATE'
+  | 'CANCEL'
+  | 'PAY'
+  | 'APPROVE'
+  | 'REJECT'
+  | 'DELETE'
+  | 'CLOSE'
+  | 'REOPEN'
 export type HistoryEntityType =
   | 'expense'
   | 'income'
@@ -891,12 +900,19 @@ export type HistoryEntityType =
   | 'category'
   | 'proposal'
   | 'opening_balance'
+  | 'transfer'
+  | 'customer'
+  | 'vendor'
+  | 'period'
+  | 'fiscal_year'
+  | 'member'
+  | 'organization'
 
 export interface HistoryFieldChange {
   field: string
   /** Nombre amigable en español ("Monto", "Categoría"). */
   label: string
-  kind: 'money' | 'date' | 'text' | 'status' | 'bool' | 'rate' | 'ref'
+  kind: 'money' | 'date' | 'text' | 'status' | 'bool' | 'rate' | 'ref' | 'role'
   old: string | number | boolean | null
   new: string | number | boolean | null
   /** Referencias (categoría, cuenta…) ya resueltas a su nombre por el backend. */

@@ -12,7 +12,7 @@ from sqlalchemy import JSON, Column, DateTime, ForeignKey, Index, String
 from app.database import Base
 from app.models.mixins import TenantMixin, UUIDPKMixin, _utcnow
 
-CHANGE_ACTIONS = ("CREATE", "UPDATE", "CANCEL", "PAY", "APPROVE", "REJECT", "DELETE")
+CHANGE_ACTIONS = ("CREATE", "UPDATE", "CANCEL", "PAY", "APPROVE", "REJECT", "DELETE", "CLOSE", "REOPEN")
 CHANGE_SOURCES = ("web", "assistant", "agent", "import", "approval", "system")
 
 

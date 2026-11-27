@@ -14,6 +14,7 @@ from app.models.contact import Customer, Vendor
 from app.models.organization import WRITE_ROLES
 from app.schemas.common import paginate
 from app.security.deps import get_current_org_id, require_role
+from app.services.change_log import record_change, snapshot
 
 
 class ContactCreate(BaseModel):
@@ -138,6 +139,8 @@ def build_contact_router(
     ):
         contact = model(organization_id=org_id, **check(None, payload.model_dump()))
         db.add(contact)
+        db.flush()
+        record_change(db, org_id, contact, "CREATE", _membership.user_id)
         db.commit()
         db.refresh(contact)
         return ReadSchema.model_validate(contact)
@@ -159,8 +162,10 @@ def build_contact_router(
         _membership=Depends(require_role(WRITE_ROLES)),
     ):
         contact = _get(db, org_id, contact_id)
+        before = snapshot(contact)
         for field, value in check(contact, payload.model_dump(exclude_unset=True)).items():
             setattr(contact, field, value)
+        record_change(db, org_id, contact, "UPDATE", _membership.user_id, before=before, after=snapshot(contact))
         db.commit()
         db.refresh(contact)
         return ReadSchema.model_validate(contact)
@@ -173,8 +178,10 @@ def build_contact_router(
         _membership=Depends(require_role(WRITE_ROLES)),
     ):
         contact = _get(db, org_id, contact_id)
+        before = snapshot(contact)
         contact.deleted_at = datetime.now(timezone.utc)
         contact.status = "INACTIVE"
+        record_change(db, org_id, contact, "DELETE", _membership.user_id, before=before, after=snapshot(contact))
         db.commit()
 
     return router

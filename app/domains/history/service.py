@@ -20,10 +20,13 @@ from app.models.contact import Customer, Vendor
 from app.models.expense import Expense
 from app.models.financial_account import FinancialAccount
 from app.models.fiscal_entity import FiscalEntity
+from app.models.fiscal_year import FiscalYearLock
 from app.models.income import Income
 from app.models.payable import Payable
+from app.models.period import PeriodLock
 from app.models.project import Project
 from app.models.receivable import Receivable
+from app.models.transaction import FinancialTransaction
 from app.models.user import User
 
 # campo → (etiqueta, tipo, modelo referido)
@@ -66,7 +69,26 @@ FIELD_META: dict[str, tuple[str, str, type | None]] = {
     "project_id": ("Proyecto", "ref", Project),
     "business_unit_id": ("Unidad", "ref", BusinessUnit),
     "fiscal_entity_id": ("Contribuyente", "ref", FiscalEntity),
+    "from_account_id": ("Sale de", "ref", FinancialAccount),
+    "to_account_id": ("Entra a", "ref", FinancialAccount),
+    "attachment": ("Comprobante", "text", None),
+    "legal_name": ("Razón social", "text", None),
+    "tax_id": ("RFC", "text", None),
+    "email": ("Correo", "text", None),
+    "phone": ("Teléfono", "text", None),
+    "fiscal_regime": ("Régimen fiscal", "text", None),
+    "fiscal_postal_code": ("C.P. fiscal", "text", None),
+    "default_cfdi_use": ("Uso de CFDI habitual", "text", None),
+    "role": ("Permiso", "role", None),
+    "can_authorize": ("Puede autorizar", "bool", None),
+    "approval_threshold": ("Monto que pide autorización", "money", None),
+    "member_capture_limit": ("Límite de captura", "money", None),
 }
+
+MONTHS = (
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+)
 
 # tipo de registro → (modelo, columna que lo nombra)
 ENTITY_MODELS: dict[str, tuple[type, str]] = {
@@ -77,7 +99,40 @@ ENTITY_MODELS: dict[str, tuple[type, str]] = {
     "financial_account": (FinancialAccount, "name"),
     "category": (Category, "name"),
     "proposal": (AgentProposal, "summary"),
+    "customer": (Customer, "name"),
+    "vendor": (Vendor, "name"),
 }
+
+
+def _special_labels(db: Session, org_id: str, entity_type: str, ids: set[str]) -> dict[str, str]:
+    """Registros que no se nombran con una sola columna de su tabla."""
+    if entity_type == "period":
+        rows = db.query(PeriodLock.id, PeriodLock.year, PeriodLock.month).filter(
+            PeriodLock.organization_id == org_id, PeriodLock.id.in_(ids)
+        )
+        return {row[0]: f"Mes de {MONTHS[row[2] - 1]} de {row[1]}" for row in rows}
+    if entity_type == "fiscal_year":
+        rows = db.query(FiscalYearLock.id, FiscalYearLock.year).filter(
+            FiscalYearLock.organization_id == org_id, FiscalYearLock.id.in_(ids)
+        )
+        return {row[0]: f"Ejercicio {row[1]}" for row in rows}
+    if entity_type == "member":
+        # El id es el de la persona: su nombre sigue aunque ya no esté en el equipo.
+        # Sólo se nombra a quien está o estuvo en ESTA empresa (hay bitácora suya aquí).
+        return dict(db.query(User.id, User.name).filter(User.id.in_(ids)).all())
+    if entity_type == "organization":
+        return {entity_id: "Reglas de autorización" for entity_id in ids if entity_id == org_id}
+    if entity_type == "transfer":
+        rows = (
+            db.query(FinancialTransaction.transfer_group_id, FinancialTransaction.description)
+            .filter(
+                FinancialTransaction.organization_id == org_id,
+                FinancialTransaction.transfer_group_id.in_(ids),
+            )
+            .all()
+        )
+        return {group_id: description for group_id, description in rows}
+    return {}
 
 
 def _dynamic_meta(field: str) -> tuple[str, str, type | None]:
@@ -164,9 +219,12 @@ def serialize_events(db: Session, org_id: str, rows: list[ChangeLog]) -> list[Hi
     labels: dict[tuple[str, str], str] = {}
     for entity_type, ids in by_type.items():
         spec = ENTITY_MODELS.get(entity_type)
-        if spec is None:
-            continue
-        for entity_id, label in _names(db, org_id, spec[0], ids, spec[1]).items():
+        found = (
+            _names(db, org_id, spec[0], ids, spec[1])
+            if spec is not None
+            else _special_labels(db, org_id, entity_type, ids)
+        )
+        for entity_id, label in found.items():
             labels[(entity_type, entity_id)] = label
 
     events: list[HistoryEvent] = []

@@ -20,6 +20,7 @@ from app.models.organization import WRITE_ROLES
 from app.models.user import User
 from app.security.deps import get_current_org_id, get_current_user, require_role
 from app.services import attachments as storage
+from app.services.change_log import record_change
 
 router = APIRouter(tags=["attachments"])
 
@@ -66,6 +67,16 @@ def upload_expense_attachment(
     expense = _expense(db, org_id, expense_id)
     # Un byte de más basta para saber que se pasó del límite sin leerlo todo.
     data = file.file.read(storage.MAX_FILE_BYTES + 1)
+    # Va en la misma transacción que el archivo: si el guardado falla, tampoco queda.
+    record_change(
+        db,
+        org_id,
+        expense,
+        "UPDATE",
+        user.id,
+        before={"attachment": None},
+        after={"attachment": file.filename or "archivo"},
+    )
     try:
         attachment = storage.save(
             db,
@@ -127,5 +138,14 @@ def delete_attachment(
                 status_code=400,
                 detail="El mes de este gasto está cerrado: reábrelo para quitar el adjunto.",
             )
+        record_change(
+            db,
+            org_id,
+            expense,
+            "UPDATE",
+            user.id,
+            before={"attachment": attachment.filename},
+            after={"attachment": None},
+        )
     storage.soft_delete(db, attachment, user.id)
     return Response(status_code=204)

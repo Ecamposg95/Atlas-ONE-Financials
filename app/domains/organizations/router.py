@@ -22,6 +22,7 @@ from app.models.user import User
 from app.security.passwords import hash_password
 from app.security.deps import get_current_org_id, get_current_user, require_role
 from app.services import approvals
+from app.services.change_log import record_change, snapshot
 from app.services.onboarding import provision_organization
 
 router = APIRouter(prefix="/organizations", tags=["organizations"])
@@ -190,11 +191,14 @@ def update_approval_settings(
     payload: ApprovalSettings,
     db: Session = Depends(get_db),
     org_id: str = Depends(get_current_org_id),
+    user: User = Depends(get_current_user),
     _role: None = Depends(require_role((ROLE_OWNER, ROLE_ADMIN))),
 ):
     organization = db.get(Organization, org_id)
+    before = snapshot(organization)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(organization, field, value)
+    record_change(db, org_id, organization, "UPDATE", user.id, before=before, after=snapshot(organization))
     db.commit()
     db.refresh(organization)
     return ApprovalSettings.model_validate(organization, from_attributes=True)
@@ -261,6 +265,7 @@ def invite_member(
     payload: MemberInvite,
     db: Session = Depends(get_db),
     org_id: str = Depends(get_current_org_id),
+    user: User = Depends(get_current_user),
     _role: None = Depends(require_role((ROLE_OWNER, ROLE_ADMIN))),
 ):
     if payload.role not in VALID_ROLES:
@@ -290,6 +295,9 @@ def invite_member(
 
     member = OrganizationMember(organization_id=org_id, user_id=account.id, role=payload.role)
     db.add(member)
+    db.flush()
+    # La persona, no su membresía: así su nombre sigue en la bitácora aunque salga del equipo.
+    record_change(db, org_id, member, "CREATE", user.id, after=snapshot(member), entity_id=account.id)
     db.commit()
     db.refresh(member)
     return _member_read(member, account, viewer_id="")
@@ -321,10 +329,12 @@ def update_member_role(
         detail = "El dueño siempre autoriza." if "can_authorize" in changes else "No puedes cambiar el permiso del dueño."
         raise HTTPException(status_code=400, detail=detail)
 
+    before = snapshot(member)
     if "role" in changes:
         member.role = payload.role
     if "can_authorize" in changes:
         member.can_authorize = bool(payload.can_authorize)
+    record_change(db, org_id, member, "UPDATE", user.id, before=before, after=snapshot(member), entity_id=member.user_id)
     db.commit()
     db.refresh(member)
     account = db.get(User, member.user_id)
@@ -336,6 +346,7 @@ def remove_member(
     member_id: str,
     db: Session = Depends(get_db),
     org_id: str = Depends(get_current_org_id),
+    user: User = Depends(get_current_user),
     _role: None = Depends(require_role((ROLE_OWNER, ROLE_ADMIN))),
 ):
     member = (
@@ -347,5 +358,6 @@ def remove_member(
         raise HTTPException(status_code=404, detail="Esa persona no está en tu equipo.")
     if member.role == ROLE_OWNER:
         raise HTTPException(status_code=400, detail="No puedes sacar al dueño de su empresa.")
+    record_change(db, org_id, member, "DELETE", user.id, before=snapshot(member), entity_id=member.user_id)
     db.delete(member)
     db.commit()

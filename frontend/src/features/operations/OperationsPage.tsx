@@ -52,6 +52,7 @@ import { usePermissions } from '@/lib/permissions'
 import { useAuthStore } from '@/stores/authStore'
 import { toast } from '@/stores/toastStore'
 import { AttachmentsPanel, PendingAttachments, uploadAttachment } from './Attachments'
+import { PayableMatchNotice } from './PayableMatchNotice'
 import {
   CfdiFields,
   EMPTY_CFDI,
@@ -1047,6 +1048,9 @@ export function OperationsPage({ config }: { config: Config }) {
               }}
             />
           </div>
+          {config.kind === 'expense' ? (
+            <PayableMatchNotice vendorId={form.contact_id} amount={form.amount} />
+          ) : null}
           {config.kind === 'expense' ? (
             <details className="rounded-lg border border-border bg-surface-2/40 px-3 py-2">
               <summary className="cursor-pointer text-sm text-muted">
