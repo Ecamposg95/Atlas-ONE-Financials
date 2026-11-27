@@ -7,6 +7,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.common import TaxTreatment
+
 from app.domains.fiscal_mx.schemas import CfdiOperationFields
 
 
@@ -16,6 +18,7 @@ class IncomeCreate(CfdiOperationFields):
     description: str = Field(min_length=1, max_length=500)
     amount: Decimal = Field(gt=0, allow_inf_nan=False)  # TOTAL con impuesto
     tax_rate: Decimal | None = Field(default=None, ge=0, le=1, allow_inf_nan=False)
+    tax_treatment: TaxTreatment | None = None
     category_id: str
     project_id: str | None = None
     # Dimensiones del libro: la unidad se hereda de la cuenta si no viene;
@@ -42,6 +45,7 @@ class IncomeUpdate(CfdiOperationFields):
     description: str | None = Field(default=None, min_length=1, max_length=500)
     amount: Decimal | None = Field(default=None, gt=0, allow_inf_nan=False)
     tax_rate: Decimal | None = Field(default=None, ge=0, le=1, allow_inf_nan=False)
+    tax_treatment: TaxTreatment | None = None
     category_id: str | None = None
     project_id: str | None = None
     financial_account_id: str | None = None
@@ -70,6 +74,7 @@ class IncomeRead(BaseModel):
     subtotal: Decimal
     tax_rate: Decimal
     tax_amount: Decimal
+    tax_treatment: str = "UNCLASSIFIED"
     category_id: str
     project_id: str | None = None
     business_unit_id: str | None = None

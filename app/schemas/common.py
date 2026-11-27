@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Generic, TypeVar
+from typing import Generic, Literal, TypeVar
 
 from pydantic import BaseModel
 from sqlalchemy import func
@@ -59,3 +59,7 @@ def apply_sort(query, sort: str | None, allowed: dict, default: tuple):
             detail=f"No se puede ordenar por '{field}'. Campos válidos: {', '.join(sorted(allowed))}.",
         )
     return query.order_by(column.desc() if descending else column.asc(), *default)
+
+
+# R2·HU-05: ver TAX_TREATMENTS en app/services/taxes.py.
+TaxTreatment = Literal["TAXED", "ZERO_RATED", "EXEMPT", "NOT_OBJECT", "UNCLASSIFIED"]

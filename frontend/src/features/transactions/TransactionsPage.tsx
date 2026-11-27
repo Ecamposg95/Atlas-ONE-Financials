@@ -114,9 +114,11 @@ export function TransactionsPage() {
     contact: '',
     min_amount: urlFilters.min_amount,
     max_amount: urlFilters.max_amount,
+    // Un movimiento no tiene tratamiento de IVA: éste es de gastos e ingresos.
+    tax_treatment: '',
   }
   const setFine = (next: Partial<FineFilterValues>) => {
-    const { financial_account_id: _account, contact: _contact, ...rest } = next
+    const { financial_account_id: _account, contact: _contact, tax_treatment: _treatment, ...rest } = next
     setUrlFilters(rest)
   }
   const activeFilterCount =

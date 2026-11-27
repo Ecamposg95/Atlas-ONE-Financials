@@ -1,8 +1,9 @@
 import { downloadErrorMessage, downloadFile } from '@/lib/download'
 import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { TREATMENT_LABELS } from '@/lib/taxes'
 import { api } from '@/api/client'
 import {
   DimensionFilterSelects,
@@ -496,6 +497,7 @@ export function ReportsPage() {
               </span>
             </div>
           </div>
+          <VatDetails report={vatQuery.data} start={start} end={end} />
         </Card>
       ) : null}
 
@@ -719,6 +721,97 @@ export function ReportsPage() {
           </Card>
         </div>
       ) : null}
+    </div>
+  )
+}
+
+
+/** R2·HU-05: retenciones del periodo y la base por tratamiento de IVA. "Sin
+ *  clasificar" no es un tratamiento: es lo que contabilidad aún no revisa. */
+function VatDetails({ report, start, end }: { report: VatReport; start: string; end: string }) {
+  const sides = [
+    { key: 'expenses' as const, title: 'Gastos pagados', path: '/gastos' },
+    { key: 'income' as const, title: 'Ingresos cobrados', path: '/ingresos' },
+  ]
+  const unclassified = (key: 'expenses' | 'income') =>
+    report.by_treatment[key].find((row) => row.treatment === 'UNCLASSIFIED')?.operations ?? 0
+  return (
+    <div className="mt-6 space-y-5 text-sm">
+      {report.unclassified_count > 0 ? (
+        <div className="rounded-lg border border-warn/40 bg-warn/10 px-3 py-2.5">
+          <p className="font-medium">
+            {report.unclassified_count} operaci{report.unclassified_count === 1 ? 'ón' : 'ones'} sin IVA
+            sin clasificar en este periodo.
+          </p>
+          <p className="mt-1 text-muted">
+            Tasa 0, exento y no objeto se declaran distinto. Contabilidad decide cuál es cada una; se
+            corrige desde el detalle de la operación sin cancelarla.{' '}
+            {sides
+              .filter((side) => unclassified(side.key) > 0)
+              .map((side, index) => (
+                <span key={side.key}>
+                  {index > 0 ? ' · ' : ''}
+                  <Link
+                    to={`${side.path}?iva=UNCLASSIFIED&desde=${start}&hasta=${end}`}
+                    className="font-medium text-accent underline-offset-2 hover:underline"
+                  >
+                    Ver {side.key === 'expenses' ? 'gastos' : 'ingresos'} ({unclassified(side.key)})
+                  </Link>
+                </span>
+              ))}
+          </p>
+        </div>
+      ) : null}
+
+      <div>
+        <h3 className="text-xs font-medium uppercase tracking-wide text-muted">Retenciones a proveedores</h3>
+        <div className="mt-2 divide-y divide-border">
+          <div className="flex items-center justify-between py-2">
+            <span>ISR retenido</span>
+            <Money value={report.isr_withheld} />
+          </div>
+          <div className="flex items-center justify-between py-2">
+            <span>IVA retenido</span>
+            <Money value={report.vat_withheld} />
+          </div>
+        </div>
+        <p className="mt-1 text-xs text-muted">Se enteran al SAT; no se le pagaron al proveedor.</p>
+      </div>
+
+      {sides.map((side) =>
+        report.by_treatment[side.key].length > 0 ? (
+          <div key={side.key}>
+            <h3 className="text-xs font-medium uppercase tracking-wide text-muted">{side.title}, por IVA</h3>
+            <table className="mt-2 w-full">
+              <thead>
+                <tr className="text-left text-[11px] uppercase tracking-wider text-muted">
+                  <th className="py-1.5 font-medium">Tratamiento</th>
+                  <th className="py-1.5 text-right font-medium">Operaciones</th>
+                  <th className="py-1.5 text-right font-medium">Base</th>
+                  <th className="py-1.5 text-right font-medium">IVA</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {report.by_treatment[side.key].map((row) => (
+                  <tr key={`${row.treatment}-${row.rate}`}>
+                    <td className={`py-2 ${row.treatment === 'UNCLASSIFIED' ? 'text-warn' : ''}`}>
+                      {TREATMENT_LABELS[row.treatment]}
+                      {row.treatment === 'TAXED' ? ` ${Math.round(Number(row.rate) * 100)}%` : ''}
+                    </td>
+                    <td className="figures py-2 text-right">{row.operations}</td>
+                    <td className="figures py-2 text-right">{formatMoney(row.base)}</td>
+                    <td className="figures py-2 text-right">{formatMoney(row.tax)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null,
+      )}
+      <p className="text-xs text-muted">
+        Base de lo pagado y cobrado de contado en el periodo. Los abonos a cuentas por pagar y por
+        cobrar entran en el IVA de arriba, no en este desglose.
+      </p>
     </div>
   )
 }

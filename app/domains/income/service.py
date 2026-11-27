@@ -15,7 +15,7 @@ from app.models.income import Income
 from app.models.project import Project
 from app.domains.periods.service import assert_month_open
 from app.services.accounting.rules import income_paid_entry
-from app.services.taxes import split_total
+from app.services.taxes import resolve_treatment, split_total, with_treatment
 from app.services.change_log import record_change, snapshot
 from app.services.reversals import reverse_operation
 from app.services.dimensions import inherit_business_unit, tag_entry, validate_dimensions
@@ -30,7 +30,8 @@ def resolve_tax(db: Session, org_id: str, payload):
     preselecciona), no del servidor: aplicar IVA en silencio a quien no lo
     pidió cambiaría montos de dinero sin que nadie lo decida.
     """
-    return split_total(payload.amount, payload.tax_rate or 0)
+    tax = split_total(payload.amount, payload.tax_rate or 0)
+    return with_treatment(tax, getattr(payload, "tax_treatment", None))
 
 
 def _validate_category(db: Session, org_id: str, category_id: str) -> Category:
@@ -96,6 +97,7 @@ def build_income(db: Session, org_id: str, payload, created_by: str) -> Income:
         subtotal=tax.subtotal,
         tax_rate=tax.tax_rate,
         tax_amount=tax.tax_amount,
+        tax_treatment=tax.tax_treatment,
         category_id=payload.category_id,
         project_id=payload.project_id,
         business_unit_id=inherit_business_unit(
@@ -310,6 +312,10 @@ def update_income(db: Session, org_id: str, income: Income, changes: dict, user_
             "Un ingreso cobrado o cancelado sólo admite cambiar el proyecto. "
             "Para corregir otra cosa, cancélalo y regístralo de nuevo."
         )
+    if "tax_treatment" in changes and not locked:
+        # Clasificar el IVA de lo ya cobrado no mueve el libro, pero sí cambia
+        # el reporte de IVA de ese mes: con el mes cerrado, no.
+        assert_month_open(db, org_id, income.date, "clasificar el IVA de este ingreso")
     if locked:
         # Pendiente no tiene póliza ni candado del motor: el mes cerrado se respeta aquí.
         assert_month_open(db, org_id, income.date, "corregir este ingreso")
@@ -348,6 +354,10 @@ def update_income(db: Session, org_id: str, income: Income, changes: dict, user_
         income.subtotal = tax.subtotal
         income.tax_rate = tax.tax_rate
         income.tax_amount = tax.tax_amount
+    if "tax_treatment" in changes or changes.get("tax_rate") is not None:
+        income.tax_treatment = resolve_treatment(
+            income.tax_rate, changes.get("tax_treatment"), current=income.tax_treatment
+        )
     record_change(db, org_id, income, "UPDATE", user_id, before=before, after=snapshot(income))
     db.commit()
     db.refresh(income)

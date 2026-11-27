@@ -81,6 +81,7 @@ def build_receivable(db: Session, org_id: str, payload, created_by: str) -> Rece
         subtotal=tax.subtotal,
         tax_rate=tax.tax_rate,
         tax_amount=tax.tax_amount,
+        tax_treatment=tax.tax_treatment,
         date=issue_date,
         due_date=payload.due_date,
         category_id=payload.category_id,

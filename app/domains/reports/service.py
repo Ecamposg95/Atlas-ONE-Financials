@@ -227,9 +227,15 @@ def vat_report(
         # 2190/2191 son pasivo (naturaleza acreedora); 1190/1191 activo (deudora).
         return credit - debit if code.startswith("2") else debit - credit
 
+    from app.services.accounting.coa import CODE_ISR_WITHHELD, CODE_VAT_WITHHELD
+
     charged = movement(CODE_VAT_CHARGED_COLLECTED, start, end)
     creditable = movement(CODE_VAT_CREDITABLE_PAID, start, end)
     difference = charged - creditable
+    by_treatment = {
+        "expenses": _treatment_breakdown(db, organization_id, "expense", start, end, business_unit_id, fiscal_entity_id),
+        "income": _treatment_breakdown(db, organization_id, "income", start, end, business_unit_id, fiscal_entity_id),
+    }
 
     return {
         "start": start,
@@ -242,7 +248,63 @@ def vat_report(
         # Informativos: aún no se declaran porque no se han cobrado/pagado.
         "vat_pending_collection": movement(CODE_VAT_CHARGED_PENDING, None, end),
         "vat_pending_payment": movement(CODE_VAT_CREDITABLE_PENDING, None, end),
+        # R2·HU-05: retenciones hechas a proveedores en el periodo (se enteran al SAT).
+        "isr_withheld": movement(CODE_ISR_WITHHELD, start, end),
+        "vat_withheld": movement(CODE_VAT_WITHHELD, start, end),
+        # Base de lo pagado y cobrado de contado, por tratamiento de IVA. No
+        # incluye abonos a cuentas por pagar o cobrar (su IVA sí está arriba).
+        "by_treatment": by_treatment,
+        "unclassified_count": sum(
+            row["operations"] for side in by_treatment.values() for row in side if row["treatment"] == "UNCLASSIFIED"
+        ),
     }
+
+
+TREATMENT_ORDER = ("TAXED", "ZERO_RATED", "EXEMPT", "NOT_OBJECT", "UNCLASSIFIED")
+
+
+def _treatment_breakdown(
+    db: Session,
+    organization_id: str,
+    kind: str,
+    start: date_type,
+    end: date_type,
+    business_unit_id: str | None,
+    fiscal_entity_id: str | None,
+) -> list[dict]:
+    from app.models.expense import Expense
+    from app.models.income import Income
+
+    model = Expense if kind == "expense" else Income
+    query = db.query(
+        model.tax_treatment,
+        model.tax_rate,
+        func.count(model.id),
+        func.coalesce(func.sum(model.subtotal), 0),
+        func.coalesce(func.sum(model.tax_amount), 0),
+    ).filter(
+        model.organization_id == organization_id,
+        model.status == "PAID",
+        model.date >= start,
+        model.date <= end,
+    )
+    if business_unit_id:
+        query = query.filter(model.business_unit_id == business_unit_id)
+    if fiscal_entity_id:
+        query = query.filter(model.fiscal_entity_id == fiscal_entity_id)
+    rows = query.group_by(model.tax_treatment, model.tax_rate).all()
+    result = [
+        {
+            "treatment": treatment,
+            "rate": Decimal(rate),
+            "operations": int(count),
+            "base": Decimal(base),
+            "tax": Decimal(tax),
+        }
+        for treatment, rate, count, base, tax in rows
+    ]
+    order = {treatment: index for index, treatment in enumerate(TREATMENT_ORDER)}
+    return sorted(result, key=lambda row: (order.get(row["treatment"], 99), -row["rate"]))
 
 
 def cash_projection(db: Session, organization_id: str, days: int = 90) -> dict:

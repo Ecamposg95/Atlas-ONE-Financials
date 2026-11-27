@@ -14,7 +14,7 @@ from app.domains.income.service import resolve_tax, validate_money_account, vali
 from app.domains.periods.service import assert_month_open
 from app.services.accounting.rules import expense_paid_entry, expense_reclassification_entry
 from app.services.change_log import record_change, snapshot
-from app.services.taxes import split_total
+from app.services.taxes import resolve_treatment, retention_from_rate, split_total
 from app.services.reversals import reverse_operation
 from app.models.financial_account import FinancialAccount
 from app.services.dimensions import inherit_business_unit, tag_entry, validate_dimensions
@@ -83,14 +83,17 @@ def build_expense(db: Session, org_id: str, payload, created_by: str) -> Expense
         subtotal=tax.subtotal,
         tax_rate=tax.tax_rate,
         tax_amount=tax.tax_amount,
+        tax_treatment=tax.tax_treatment,
         category_id=payload.category_id,
         project_id=payload.project_id,
         business_unit_id=inherit_business_unit(
             db, org_id, payload.business_unit_id, payload.financial_account_id
         ),
         fiscal_entity_id=payload.fiscal_entity_id,
-        retention_isr=payload.retention_isr,
-        retention_iva=payload.retention_iva,
+        retention_isr=retention_from_rate(tax.subtotal, payload.retention_isr_rate, payload.retention_isr),
+        retention_iva=retention_from_rate(tax.subtotal, payload.retention_iva_rate, payload.retention_iva),
+        retention_isr_rate=payload.retention_isr_rate,
+        retention_iva_rate=payload.retention_iva_rate,
         financial_account_id=payload.financial_account_id,
         payment_method=payload.payment_method,
         reference=payload.reference,
@@ -228,7 +231,8 @@ def cancel_expense(
 # abierto y un motivo se corrige lo que no mueve dinero: proveedor, referencia,
 # notas y categoría (ésta con póliza de reclasificación). Monto, fecha, cuenta y
 # concepto exigen cancelar (reverso) y volver a registrar.
-PAID_CORRECTABLE = ("category_id", "vendor_id", "reference", "notes")
+PAID_CORRECTABLE = ("category_id", "vendor_id", "reference", "notes", "tax_treatment")
+RETENTION_FIELDS = ("retention_isr", "retention_iva", "retention_isr_rate", "retention_iva_rate")
 PENDING_EDITABLE = (
     "date",
     "description",
@@ -240,6 +244,8 @@ PENDING_EDITABLE = (
     "payment_method",
     "reference",
     "notes",
+    "tax_treatment",
+    *RETENTION_FIELDS,
 )
 
 
@@ -277,7 +283,7 @@ def update_expense(
         locked = [field for field in touched if field not in PAID_CORRECTABLE]
         if locked:
             raise ValueError(
-                "De un gasto pagado se corrigen categoría, proveedor, referencia y notas. "
+                "De un gasto pagado se corrigen categoría, proveedor, referencia, notas y tratamiento de IVA. "
                 "Para cambiar monto, fecha, concepto o cuenta, cancélalo y regístralo de nuevo."
             )
         if not reason or len(reason) < 3:
@@ -317,6 +323,25 @@ def update_expense(
         expense.subtotal = tax.subtotal
         expense.tax_rate = tax.tax_rate
         expense.tax_amount = tax.tax_amount
+    if "tax_treatment" in changes or changes.get("tax_rate") is not None:
+        # Sólo el tratamiento sin tasa (sin clasificar → exento, etc.) es un
+        # cambio sin efecto contable; uno que cambie el IVA exige tasa nueva.
+        expense.tax_treatment = resolve_treatment(
+            expense.tax_rate, changes.get("tax_treatment"), current=expense.tax_treatment
+        )
+    if expense.status == "PENDING" and (
+        any(field in changes for field in RETENTION_FIELDS)
+        or changes.get("amount") is not None
+        or changes.get("tax_rate") is not None
+    ):
+        for kind in ("isr", "iva"):
+            rate_field, amount_field = f"retention_{kind}_rate", f"retention_{kind}"
+            rate = changes[rate_field] if rate_field in changes else getattr(expense, rate_field)
+            amount = changes.get(amount_field) if amount_field in changes else (None if rate is not None else getattr(expense, amount_field))
+            setattr(expense, rate_field, rate)
+            setattr(expense, amount_field, retention_from_rate(expense.subtotal, rate, amount))
+        if Decimal(expense.retention_isr) + Decimal(expense.retention_iva) >= Decimal(expense.amount):
+            raise ValueError("Las retenciones no pueden ser iguales o mayores que el total.")
     if expense.status == "PAID" and expense.category_id != old_category_id:
         _reclassify(db, org_id, expense, old_category_id, user_id)
     record_change(db, org_id, expense, "UPDATE", user_id, before=before, after=snapshot(expense), reason=reason)

@@ -22,6 +22,7 @@ import { Money } from '@/components/ui/Money'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Table, Card, STICKY_CELL } from '@/components/ui/Table'
 import { TaxSelect } from '@/components/ui/TaxSelect'
+import { defaultTreatment } from '@/lib/taxes'
 import { TableFooter } from '@/components/ui/Pagination'
 import {
   BatchBar,
@@ -180,6 +181,7 @@ export function DebtsPage({ config }: { config: Config }) {
     due_date: '',
     category_id: '',
     tax_rate: defaultTaxRate,
+    tax_treatment: defaultTreatment(defaultTaxRate),
     notes: '',
     ...EMPTY_DIMENSIONS,
   })
@@ -224,6 +226,7 @@ export function DebtsPage({ config }: { config: Config }) {
         description: form.description,
         amount: form.amount,
         tax_rate: form.tax_rate,
+        tax_treatment: form.tax_treatment,
         due_date: form.due_date,
         category_id: form.category_id,
       }
@@ -279,6 +282,7 @@ export function DebtsPage({ config }: { config: Config }) {
       due_date: '',
       category_id: '',
       tax_rate: defaultTaxRate,
+      tax_treatment: defaultTreatment(defaultTaxRate),
       notes: '',
       ...EMPTY_DIMENSIONS,
     })
@@ -710,7 +714,9 @@ export function DebtsPage({ config }: { config: Config }) {
           <TaxSelect
             total={form.amount}
             rate={form.tax_rate}
+            treatment={form.tax_treatment}
             onRateChange={(rate) => setForm({ ...form, tax_rate: rate })}
+            onTaxChange={(rate, treatment) => setForm({ ...form, tax_rate: rate, tax_treatment: treatment })}
           />
           <SelectInput
             label={config.categoryLabel}

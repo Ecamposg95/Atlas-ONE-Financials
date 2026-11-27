@@ -53,6 +53,8 @@ def filter_expenses(db: Session, org_id: str, filters: OperationFilters, *, non_
         query = query.filter(Expense.fiscal_entity_id == filters.fiscal_entity_id)
     if filters.financial_account_id:
         query = query.filter(Expense.financial_account_id == filters.financial_account_id)
+    if filters.tax_treatment:
+        query = query.filter(Expense.tax_treatment == filters.tax_treatment)
     if filters.payment_method:
         query = query.filter(Expense.payment_method == filters.payment_method)
     if filters.created_by:
