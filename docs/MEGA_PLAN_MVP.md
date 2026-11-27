@@ -205,6 +205,8 @@ Seis fases ordenadas por dependencia, las dos primeras en paralelo, con un estim
 
 Reglas de secuencia: dentro de una fase, los módulos marcados en paralelo corren en forks con territorios de archivos disjuntos; entre fases no se adelanta trabajo salvo specs. La fase 4 es la más larga y la única con un proveedor externo de por medio, por eso su spec y la prueba de sandbox del PAC arrancan durante la fase 3. El trabajo en ONE, Cortex y HRFlow se planea como sub-proyecto de cada repo con su propio spec, y ARCA publica primero el contrato (endpoint, firma, payload de ejemplo y pruebas de contrato).
 
+**Cliente piloto La Fe.** Su backlog vive en `docs/lafe/` y tiene prioridad sobre las fases cuando bloquea su operación: ronda 1 en [`BACKLOG.md`](lafe/BACKLOG.md) y ronda 2, con el cotejo contra código y datos del 2026-11-27, en [`BACKLOG_RONDA2.md`](lafe/BACKLOG_RONDA2.md). La ronda 2 adelanta la lectura de XML de facturas recibidas (módulo E) porque resuelve el desglose por concepto y buena parte del IVA y las retenciones.
+
 ## 6. Forma de trabajo y calidad
 
 Cada módulo: diseño conversado → spec en `docs/superpowers/specs/AAAA-MM-DD-<tema>-design.md` → plan en `docs/superpowers/plans/` → forks paralelos con worktrees aislados y territorios disjuntos → verificación completa → merge → push a `main` (despliega). Los forks nunca pushean; la sesión principal re-verifica suite, build y captura antes de integrar.
