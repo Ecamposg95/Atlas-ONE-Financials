@@ -165,8 +165,9 @@ def cash_flow_series(
             points[key]["outflows"] += amount
 
     # Top categorías de gasto PAGADO por periodo: una sola consulta agregada.
+    # Sin IVA (`subtotal`), igual que el estado de resultados y `category_series`.
     expense_rows = (
-        db.query(Expense.date, Category.name, Expense.amount)
+        db.query(Expense.date, Category.name, Expense.subtotal)
         .join(Category, Category.id == Expense.category_id)
         .filter(
             Expense.organization_id == organization_id,
@@ -276,11 +277,11 @@ def summary(
         elif transaction_type == "EXPENSE":
             operations[key]["expenses"] += amount
 
-    # Distribución de gastos pagados del mes por categoría
+    # Distribución de gastos pagados del mes por categoría, sin IVA como el estado de resultados.
     expense_categories = (
         db.query(
             Category.name,
-            func.coalesce(func.sum(Expense.amount), 0),
+            func.coalesce(func.sum(Expense.subtotal), 0),
         )
         .join(Expense, Expense.category_id == Category.id)
         .filter(
@@ -291,7 +292,7 @@ def summary(
             *_operation_filters(Expense, business_unit_id, fiscal_entity_id),
         )
         .group_by(Category.name)
-        .order_by(func.sum(Expense.amount).desc())
+        .order_by(func.sum(Expense.subtotal).desc())
         .all()
     )
 
