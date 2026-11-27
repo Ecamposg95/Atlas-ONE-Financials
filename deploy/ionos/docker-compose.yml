@@ -1,0 +1,21 @@
+# Atlas ONE Financials en el VPS de IONOS.
+# Vive en /srv/apps/financials/ (este archivo + .env); el código en ./src lo
+# sube la tarea "Deploy a IONOS" de .github/workflows/ci.yml.
+# Base de datos: el PostgreSQL compartido del servidor (contenedor `postgres`,
+# red `edge`), base `atlas_financials` con su propio usuario. Caddy publica
+# financials.atlasone.com.mx -> financials:8000.
+services:
+  financials:
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+    image: financials:latest
+    container_name: financials
+    restart: unless-stopped
+    env_file: .env
+    expose: ["8000"]
+    networks: [edge]
+
+networks:
+  edge:
+    external: true
