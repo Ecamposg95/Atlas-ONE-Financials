@@ -90,7 +90,11 @@ def create_app() -> FastAPI:
             logger.exception("health_deep: fallo de base de datos")
             db_status = "error"
         status = "ok" if db_status == "ok" else "degraded"
-        return {"status": status, "database": db_status, "environment": settings.env}
+        # 503 sin base: el healthcheck del contenedor y el deploy dependen del código, no del cuerpo.
+        return JSONResponse(
+            status_code=200 if db_status == "ok" else 503,
+            content={"status": status, "database": db_status, "environment": settings.env},
+        )
 
     _register_routers(app)
     _mount_frontend(app)
@@ -116,13 +120,16 @@ def _mount_frontend(app: FastAPI) -> None:
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
     index_file = FRONTEND_DIST / "index.html"
+    raiz = FRONTEND_DIST.resolve()
 
     @app.get("/{full_path:path}", include_in_schema=False)
     def spa_catch_all(full_path: str):
         if full_path.startswith("api/"):
             return JSONResponse(status_code=404, content={"detail": "Recurso no encontrado."})
-        candidate = FRONTEND_DIST / full_path
-        if full_path and candidate.is_file():
+        # La ruta llega ya decodificada: `..%2f..%2fetc%2fpasswd` es `../../etc/passwd`. Sólo se sirve lo que,
+        # resuelto, sigue dentro de la SPA; lo demás recibe el index como cualquier ruta del cliente.
+        candidate = (raiz / full_path).resolve()
+        if full_path and candidate.is_relative_to(raiz) and candidate.is_file():
             return FileResponse(candidate)
         return FileResponse(index_file)
 
