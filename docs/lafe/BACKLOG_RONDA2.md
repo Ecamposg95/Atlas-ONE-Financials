@@ -54,12 +54,14 @@ Como responsable administrativo, quiero solicitar la corrección o reversa de un
 
 - Criterios: distinguir corregir datos, sustituir comprobante y revertir pago; motivo obligatorio y relación con el original; autorización del rol definido; bitácora de quién solicitó, autorizó y qué cambió; saldos y reportes sin duplicar efectos.
 - Existe: cancelar un pagado genera la reversa con fecha de hoy y conserva el historial (`reversals.py`); bitácora `change_log`.
+- Hecho (27-nov, con la propuesta de la decisión 1; se ajusta si el refinamiento decide otra cosa):
+  - Un gasto pagado corrige categoría, proveedor, referencia y notas con motivo obligatorio, mientras el mes esté abierto. La categoría genera una póliza de reclasificación en la fecha del gasto, ligada a él: si después se cancela, su reverso también se deshace. Monto, fecha, concepto y cuenta siguen exigiendo reversa.
+  - Motivo obligatorio al cancelar gastos, ingresos, cuentas por pagar y por cobrar.
+  - Sustituir comprobante: el anterior queda dado de baja, el cambio y su motivo en el historial; bloqueado en mes cerrado.
 - Falta:
-  - Corregir campos de un pagado: hoy todo queda bloqueado, hasta notas y categoría.
-  - Motivo obligatorio: hoy es opcional.
-  - Sustituir comprobante: hoy solo se sube otro o se borra.
-  - Autorización para cancelar: las autorizaciones solo cubren crear o pagar gastos, pagar cuentas por pagar y traspasos.
-  - Revertir un solo pago de una cuenta por pagar.
+  - Corregir la sucursal de un pagado: la póliza lleva una sola unidad y moverla exige una reclasificación entre unidades. Validar con Jessica.
+  - Autorización para cancelar (decisión 2): las autorizaciones solo cubren crear o pagar gastos, pagar cuentas por pagar y traspasos.
+  - Revertir un solo pago de una cuenta por pagar: los pagos comparten origen con la cuenta y hoy el reverso es de todo.
 - Propuesta para la decisión 1: categoría, sucursal, notas y referencia se corrigen directo con bitácora mientras el periodo esté abierto; monto, fecha y cuenta solo con reversa.
 
 **R2·HU-03 · Cerrar periodos y controlar correcciones posteriores** — P0 · Abraham, Liza y Jessica · **Existe, con huecos; sin uso.**
@@ -69,10 +71,10 @@ Como responsable contable, quiero cerrar periodos y controlar sus modificaciones
 - Criterios: cierre por usuario autorizado; sin edición ordinaria en periodo cerrado; correcciones por mecanismo compensatorio aprobado por contabilidad; reapertura con permisos y trazabilidad; el sistema explica el bloqueo.
 - Existe: cierre y reapertura de meses y ejercicios (roles contables), reapertura con motivo, bloqueo central en el motor contable con mensaje claro.
 - Huecos:
-  - Los gastos pendientes se crean y editan en un mes cerrado, porque no generan póliza.
+  - ~~Los gastos pendientes se crean y editan en un mes cerrado, porque no generan póliza.~~ Resuelto: gastos e ingresos pendientes respetan el mes y el ejercicio cerrados al crearse, editarse o cambiar de fecha.
   - Cancelar algo de un mes cerrado registra la reversa con fecha de hoy. Puede ser justo el mecanismo compensatorio; confirmarlo con Jessica.
   - ~~Cierre y reapertura no quedan en la bitácora.~~ Resuelto en R2·REQ-03.
-  - El bloqueo de comprobantes solo revisa el ejercicio, no el mes.
+  - ~~El bloqueo de comprobantes solo revisa el ejercicio, no el mes.~~ Quitar y sustituir revisan mes y ejercicio. Subir uno nuevo a un mes cerrado sigue permitido (completar evidencia faltante); confirmar con Jessica.
 - Por validar con Jessica: reglas del periodo abierto, fechas de aplicación y pólizas inversas. Cambiar de mes no equivale a cerrar.
 
 **R2·HU-04 · Corregir gastos de forma masiva** — P1 · Liza · **Falta.** Depende de R2·HU-02 y R2·HU-03.

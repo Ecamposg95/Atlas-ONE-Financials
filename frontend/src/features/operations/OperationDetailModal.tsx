@@ -1,7 +1,8 @@
 /** Detalle de un ingreso o gasto: corregirlo mientras está pendiente y ver su historial.
  *
- *  Pendiente no tiene movimiento ni póliza, así que se puede corregir. Pagado o
- *  cancelado ya no: la corrección es cancelar (reverso) y volver a registrar.
+ *  Pendiente no tiene movimiento ni póliza, así que se puede corregir. De un gasto
+ *  pagado (R2·HU-02) se corrigen categoría y notas con motivo, mientras el mes
+ *  esté abierto; monto, fecha y cuenta exigen cancelar (reverso) y volver a registrar.
  *  Cada cambio queda en el historial con su valor anterior (HU-09).
  */
 
@@ -46,6 +47,7 @@ export function OperationDetailModal({
   onClose,
   onSaved,
   customers,
+  paidCorrections = false,
 }: {
   operation: Operation | null
   /** Captura en adelante: Consulta sólo ve (el API rechaza sus cambios). */
@@ -61,6 +63,8 @@ export function OperationDetailModal({
   onSaved: () => void
   /** Sólo ingresos: con los clientes se muestran los datos para la factura. */
   customers?: Contact[]
+  /** Sólo gastos: lo pagado admite corregir categoría y notas con motivo. */
+  paidCorrections?: boolean
 }) {
   const [tab, setTab] = useState<Tab>('detail')
   const [error, setError] = useState<string | null>(null)
@@ -72,12 +76,14 @@ export function OperationDetailModal({
     financial_account_id: '',
     notes: '',
   })
+  const [reason, setReason] = useState('')
   const [cfdi, setCfdi] = useState(EMPTY_CFDI)
 
   // Abrir otra operación vuelve a la pestaña de detalle; recargar la misma no.
   useEffect(() => {
     setTab('detail')
     setError(null)
+    setReason('')
   }, [operation?.id])
 
   useEffect(() => {
@@ -98,6 +104,14 @@ export function OperationDetailModal({
       if (!operation) return
       // Sólo lo que cambió: el historial registra exactamente lo que se tocó.
       const payload: Record<string, unknown> = customers ? cfdiChanges(cfdi, operation) : {}
+      if (operation.status === 'PAID' && paidCorrections) {
+        if (form.category_id !== operation.category_id) payload.category_id = form.category_id
+        if (form.notes !== (operation.notes ?? '')) payload.notes = form.notes || null
+        if (Object.keys(payload).length === 0) return
+        await api.patch(`${endpoint}/${operation.id}`, { ...payload, reason: reason.trim() })
+        setReason('')
+        return
+      }
       if (operation.status !== 'PENDING') {
         // Cobrado o cancelado: sólo los datos para la factura, que no tocan el libro.
         if (Object.keys(payload).length > 0) await api.patch(`${endpoint}/${operation.id}`, payload)
@@ -123,6 +137,7 @@ export function OperationDetailModal({
 
   if (!operation) return null
   const editable = operation.status === 'PENDING' && canWrite
+  const correctable = operation.status === 'PAID' && paidCorrections && canWrite
   const customer = customers?.find((item) => item.id === operation.customer_id)
 
   return (
@@ -241,8 +256,54 @@ export function OperationDetailModal({
               ? 'Tu permiso es de consulta: puedes verla, no modificarla.'
               : operation.status === 'CANCELLED'
                 ? 'Está cancelada: ya no se puede modificar.'
-                : 'Ya movió dinero: para corregirla, cancélala con el botón Cancelar de la lista (se registra un reverso que deshace el movimiento de dinero) y regístrala de nuevo. Así la contabilidad conserva el rastro.'}
+                : correctable
+                  ? 'Ya movió dinero: monto, fecha y cuenta sólo se corrigen cancelándolo (se registra un reverso) y registrándolo de nuevo. Categoría y notas se corrigen aquí.'
+                  : 'Ya movió dinero: para corregirla, cancélala con el botón Cancelar de la lista (se registra un reverso que deshace el movimiento de dinero) y regístrala de nuevo. Así la contabilidad conserva el rastro.'}
           </p>
+          {correctable ? (
+            <form
+              className="space-y-3 border-t border-border pt-4"
+              onSubmit={(event) => {
+                event.preventDefault()
+                saveMutation.mutate()
+              }}
+            >
+              <div>
+                <h3 className="text-sm font-semibold">Corregir</h3>
+                <p className="text-xs text-muted">
+                  Cambiar la categoría registra una póliza de reclasificación en la fecha del gasto; el
+                  dinero y el IVA no se mueven. Si el mes ya está cerrado, hay que reabrirlo.
+                </p>
+              </div>
+              <SelectInput
+                label="Categoría"
+                required
+                options={categories.map((category) => ({ value: category.id, label: category.name }))}
+                value={form.category_id}
+                onChange={(event) => setForm({ ...form, category_id: event.target.value })}
+              />
+              <TextInput
+                label="Notas (opcional)"
+                value={form.notes}
+                onChange={(event) => setForm({ ...form, notes: event.target.value })}
+              />
+              <TextInput
+                label="Motivo de la corrección"
+                hint="Queda en el historial con el valor anterior."
+                required
+                minLength={3}
+                maxLength={500}
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+              />
+              {error ? <p className="text-sm text-neg">{error}</p> : null}
+              <div className="flex justify-end">
+                <Button type="submit" disabled={saveMutation.isPending}>
+                  {saveMutation.isPending ? 'Guardando…' : 'Guardar corrección'}
+                </Button>
+              </div>
+            </form>
+          ) : null}
           {customers && canWrite ? (
             <form
               className="space-y-3 border-t border-border pt-4"

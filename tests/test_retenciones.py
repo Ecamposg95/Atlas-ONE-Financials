@@ -113,7 +113,7 @@ def test_reversing_a_withheld_expense_undoes_the_liability(client):
         client, headers, account, honorarios, retention_isr="1000", retention_iva="1066.67"
     )
 
-    client.post(f"/api/expenses/{expense['id']}/cancel", headers=headers, json={})
+    client.post(f"/api/expenses/{expense['id']}/cancel", headers=headers, json={"reason": "Captura duplicada"})
 
     after = Decimal(str(client.get("/api/accounts", headers=headers).json()[0]["current_balance"]))
     assert after == before

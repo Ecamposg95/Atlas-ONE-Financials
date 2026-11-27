@@ -55,7 +55,8 @@ class IncomePay(BaseModel):
 
 
 class IncomeCancel(BaseModel):
-    reason: str | None = Field(default=None, max_length=500)
+    # R2·HU-02: cancelar siempre explica por qué; el motivo queda en el historial.
+    reason: str = Field(min_length=3, max_length=500)
 
 
 class IncomeRead(BaseModel):

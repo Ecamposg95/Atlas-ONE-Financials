@@ -83,7 +83,7 @@ def test_balance_sheet_shows_pending_liability(client):
 def test_cancel_unpaid_payable_reverses(client):
     headers, _account, renta, vendor = _setup(client)
     payable = _create(client, headers, renta, vendor)
-    cancelled = client.post(f"/api/payables/{payable['id']}/cancel", headers=headers, json={})
+    cancelled = client.post(f"/api/payables/{payable['id']}/cancel", headers=headers, json={"reason": "Captura duplicada"})
     assert cancelled.status_code == 200
     balances = _trial(client, headers)
     assert balances.get("2100", Decimal("0")) == Decimal("0")

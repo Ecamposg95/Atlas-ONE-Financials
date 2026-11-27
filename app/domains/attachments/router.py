@@ -6,9 +6,10 @@ quitar exige los mismos roles que registrar gastos.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -120,6 +121,60 @@ def download_attachment(
     )
 
 
+def _ensure_expense_month_open(db: Session, org_id: str, expense: Expense, action: str) -> None:
+    # La evidencia de un mes cerrado ya respaldó una declaración.
+    year, month = expense.date.year, expense.date.month
+    if is_closed(db, org_id, year, month) or is_year_closed(db, org_id, year):
+        raise HTTPException(
+            status_code=400,
+            detail=f"El mes de este gasto está cerrado: reábrelo para {action}.",
+        )
+
+
+@router.post("/attachments/{attachment_id}/replace", response_model=AttachmentRead, status_code=201)
+def replace_attachment(
+    attachment_id: str,
+    file: UploadFile = File(...),
+    reason: str = Form(min_length=3, max_length=500),
+    db: Session = Depends(get_db),
+    org_id: str = Depends(get_current_org_id),
+    user: User = Depends(get_current_user),
+    _membership=Depends(require_role(WRITE_ROLES)),
+):
+    """R2·HU-02: sustituir un comprobante (factura cancelada y reemplazada,
+    foto ilegible). El anterior se conserva dado de baja y el cambio queda en
+    el historial del gasto con su motivo."""
+    old = _attachment(db, org_id, attachment_id)
+    if old.owner_type != "expense":
+        raise HTTPException(status_code=400, detail="Ese adjunto no se puede sustituir.")
+    expense = _expense(db, org_id, old.owner_id)
+    _ensure_expense_month_open(db, org_id, expense, "sustituir el comprobante")
+    data = file.file.read(storage.MAX_FILE_BYTES + 1)
+    filename = file.filename or "archivo"
+    # Todo en una transacción: si el archivo nuevo no pasa, el anterior sigue vigente.
+    old.deleted_at = datetime.now(timezone.utc)
+    old.deleted_by = user.id
+    db.flush()
+    record_change(
+        db,
+        org_id,
+        expense,
+        "UPDATE",
+        user.id,
+        before={"attachment": old.filename},
+        after={"attachment": filename},
+        reason=reason,
+    )
+    try:
+        attachment = storage.save(
+            db, org_id, "expense", expense.id, filename, file.content_type, data, uploaded_by=user.id
+        )
+    except storage.AttachmentError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return AttachmentRead.model_validate(attachment)
+
+
 @router.delete("/attachments/{attachment_id}", status_code=204)
 def delete_attachment(
     attachment_id: str,
@@ -131,13 +186,7 @@ def delete_attachment(
     attachment = _attachment(db, org_id, attachment_id)
     if attachment.owner_type == "expense":
         expense = _expense(db, org_id, attachment.owner_id)
-        # La evidencia de un mes cerrado ya respaldó una declaración.
-        year, month = expense.date.year, expense.date.month
-        if is_closed(db, org_id, year, month) or is_year_closed(db, org_id, year):
-            raise HTTPException(
-                status_code=400,
-                detail="El mes de este gasto está cerrado: reábrelo para quitar el adjunto.",
-            )
+        _ensure_expense_month_open(db, org_id, expense, "quitar el adjunto")
         record_change(
             db,
             org_id,

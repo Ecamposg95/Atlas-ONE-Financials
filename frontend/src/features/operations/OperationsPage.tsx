@@ -337,7 +337,7 @@ export function OperationsPage({ config }: { config: Config }) {
 
   const cancelMutation = useMutation({
     mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
-      await api.post(`${config.endpoint}/${id}/cancel`, { reason: reason.trim() || null })
+      await api.post(`${config.endpoint}/${id}/cancel`, { reason: reason.trim() })
     },
     onSuccess: () => {
       invalidate()
@@ -941,7 +941,11 @@ export function OperationsPage({ config }: { config: Config }) {
               </p>
             )}
             <TextInput
-              label="¿Por qué la cancelas? (opcional, queda en el historial)"
+              label="¿Por qué la cancelas?"
+              hint="Queda en el historial junto con quién la canceló."
+              required
+              minLength={3}
+              maxLength={500}
               value={cancelReason}
               onChange={(event) => setCancelReason(event.target.value)}
             />
@@ -975,6 +979,7 @@ export function OperationsPage({ config }: { config: Config }) {
         onClose={() => setDetailFor(null)}
         onSaved={invalidate}
         customers={config.kind === 'income' ? (contacts ?? []) : undefined}
+        paidCorrections={config.kind === 'expense'}
       />
 
       <JournalEntryModal

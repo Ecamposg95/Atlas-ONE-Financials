@@ -162,6 +162,39 @@ def expense_paid_entry(
     )
 
 
+def expense_reclassification_entry(
+    db: Session,
+    organization_id: str,
+    description: str,
+    amount: Decimal,
+    date: date_type,
+    from_account_code: str,
+    to_account_code: str,
+    source_id: str,
+    created_by: str | None = None,
+) -> JournalEntry:
+    """Corrección de la categoría de un gasto ya pagado (R2·HU-02): la base pasa
+    de una cuenta de gasto a otra. No toca dinero, IVA ni retenciones.
+
+    Cargo cuenta nueva / Abono cuenta anterior, con el gasto como origen: su
+    reverso (si después se cancela) también la deshace.
+    """
+    return post_journal_entry(
+        db,
+        organization_id,
+        date=date,
+        description=description,
+        lines=[
+            LineSpec(to_account_code, debit=amount),
+            LineSpec(from_account_code, credit=amount),
+        ],
+        source_type="expense",
+        source_id=source_id,
+        created_by=created_by,
+        kind="DIARIO",
+    )
+
+
 def receivable_created_entry(
     db: Session,
     organization_id: str,

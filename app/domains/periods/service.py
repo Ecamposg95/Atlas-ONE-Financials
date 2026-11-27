@@ -27,6 +27,24 @@ def _month_bounds(year: int, month: int) -> tuple[date_type, date_type]:
     return date_type(year, month, 1), date_type(year, month, monthrange(year, month)[1])
 
 
+MONTH_NAMES = (
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+)
+
+
+def assert_month_open(db: Session, organization_id: str, day: date_type, action: str) -> None:
+    """Lo que no genera póliza (un gasto pendiente) no pasa por el candado del
+    motor contable: se valida aquí con el mismo criterio que una póliza."""
+    if is_year_closed(db, organization_id, day.year):
+        raise ValueError(f"El ejercicio {day.year} está cerrado: reábrelo para {action}.")
+    if is_closed(db, organization_id, day.year, day.month):
+        raise ValueError(
+            f"El mes de {MONTH_NAMES[day.month - 1]} de {day.year} está cerrado: "
+            f"reábrelo para {action}."
+        )
+
+
 def is_closed(db: Session, organization_id: str, year: int, month: int) -> bool:
     return (
         db.query(PeriodLock)

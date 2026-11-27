@@ -4,7 +4,8 @@
 
 import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Camera, Download, Eye, FileText, Image, Paperclip, Trash2, Upload, X } from 'lucide-react'
+import { isAxiosError } from 'axios'
+import { Camera, Download, Eye, FileText, Image, Paperclip, Replace, Trash2, Upload, X } from 'lucide-react'
 import { api, errorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { downloadErrorMessage } from '@/lib/download'
@@ -51,6 +52,17 @@ export async function uploadAttachment(expenseId: string, file: File): Promise<A
   const body = new FormData()
   body.append('file', file)
   const response = await api.post<Attachment>(`/expenses/${expenseId}/attachments`, body, {
+    timeout: UPLOAD_TIMEOUT_MS,
+  })
+  return response.data
+}
+
+/** R2·HU-02: el anterior queda dado de baja y el cambio, con su motivo, en el historial. */
+async function replaceAttachment(id: string, file: File, reason: string): Promise<Attachment> {
+  const body = new FormData()
+  body.append('file', file)
+  body.append('reason', reason)
+  const response = await api.post<Attachment>(`/attachments/${id}/replace`, body, {
     timeout: UPLOAD_TIMEOUT_MS,
   })
   return response.data
@@ -143,6 +155,9 @@ export function AttachmentsPanel({ expenseId }: { expenseId: string }) {
   const canWrite = useCanEditExpenses()
   const [errors, setErrors] = useState<string[]>([])
   const [busyId, setBusyId] = useState<string | null>(null)
+  // Qué adjunto se sustituye con el archivo que se elija en el selector oculto.
+  const replaceInput = useRef<HTMLInputElement>(null)
+  const [replacing, setReplacing] = useState<Attachment | null>(null)
 
   const queryKey = ['attachments', 'expense', expenseId]
   const { data, isLoading } = useQuery({
@@ -185,6 +200,39 @@ export function AttachmentsPanel({ expenseId }: { expenseId: string }) {
       refresh()
     },
   })
+
+  const replaceMutation = useMutation({
+    mutationFn: async ({ item, file, reason }: { item: Attachment; file: File; reason: string }) => {
+      const precheck = precheckFile(file)
+      if (precheck) throw new Error(precheck)
+      await replaceAttachment(item.id, file, reason)
+    },
+    onSuccess: () => {
+      setErrors([])
+      refresh()
+      void queryClient.invalidateQueries({ queryKey: ['history'] })
+    },
+    // El precheck lanza un Error propio; lo del servidor viene de axios.
+    onError: (err) => setErrors([isAxiosError(err) || !(err instanceof Error) ? errorMessage(err) : err.message]),
+    onSettled: () => setReplacing(null),
+  })
+
+  function chooseReplacement(file: File | undefined) {
+    const item = replacing
+    if (!item || !file) {
+      setReplacing(null)
+      return
+    }
+    const reason = window.prompt(
+      `¿Por qué sustituyes "${item.filename}" por "${file.name}"? El anterior se conserva dado de baja y el motivo queda en el historial.`,
+    )
+    if (reason === null || reason.trim().length < 3) {
+      if (reason !== null) setErrors(['Escribe el motivo de la sustitución: queda en el historial.'])
+      setReplacing(null)
+      return
+    }
+    replaceMutation.mutate({ item, file, reason: reason.trim() })
+  }
 
   const removeMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -291,6 +339,21 @@ export function AttachmentsPanel({ expenseId }: { expenseId: string }) {
                   {canWrite ? (
                     <Button
                       variant="ghost"
+                      className="!px-2 !py-1"
+                      aria-label={`Sustituir ${item.filename}`}
+                      title="Sustituir por otro archivo"
+                      disabled={replaceMutation.isPending}
+                      onClick={() => {
+                        setReplacing(item)
+                        replaceInput.current?.click()
+                      }}
+                    >
+                      <Replace className="h-4 w-4" />
+                    </Button>
+                  ) : null}
+                  {canWrite ? (
+                    <Button
+                      variant="ghost"
                       className="!px-2 !py-1 hover:!text-neg"
                       aria-label={`Quitar ${item.filename}`}
                       title="Quitar"
@@ -313,7 +376,17 @@ export function AttachmentsPanel({ expenseId }: { expenseId: string }) {
           ) : null}
         </>
       )}
-      {uploadMutation.isPending ? <p className="text-xs text-muted">Subiendo…</p> : null}
+      <input
+        ref={replaceInput}
+        type="file"
+        className="hidden"
+        accept={ACCEPT}
+        onChange={(event) => {
+          chooseReplacement(event.target.files?.[0])
+          event.target.value = ''
+        }}
+      />
+      {uploadMutation.isPending || replaceMutation.isPending ? <p className="text-xs text-muted">Subiendo…</p> : null}
       {errors.length > 0 ? (
         <ul className="space-y-0.5 text-sm text-neg">
           {errors.map((message) => (

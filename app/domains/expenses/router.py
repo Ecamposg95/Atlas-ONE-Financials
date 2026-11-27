@@ -196,5 +196,7 @@ def patch_expense(
     _membership=Depends(require_role(WRITE_ROLES)),
 ):
     expense = _get_expense(db, org_id, expense_id)
-    expense = service.update_expense(db, org_id, expense, payload.model_dump(exclude_unset=True), user.id)
+    changes = payload.model_dump(exclude_unset=True)
+    reason = changes.pop("reason", None)
+    expense = service.update_expense(db, org_id, expense, changes, user.id, reason=reason)
     return ExpenseRead.model_validate(expense)

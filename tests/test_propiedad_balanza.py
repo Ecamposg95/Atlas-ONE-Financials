@@ -165,7 +165,7 @@ class _World:
         if kind is None:
             return
         target = self.rng.choice(pools[kind])
-        response = self.client.post(f"/api/{kind}/{target}/cancel", headers=self.headers, json={})
+        response = self.client.post(f"/api/{kind}/{target}/cancel", headers=self.headers, json={"reason": "Captura duplicada"})
         assert response.status_code < 500, response.text
         if response.status_code >= 400:
             return
