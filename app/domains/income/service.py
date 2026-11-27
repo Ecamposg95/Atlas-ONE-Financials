@@ -17,6 +17,7 @@ from app.domains.periods.service import assert_month_open
 from app.services.accounting.rules import income_paid_entry
 from app.services.taxes import resolve_treatment, split_total, with_treatment
 from app.services.change_log import record_change, snapshot
+from app.services.operation_dates import assert_not_future
 from app.services.reversals import reverse_operation
 from app.services.dimensions import inherit_business_unit, tag_entry, validate_dimensions
 from app.services.transactions import account_ledger_code, record_transaction
@@ -79,6 +80,8 @@ def build_income(db: Session, org_id: str, payload, created_by: str) -> Income:
 
     No hace commit: la importación crea decenas en un solo lote, todos o ninguno.
     """
+    if payload.status == "PAID":
+        assert_not_future(db, org_id, payload.date)
     assert_month_open(db, org_id, payload.date, "registrar un ingreso con esa fecha")
     _validate_category(db, org_id, payload.category_id)
     if payload.customer_id:
@@ -142,10 +145,10 @@ def pay_income(
         raise ValueError("Este ingreso ya está cobrado.")
     if income.status == "CANCELLED":
         raise ValueError("No puedes cobrar un ingreso cancelado.")
+    paid_date = paid_date or income.date
+    assert_not_future(db, org_id, paid_date)
     before = snapshot(income)
-    _apply_payment(
-        db, org_id, income, financial_account_id, paid_date or income.date, user_id, payment_method=payment_method
-    )
+    _apply_payment(db, org_id, income, financial_account_id, paid_date, user_id, payment_method=payment_method)
     record_change(db, org_id, income, "PAY", user_id, before=before, after=snapshot(income))
     db.commit()
     db.refresh(income)

@@ -79,6 +79,14 @@ export function today(): string {
   return `${now.getFullYear()}-${month}-${day}`
 }
 
+export function tomorrow(): string {
+  const next = new Date()
+  next.setDate(next.getDate() + 1)
+  const month = String(next.getMonth() + 1).padStart(2, '0')
+  const day = String(next.getDate()).padStart(2, '0')
+  return `${next.getFullYear()}-${month}-${day}`
+}
+
 export function monthStart(): string {
   const now = new Date()
   const month = String(now.getMonth() + 1).padStart(2, '0')

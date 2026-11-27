@@ -28,6 +28,7 @@ from app.security.deps import get_current_org_id, get_current_user, require_role
 from app.models.accounting import JournalEntry
 from app.models.fiscal_entity import FiscalEntity
 from app.services import approvals
+from app.services.operation_dates import WHEN_IT_HAPPENS_HINT, assert_not_future
 from app.services.listing import check_export_size, export_response, money_total_row
 from app.services.running_balance import running_balances
 
@@ -134,6 +135,8 @@ def create_transfer(
     user: User = Depends(get_current_user),
     membership=Depends(require_role(WRITE_ROLES)),
 ):
+    # Antes de la bandeja: una autorización con fecha futura sólo fallaría al aprobarse.
+    assert_not_future(db, org_id, payload.date, WHEN_IT_HAPPENS_HINT)
     waiting = approvals.gate(
         db,
         membership=membership,

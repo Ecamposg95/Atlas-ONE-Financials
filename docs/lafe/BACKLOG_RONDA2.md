@@ -45,9 +45,9 @@ Consulta de solo lectura después de las entregas del día. Nada de esto cambia 
 
 Sin preguntas abiertas. El orden de los lotes es la recomendación; dentro de un lote, las tareas son independientes.
 
-### Lote A · Cifras confiables (todo S)
+### Lote A · Cifras confiables (todo S) — **Hecho (#43)**
 
-Errores de cálculo que hacen que dos pantallas digan cosas distintas. Ninguno necesita decisión.
+Errores de cálculo que hacen que dos pantallas digan cosas distintas. Entregado el 27-nov: lo vencido usa la fecha de la empresa en todas partes; la póliza de saldo inicial va a la fecha de corte (si el mes de corte está cerrado, se rechaza); el desglose por categoría del resumen va sin IVA; lo pagado o cobrado, los traspasos, los pagos y los cobros no aceptan fecha futura (lo pendiente sí), las importaciones marcan esas filas como error, y Gastos e Ingresos avisan de lo pagado con fecha futura que ya existe.
 
 | Tarea | Prior. | Qué | Dónde |
 |---|---|---|---|
@@ -186,6 +186,7 @@ Todo en producción el 27-nov-2026. Falta la validación funcional con La Fe (cr
 | HU-05 · IVA explícito | #39 | Tratamiento (gravado, tasa 0, exento, no objeto, sin clasificar) en gastos, ingresos y cuentas; retenciones de gasto por tasa; desglose en detalle e historial; reporte de IVA por tratamiento con retenciones; filtro "IVA" |
 | HU-04 · Corrección masiva | #40 | Gastos: categoría, IVA, proveedor y proyecto en lote, hasta 500, con vista previa y resultado por gasto |
 | HU-20 · Totales | #41 | Por pagar y Por cobrar suman todo lo filtrado; Gastos e Ingresos suman sin cancelados; la selección suma entre páginas |
+| Lote A · Cifras confiables (HU-09.b, HU-12.a, HU-10.b, REQ-04) | #43 | Vencido con la fecha de la empresa; apertura en la fecha de corte; categorías sin IVA; sin fechas futuras en lo pagado y aviso de las existentes |
 | HU-21 · Búsqueda | #41 | Búsqueda siempre visible en Gastos e Ingresos; Ctrl K encuentra operaciones, cuentas y contactos por concepto, referencia, RFC o monto |
 
 ---

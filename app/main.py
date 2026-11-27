@@ -16,6 +16,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
 from app.config import get_settings
+from app.core.company_date import CompanyDayMiddleware
 from app.database import engine
 from app.services.approvals import CaptureLimitExceeded, NotAnAuthorizer
 from app.services.dimensions import DimensionNotFoundError
@@ -39,6 +40,9 @@ def create_app() -> FastAPI:
         redoc_url=None,
         openapi_url="/openapi.json" if settings.docs_enabled else None,
     )
+
+    # «Hoy» de la empresa por petición (lo vencido no usa la fecha del servidor).
+    app.add_middleware(CompanyDayMiddleware)
 
     if settings.cors_origins:
         app.add_middleware(

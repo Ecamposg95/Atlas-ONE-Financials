@@ -6,6 +6,7 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.models.financial_account import FINANCIAL_ACCOUNT_TYPES, FinancialAccount, is_liability
+from app.models.organization import Organization
 from app.services.accounting.engine import _quantize
 from app.services.accounting.coa import ledger_code_for
 from app.services.accounting.rules import opening_balance_entry
@@ -33,6 +34,7 @@ def create_financial_account(
     if opening < 0:
         raise ValueError("El saldo inicial no puede ser negativo.")
     validate_dimensions(db, organization_id, business_unit_id, None)
+    opening_date = opening_entry_date(db, organization_id) if opening > 0 else None
     is_processor = account_type == "PROCESSOR"
     if is_processor and settlement_account_id:
         validate_settlement_account(db, organization_id, settlement_account_id)
@@ -60,7 +62,7 @@ def create_financial_account(
             organization_id,
             account_name=account.name,
             amount=opening,
-            date=date.today(),
+            date=opening_date,
             source_id=account.id,
             created_by=created_by,
             account_code=ledger_code_for(account_type),
@@ -69,6 +71,22 @@ def create_financial_account(
         # El saldo inicial de la caja de Morelos es activo de Morelos.
         tag_entry(entry, business_unit_id, None)
     return account
+
+
+def opening_entry_date(db: Session, organization_id: str) -> date:
+    """Fecha de la póliza del saldo inicial: la fecha de corte, como en el ajuste de apertura.
+
+    Con corte fijado, el saldo inicial es lo que la cuenta tenía ese día y un
+    mes cerrado lo rechaza con el mismo mensaje que el ajuste. Sin corte (alta
+    de la empresa, antes de configurar la apertura) se queda en hoy.
+    """
+    from app.domains.opening.service import assert_cutoff_open
+
+    cutoff = db.query(Organization.opening_date).filter(Organization.id == organization_id).scalar()
+    if cutoff is None:
+        return date.today()
+    assert_cutoff_open(db, organization_id, cutoff)
+    return cutoff
 
 
 def validate_settlement_account(db: Session, organization_id: str, bank_account_id: str) -> FinancialAccount:

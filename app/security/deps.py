@@ -10,8 +10,9 @@ from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
+from app.core.company_date import use_company_timezone
 from app.database import get_db
-from app.models.organization import OrganizationMember
+from app.models.organization import Organization, OrganizationMember
 from app.models.user import User
 from app.security.tokens import TokenError, decode_token
 
@@ -34,6 +35,13 @@ def get_current_user(
     return user
 
 
+def _use_company_day(db: Session, membership: OrganizationMember) -> OrganizationMember:
+    # Lo vencido de esta petición se mide con la fecha local de la empresa.
+    organization = db.get(Organization, membership.organization_id)
+    use_company_timezone(organization.timezone if organization else None)
+    return membership
+
+
 def get_current_membership(
     x_organization_id: str | None = Header(default=None),
     user: User = Depends(get_current_user),
@@ -48,7 +56,7 @@ def get_current_membership(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No tienes acceso a esta organización.",
             )
-        return membership
+        return _use_company_day(db, membership)
     memberships = query.limit(2).all()
     if not memberships:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No perteneces a ninguna organización.")
@@ -57,7 +65,7 @@ def get_current_membership(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Indica la organización activa (encabezado X-Organization-ID).",
         )
-    return memberships[0]
+    return _use_company_day(db, memberships[0])
 
 
 def get_current_org_id(membership: OrganizationMember = Depends(get_current_membership)) -> str:

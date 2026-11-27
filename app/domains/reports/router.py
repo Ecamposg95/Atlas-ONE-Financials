@@ -1,9 +1,9 @@
 from datetime import date as date_type
-from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
 
+from app.core.company_date import organization_today
 from app.database import get_db
 from app.domains.reports import service
 from app.domains.reports.export import XLSX_MEDIA_TYPE, to_csv, to_xlsx
@@ -12,8 +12,8 @@ from app.security.deps import get_current_org_id
 router = APIRouter(prefix="/reports", tags=["reports"])
 
 
-def _default_month_range() -> tuple[date_type, date_type]:
-    today = date.today()
+def _default_month_range(db: Session, org_id: str) -> tuple[date_type, date_type]:
+    today = organization_today(db, org_id)
     return today.replace(day=1), today
 
 
@@ -33,7 +33,7 @@ def profit_loss(
     db: Session = Depends(get_db),
     org_id: str = Depends(get_current_org_id),
 ):
-    default_start, default_end = _default_month_range()
+    default_start, default_end = _default_month_range(db, org_id)
     return service.profit_loss(db, org_id, start or default_start, end or default_end, **dims)
 
 
@@ -44,7 +44,7 @@ def balance_sheet(
     db: Session = Depends(get_db),
     org_id: str = Depends(get_current_org_id),
 ):
-    return service.balance_sheet(db, org_id, as_of or date.today(), **dims)
+    return service.balance_sheet(db, org_id, as_of or organization_today(db, org_id), **dims)
 
 
 @router.get("/cash-flow")
@@ -55,7 +55,7 @@ def cash_flow(
     db: Session = Depends(get_db),
     org_id: str = Depends(get_current_org_id),
 ):
-    default_start, default_end = _default_month_range()
+    default_start, default_end = _default_month_range(db, org_id)
     return service.cash_flow(db, org_id, start or default_start, end or default_end, **dims)
 
 
@@ -67,7 +67,7 @@ def vat(
     db: Session = Depends(get_db),
     org_id: str = Depends(get_current_org_id),
 ):
-    default_start, default_end = _default_month_range()
+    default_start, default_end = _default_month_range(db, org_id)
     return service.vat_report(db, org_id, start or default_start, end or default_end, **dims)
 
 
@@ -172,7 +172,7 @@ def export_report(
     se le manda al contador."""
     if file_format not in ("csv", "xlsx"):
         raise HTTPException(status_code=404, detail="Ese formato no se puede descargar.")
-    default_start, default_end = _default_month_range()
+    default_start, default_end = _default_month_range(db, org_id)
     start = start or default_start
     end = end or default_end
     headers, rows, name, sheet_title, money = _export_table(db, org_id, report, start, end, dims)

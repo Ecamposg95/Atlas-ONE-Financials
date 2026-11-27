@@ -6,6 +6,7 @@ from decimal import Decimal
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.core.company_date import organization_today
 from app.models.category import Category
 from app.models.expense import Expense
 from app.models.financial_account import (
@@ -38,8 +39,11 @@ def outstanding(
     overdue_only: bool = False,
     business_unit_id: str | None = None,
     fiscal_entity_id: str | None = None,
+    today: date | None = None,
 ) -> Decimal:
-    """Saldo pendiente (amount - amount_paid) de cuentas abiertas o parciales."""
+    """Saldo pendiente (amount - amount_paid) de cuentas abiertas o parciales.
+
+    Lo vencido se mide con la fecha de la empresa (`today`), no la del servidor."""
     query = db.query(
         func.coalesce(func.sum(model.amount), 0),
         func.coalesce(func.sum(model.amount_paid), 0),
@@ -49,7 +53,7 @@ def outstanding(
         *_operation_filters(model, business_unit_id, fiscal_entity_id),
     )
     if overdue_only:
-        query = query.filter(model.due_date < date.today())
+        query = query.filter(model.due_date < (today or organization_today(db, organization_id)))
     total, paid = query.one()
     return Decimal(total or 0) - Decimal(paid or 0)
 
@@ -106,7 +110,7 @@ def cash_flow_series(
     entradas, salidas, neto y las 3 categorías de gasto más grandes del periodo
     — el tooltip debe explicar la barra, no repetirla.
     """
-    today = date.today()
+    today = organization_today(db, organization_id)
 
     if granularity == "week":
         # Lunes de la semana actual, 12 semanas hacia atrás.
@@ -165,8 +169,9 @@ def cash_flow_series(
             points[key]["outflows"] += amount
 
     # Top categorías de gasto PAGADO por periodo: una sola consulta agregada.
+    # Sin IVA (`subtotal`), igual que el estado de resultados y `category_series`.
     expense_rows = (
-        db.query(Expense.date, Category.name, Expense.amount)
+        db.query(Expense.date, Category.name, Expense.subtotal)
         .join(Category, Category.id == Expense.category_id)
         .filter(
             Expense.organization_id == organization_id,
@@ -211,7 +216,7 @@ def summary(
 ) -> dict:
     """El tablero de Inicio. Con unidad o contribuyente, cada cifra es sólo de
     esa dimensión; sin ellos, el negocio completo, como siempre."""
-    today = date.today()
+    today = organization_today(db, organization_id)
     month_start = _month_start(today)
     dims = {"business_unit_id": business_unit_id, "fiscal_entity_id": fiscal_entity_id}
 
@@ -276,11 +281,11 @@ def summary(
         elif transaction_type == "EXPENSE":
             operations[key]["expenses"] += amount
 
-    # Distribución de gastos pagados del mes por categoría
+    # Distribución de gastos pagados del mes por categoría, sin IVA como el estado de resultados.
     expense_categories = (
         db.query(
             Category.name,
-            func.coalesce(func.sum(Expense.amount), 0),
+            func.coalesce(func.sum(Expense.subtotal), 0),
         )
         .join(Expense, Expense.category_id == Category.id)
         .filter(
@@ -291,7 +296,7 @@ def summary(
             *_operation_filters(Expense, business_unit_id, fiscal_entity_id),
         )
         .group_by(Category.name)
-        .order_by(func.sum(Expense.amount).desc())
+        .order_by(func.sum(Expense.subtotal).desc())
         .all()
     )
 
@@ -307,7 +312,7 @@ def summary(
         "previous_profit": previous_revenue - previous_expenses,
         "previous_period_end": previous_end,
         "receivables": outstanding(db, organization_id, Receivable, **dims),
-        "overdue_receivables": outstanding(db, organization_id, Receivable, overdue_only=True, **dims),
+        "overdue_receivables": outstanding(db, organization_id, Receivable, overdue_only=True, today=today, **dims),
         "payables": outstanding(db, organization_id, Payable, **dims),
         "cash_flow": [
             {"month": m, "inflows": flow[m]["inflows"], "outflows": flow[m]["outflows"]} for m in months

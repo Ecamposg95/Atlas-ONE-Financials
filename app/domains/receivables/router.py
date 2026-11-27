@@ -1,9 +1,8 @@
-from datetime import date
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import and_, case
 from sqlalchemy.orm import Session
 
+from app.core.company_date import organization_today
 from app.database import get_db
 from app.domains.receivables import service
 from app.domains.receivables.schemas import (
@@ -50,10 +49,11 @@ def list_receivables(
         query = query.filter(Receivable.business_unit_id == business_unit_id)
     if fiscal_entity_id:
         query = query.filter(Receivable.fiscal_entity_id == fiscal_entity_id)
+    today = organization_today(db, org_id)
     if status == "OVERDUE":
         query = query.filter(
             Receivable.status.in_(("OPEN", "PARTIAL")),
-            Receivable.due_date < date.today(),
+            Receivable.due_date < today,
         )
     elif status in ("OPEN", "PARTIAL"):
         query = query.filter(Receivable.status == status)
@@ -71,7 +71,7 @@ def list_receivables(
     sum_where = None if status == "CANCELLED" else Receivable.status != "CANCELLED"
     open_balance = Receivable.amount - Receivable.amount_paid
     overdue = case(
-        (and_(Receivable.status.in_(("OPEN", "PARTIAL")), Receivable.due_date < date.today()), open_balance), else_=0
+        (and_(Receivable.status.in_(("OPEN", "PARTIAL")), Receivable.due_date < today), open_balance), else_=0
     )
     return paginate(
         query,

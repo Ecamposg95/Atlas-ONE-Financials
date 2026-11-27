@@ -21,6 +21,7 @@ from app.models.user import User
 from app.schemas.common import apply_sort, paginate
 from app.security.deps import get_current_org_id, get_current_user, require_role
 from app.services import approvals
+from app.services.operation_dates import assert_not_future
 from app.services.listing import (
     OperationFilters,
     check_export_size,
@@ -118,6 +119,8 @@ def create_expense(
 ):
     # Un gasto que nace pendiente no mueve dinero: se evalúa cuando se paga.
     if payload.status == "PAID":
+        # Antes de la bandeja: una autorización con fecha futura sólo fallaría al aprobarse.
+        assert_not_future(db, org_id, payload.date)
         waiting = approvals.gate(
             db,
             membership=membership,
@@ -159,6 +162,7 @@ def pay_expense(
     membership=Depends(require_role(WRITE_ROLES)),
 ):
     expense = _get_expense(db, org_id, expense_id)
+    assert_not_future(db, org_id, payload.date or expense.date)
     waiting = approvals.gate(
         db,
         membership=membership,
