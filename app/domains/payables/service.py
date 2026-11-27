@@ -22,6 +22,7 @@ from app.services.accounting.rules import (
 )
 from app.services.change_log import record_change, snapshot
 from app.services.reversals import reverse_operation
+from app.services.operation_dates import WHEN_IT_HAPPENS_HINT, assert_not_future, company_today
 from app.services.dimensions import inherit_business_unit, tag_entry, validate_dimensions
 from app.services.transactions import account_ledger_code, record_transaction
 
@@ -180,7 +181,9 @@ def pay_payable(
     if amount > balance:
         raise ValueError(f"El pago excede el saldo pendiente (${balance}).")
 
-    when = payment_date or date.today()
+    # Sin fecha, hoy de la empresa: el del servidor (UTC) ya es mañana por la noche.
+    when = payment_date or company_today(db, org_id)
+    assert_not_future(db, org_id, when, WHEN_IT_HAPPENS_HINT)
     remaining_tax = Decimal(payable.tax_amount) - Decimal(payable.tax_paid)
     tax_now = proportional_tax(
         Decimal(payable.tax_amount), amount, Decimal(payable.amount), remaining_tax

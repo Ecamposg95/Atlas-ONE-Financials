@@ -459,6 +459,7 @@ export function TransactionsPage() {
               label="Fecha"
               type="date"
               required
+              max={today()}
               value={form.date}
               onChange={(event) => setForm({ ...form, date: event.target.value })}
             />

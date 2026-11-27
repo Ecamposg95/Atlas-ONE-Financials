@@ -788,6 +788,7 @@ export function DebtsPage({ config }: { config: Config }) {
                 label="Fecha"
                 type="date"
                 required
+                max={today()}
                 value={payForm.date}
                 onChange={(event) => setPayForm({ ...payForm, date: event.target.value })}
               />

@@ -14,6 +14,7 @@ from app.domains.income.service import resolve_tax, validate_money_account, vali
 from app.domains.periods.service import assert_month_open
 from app.services.accounting.rules import expense_paid_entry, expense_reclassification_entry
 from app.services.change_log import record_change, snapshot
+from app.services.operation_dates import assert_not_future
 from app.services.taxes import resolve_treatment, retention_from_rate, split_total
 from app.services.reversals import reverse_operation
 from app.models.financial_account import FinancialAccount
@@ -67,6 +68,8 @@ def create_expense(db: Session, org_id: str, payload, created_by: str, commit: b
 
 def build_expense(db: Session, org_id: str, payload, created_by: str) -> Expense:
     """Crea el gasto (y lo paga si viene PAID) en la transacción del caller, sin commit."""
+    if payload.status == "PAID":
+        assert_not_future(db, org_id, payload.date)
     assert_month_open(db, org_id, payload.date, "registrar un gasto con esa fecha")
     _validate_category(db, org_id, payload.category_id)
     if payload.vendor_id:
@@ -123,8 +126,10 @@ def pay_expense(
         raise ValueError("Este gasto ya está pagado.")
     if expense.status == "CANCELLED":
         raise ValueError("No puedes pagar un gasto cancelado.")
+    paid_date = paid_date or expense.date
+    assert_not_future(db, org_id, paid_date)
     before = snapshot(expense)
-    _apply_payment(db, org_id, expense, financial_account_id, paid_date or expense.date, user_id)
+    _apply_payment(db, org_id, expense, financial_account_id, paid_date, user_id)
     record_change(db, org_id, expense, "PAY", user_id, before=before, after=snapshot(expense))
     db.commit()
     db.refresh(expense)
