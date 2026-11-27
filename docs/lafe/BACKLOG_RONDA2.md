@@ -80,7 +80,8 @@ Como responsable contable, quiero cerrar periodos y controlar sus modificaciones
 **R2·HU-04 · Corregir gastos de forma masiva** — P1 · Liza · **Falta.** Depende de R2·HU-02 y R2·HU-03.
 
 - Criterios: filtrar y seleccionar; solo campos autorizados; vista previa; respetar permisos, estados y cierres; resultado con actualizados, rechazados y motivos.
-- Hoy solo existe pagar o asignar proyecto a varios gastos, desde el navegador uno por uno. No hay endpoint masivo.
+- **Hecho (27-nov):** en Gastos, "Corregir en lote" cambia categoría, tratamiento de IVA, proveedor y proyecto de los gastos seleccionados, con motivo obligatorio. Se puede seleccionar más allá de la página: todos los que coinciden con el filtro, hasta 500. Primero hay una vista previa que no cambia nada; al aplicar, cada gasto pasa por las reglas de la corrección individual (estado, mes cerrado, IVA coherente, reclasificación). El resultado dice cuántos se corrigieron, cuántos ya tenían esos datos y cuáles no se pudieron corregir y por qué (`POST /expenses/bulk-update`).
+- Falta: lo mismo para ingresos; los datos que mueven dinero (monto, fecha, cuenta) siguen sin corregirse en lote, por diseño.
 
 ### Épica 2 · Información fiscal estructurada
 

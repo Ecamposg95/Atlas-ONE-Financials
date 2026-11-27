@@ -6,7 +6,14 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.domains.expenses import service
 from app.domains.expenses.listing import expense_export_rows, filter_expenses
-from app.domains.expenses.schemas import ExpenseCancel, ExpenseCreate, ExpensePay, ExpenseRead, ExpenseUpdate
+from app.domains.expenses.schemas import (
+    ExpenseBulkUpdate,
+    ExpenseCancel,
+    ExpenseCreate,
+    ExpensePay,
+    ExpenseRead,
+    ExpenseUpdate,
+)
 from app.models.contact import Vendor
 from app.models.expense import Expense
 from app.models.organization import WRITE_ROLES
@@ -184,6 +191,26 @@ def cancel_expense(
     expense = _get_expense(db, org_id, expense_id)
     expense = service.cancel_expense(db, expense, user.id, payload.reason)
     return ExpenseRead.model_validate(expense)
+
+
+@router.post("/bulk-update")
+def bulk_update_expenses(
+    payload: ExpenseBulkUpdate,
+    db: Session = Depends(get_db),
+    org_id: str = Depends(get_current_org_id),
+    user: User = Depends(get_current_user),
+    _membership=Depends(require_role(WRITE_ROLES)),
+):
+    """R2·HU-04. `dry_run=true` (por omisión) sólo muestra qué pasaría."""
+    return service.bulk_update_expenses(
+        db,
+        org_id,
+        payload.ids,
+        payload.changes.model_dump(exclude_unset=True),
+        user.id,
+        payload.reason,
+        payload.dry_run,
+    )
 
 
 @router.patch("/{expense_id}", response_model=ExpenseRead)
