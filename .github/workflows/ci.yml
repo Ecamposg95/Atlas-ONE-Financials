@@ -37,7 +37,7 @@ jobs:
     env:
       TEST_DATABASE_URL: postgresql://financials:financials@localhost:5432/financials_test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -52,7 +52,7 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Construir
         run: docker build -t financials:ci .
       - name: PostgreSQL 18
@@ -150,7 +150,7 @@ jobs:
     env:
       RUTA: /srv/apps/financials
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Configurar el acceso SSH
         env:
