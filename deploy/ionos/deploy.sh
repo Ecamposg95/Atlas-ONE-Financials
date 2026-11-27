@@ -55,10 +55,11 @@ levantar "$SHA"
 echo "-- esperando salud (hasta ${ESPERA_SALUD}s)"
 if esperar_salud; then
   echo "$SHA" > "$EST/.tag_actual"
-  # Limpieza: quedan la imagen en uso, la anterior y las más recientes hasta $CONSERVAR.
-  docker images financials --format '{{.Tag}}' | grep -E '^[0-9a-f]{40}$' | grep -vx -e "$SHA" -e "${ANTERIOR:-x}" \
-    | tail -n +$((CONSERVAR - 1)) | while read -r viejo; do docker rmi "financials:$viejo" >/dev/null 2>&1 || true; done
-  ls -1t "$EST"/deploy-*.log 2>/dev/null | tail -n +21 | xargs -r rm -f
+  # Limpieza: quedan la imagen en uso, la anterior y las más recientes hasta $CONSERVAR. Nada de esto debe tumbar
+  # un deploy que ya quedó sano (con pipefail, un grep sin resultados es un error): por eso el `|| true`.
+  { docker images financials --format '{{.Tag}}' | grep -E '^[0-9a-f]{40}$' | grep -vx -e "$SHA" -e "${ANTERIOR:-x}" \
+      | tail -n +$((CONSERVAR - 1)) | while read -r viejo; do docker rmi "financials:$viejo" >/dev/null 2>&1 || true; done; } || true
+  { ls -1t "$EST"/deploy-*.log 2>/dev/null | tail -n +21 | xargs -r rm -f; } || true
   echo "== DEPLOY OK $(date -u +%FT%TZ) =="
   exit 0
 fi
