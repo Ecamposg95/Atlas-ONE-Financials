@@ -2,6 +2,8 @@
 
 _2026-11-02. Comparación de las 22 historias de `BACKLOG.md` contra Atlas ONE Finance en producción (commit `7bb6ea1`), verificada en el código, no de memoria. Empresa ya creada en prod: "Laboratorios La Fe" (`lafe@atlas.mx`)._
 
+> **Foto histórica.** El estado vigente de cada historia de la ronda 1 está en la sección 7 de [`BACKLOG_RONDA2.md`](BACKLOG_RONDA2.md) (27-nov-2026): casi todas están hechas o reemplazadas; el resumen de abajo ya no aplica.
+
 **Leyenda.** Disponible: cumple los criterios tal cual. Parcial: la base existe y faltan criterios concretos. Faltante: no existe. Por probar: existe en código pero hay que validarlo con datos de LaFe.
 
 ## Resumen
