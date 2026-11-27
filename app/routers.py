@@ -36,6 +36,7 @@ from app.domains.opening.router import router as opening_router
 from app.domains.analytics.router import router as analytics_router
 from app.domains.bank_reconciliation.router import router as bank_reconciliation_router
 from app.domains.fiscal_mx.router import router as fiscal_mx_router
+from app.domains.search.router import router as search_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router)
@@ -46,6 +47,7 @@ api_router.include_router(customers_router)
 api_router.include_router(vendors_router)
 api_router.include_router(income_router)
 api_router.include_router(expenses_router)
+api_router.include_router(search_router)
 api_router.include_router(transactions_router)
 api_router.include_router(receivables_router)
 api_router.include_router(payables_router)

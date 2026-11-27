@@ -1,6 +1,6 @@
 /** Página compartida de Ingresos / Gastos: misma mecánica, conceptos explícitos. */
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { Paperclip } from 'lucide-react'
@@ -408,6 +408,25 @@ export function OperationsPage({ config }: { config: Config }) {
   }
 
   const items = data?.items ?? []
+  // `?open=<id>` llega del buscador general (Ctrl K): abre el detalle de esa
+  // operación, esté o no en la página cargada.
+  const openId = searchParams.get('open')
+  useEffect(() => {
+    if (!openId || !data) return
+    const params = new URLSearchParams(searchParams)
+    params.delete('open')
+    const found = items.find((item) => item.id === openId)
+    if (found) {
+      setDetailFor(found)
+      setSearchParams(params, { replace: true })
+      return
+    }
+    api
+      .get<Operation>(`${config.endpoint}/${openId}`)
+      .then((response) => setDetailFor(response.data))
+      .catch(() => toast('Esa operación ya no existe.', 'neg'))
+      .finally(() => setSearchParams(params, { replace: true }))
+  }, [openId, data])
   const selection = useRowSelection(items)
   const selectedPending = selection.selectedItems.filter((item) => item.status === 'PENDING')
 
@@ -441,15 +460,15 @@ export function OperationsPage({ config }: { config: Config }) {
   async function selectAllMatching() {
     setSelectingAll(true)
     try {
-      const ids: string[] = []
+      const rows: Operation[] = []
       for (let start = 0; start < Math.min(total, BULK_MAX); start += 200) {
         const page = (
           await api.get<Page<Operation>>(config.endpoint, { params: { ...listParams, limit: 200, offset: start } })
         ).data
-        ids.push(...page.items.map((item) => item.id))
+        rows.push(...page.items)
         if (page.items.length < 200) break
       }
-      selection.selectIds(ids.slice(0, BULK_MAX))
+      selection.selectItems(rows.slice(0, BULK_MAX))
     } catch (err) {
       toast(errorMessage(err), 'neg')
     } finally {
@@ -540,15 +559,25 @@ export function OperationsPage({ config }: { config: Config }) {
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
+          {/* R2·HU-21: la búsqueda siempre a la vista, no dentro de "Filtros". */}
+          <input
+            type="search"
+            aria-label={`Buscar ${config.kind === 'income' ? 'ingresos' : 'gastos'}`}
+            placeholder={
+              config.kind === 'income'
+                ? 'Buscar por concepto, cliente o referencia…'
+                : 'Buscar por concepto, referencia o proveedor…'
+            }
+            value={filters.q}
+            onChange={(event) => setFilters({ q: event.target.value })}
+            className="w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-sm sm:w-72"
+          />
           <FilterToggle
             count={activeFilterCount}
             open={filtersOpen}
             onToggle={() => setFiltersOpen(!filtersOpen)}
           />
           {/* Chips: lo aplicado se ve y se quita sin abrir el panel. */}
-          {filters.q ? (
-            <FilterChip label={`"${filters.q}"`} onRemove={() => setFilters({ q: '' })} />
-          ) : null}
           {filters.start || filters.end ? (
             <FilterChip
               label={`${filters.start || '…'} → ${filters.end || '…'}`}
@@ -593,13 +622,6 @@ export function OperationsPage({ config }: { config: Config }) {
 
         {filtersOpen ? (
           <div className="mt-2 flex flex-wrap items-end gap-2 rounded-xl border border-border bg-surface px-3 py-2.5">
-            <input
-              type="search"
-              placeholder="Buscar por concepto…"
-              value={filters.q}
-              onChange={(event) => setFilters({ q: event.target.value })}
-              className="w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-sm sm:w-56"
-            />
             <div className="flex items-center gap-1.5 text-xs text-muted">
               <span>Del</span>
               <input
@@ -699,7 +721,11 @@ export function OperationsPage({ config }: { config: Config }) {
       ) : (
         <>
         <BatchNotice outcome={batchOutcome} noun={batchNoun} onClose={() => setBatchOutcome(null)} />
-        <BatchBar count={selection.selected.size} onClear={selection.clear}>
+        <BatchBar
+          count={selection.selected.size}
+          onClear={selection.clear}
+          total={selection.sumSelected((item) => item.amount)}
+        >
           {canWrite && selectedPending.length > 0 ? (
             <Button
               variant="secondary"

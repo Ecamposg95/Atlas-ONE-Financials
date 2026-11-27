@@ -217,12 +217,17 @@ Como responsable administrativo, quiero que un activo comprado a crédito (por e
 **R2·HU-20 · Totales de lo filtrado y de lo seleccionado** — P1 · origen: comentario sobre "Por pagar".
 
 - Criterio: al filtrar y al seleccionar filas, ver la suma de lo visible y de lo seleccionado, en Por pagar y en las demás listas de operaciones.
-- Hoy las tarjetas de arriba muestran el total por pagar y el vencido. La barra de selección no suma.
+- **Hecho (27-nov):**
+  - Por pagar y Por cobrar: las tarjetas de saldo y vencido suman todo lo filtrado (antes, sólo la página visible).
+  - Gastos e Ingresos: el pie de la tabla suma todo lo filtrado sin contar cancelados.
+  - La barra de selección muestra la suma de lo seleccionado, aunque esté en varias páginas.
 
 **R2·HU-21 · Buscar en ingresos y en general** — P1 · origen: comentario sobre "Por pagar".
 
 - Criterio: buscar por concepto en Ingresos igual que en Gastos, y un buscador general que encuentre ingresos y gastos.
-- Las listas de operaciones ya tienen búsqueda de texto en los filtros. Hay que revisar por qué no está a la vista en Ingresos. El buscador global ("Buscar o crear", Ctrl K) hoy navega y crea, pero no busca operaciones.
+- **Hecho (27-nov):**
+  - La búsqueda de Gastos e Ingresos estaba escondida dentro del panel "Filtros"; ahora está siempre a la vista.
+  - El buscador general (Ctrl K) encuentra ingresos, gastos, cuentas por pagar y cobrar, clientes y proveedores, por concepto, referencia, notas, nombre, RFC o monto. Abre directo el detalle (`GET /search`).
 
 ---
 

@@ -75,7 +75,8 @@ export function ContactsPage({ config }: { config: Config }) {
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const [modalOpen, setModalOpen] = useState(searchParams.has('nuevo'))
-  const [search, setSearch] = useState('')
+  // `?q=` llega del buscador general (Ctrl K).
+  const [search, setSearch] = useState(searchParams.get('q') ?? '')
   const [offset, setOffset] = useState(0)
   const [form, setForm] = useState<ContactForm>(EMPTY_FORM)
   const [editing, setEditing] = useState<Contact | null>(null)

@@ -17,7 +17,8 @@ export function TableFooter<T>({
   const totalAmount =
     page.total_amount !== undefined ? (
       <span className="ml-2">
-        · suma <span className="figures font-medium text-ink">{formatMoney(page.total_amount)}</span>
+        · suma{page.sum_excludes_cancelled ? ' sin cancelados' : ''}{' '}
+        <span className="figures font-medium text-ink">{formatMoney(page.total_amount)}</span>
       </span>
     ) : null
   const from = total === 0 ? 0 : offset + 1

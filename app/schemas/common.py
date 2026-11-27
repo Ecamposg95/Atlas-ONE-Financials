@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Generic, Literal, TypeVar
 
 from pydantic import BaseModel
-from sqlalchemy import func
+from sqlalchemy import case, func
 
 T = TypeVar("T")
 
@@ -17,11 +17,13 @@ class Page(BaseModel, Generic[T]):
     offset: int
 
 
-def paginate(query, limit: int, offset: int, schema, sum_column=None) -> dict:
+def paginate(query, limit: int, offset: int, schema, sum_column=None, sum_where=None, sums: dict | None = None) -> dict:
     """Aplica limit/offset a un query ya filtrado por organización y serializa.
 
     `sum_column` agrega el total monetario de TODO el filtro (no sólo de la
-    página): mostrar la suma de una página sería engañoso.
+    página): mostrar la suma de una página sería engañoso. `sum_where` deja
+    fuera lo que no debe sumar (lo cancelado) y `sums` agrega otros totales
+    con nombre (saldo, vencido), con la misma condición.
     """
     total = query.count()
     rows = query.limit(limit).offset(offset).all()
@@ -31,10 +33,20 @@ def paginate(query, limit: int, offset: int, schema, sum_column=None) -> dict:
         "limit": limit,
         "offset": offset,
     }
+    columns = {}
     if sum_column is not None:
-        page["total_amount"] = query.with_entities(
-            func.coalesce(func.sum(sum_column), 0)
-        ).order_by(None).scalar()
+        columns["total_amount"] = sum_column
+    columns.update(sums or {})
+    if columns:
+        def summed(expression):
+            if sum_where is not None:
+                expression = case((sum_where, expression), else_=0)
+            return func.coalesce(func.sum(expression), 0)
+
+        values = query.with_entities(*[summed(expression) for expression in columns.values()]).order_by(None).one()
+        page.update(dict(zip(columns.keys(), values, strict=True)))
+        if sum_where is not None:
+            page["sum_excludes_cancelled"] = True
     return page
 
 

@@ -52,7 +52,9 @@ def list_income(
     org_id: str = Depends(get_current_org_id),
 ):
     query = _sorted(filter_incomes(db, org_id, filters), sort)
-    return paginate(query, limit, offset, IncomeRead, sum_column=Income.amount)
+    # R2·HU-20: la suma de lo filtrado no cuenta lo cancelado, salvo que se pidan sólo cancelados.
+    sum_where = None if filters.status == "CANCELLED" else Income.status != "CANCELLED"
+    return paginate(query, limit, offset, IncomeRead, sum_column=Income.amount, sum_where=sum_where)
 
 
 @router.get("/export")

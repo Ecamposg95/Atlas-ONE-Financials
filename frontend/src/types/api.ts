@@ -5,6 +5,11 @@ export interface Page<T> {
   offset: number
   /** Suma de TODO el filtro (no sólo de la página). Sólo en listas de dinero. */
   total_amount?: string | number
+  /** La suma deja fuera lo cancelado (salvo que se filtren sólo cancelados). */
+  sum_excludes_cancelled?: boolean
+  /** Cuentas por pagar y cobrar: saldo y vencido de TODO el filtro. */
+  total_balance?: string | number
+  total_overdue?: string | number
 }
 
 export interface User {

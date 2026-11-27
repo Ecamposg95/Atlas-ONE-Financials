@@ -79,7 +79,9 @@ def list_expenses(
     org_id: str = Depends(get_current_org_id),
 ):
     query = _sorted(filter_expenses(db, org_id, filters, non_deductible=non_deductible), sort)
-    return paginate(query, limit, offset, ExpenseRead, sum_column=Expense.amount)
+    # R2·HU-20: la suma de lo filtrado no cuenta lo cancelado, salvo que se pidan sólo cancelados.
+    sum_where = None if filters.status == "CANCELLED" else Expense.status != "CANCELLED"
+    return paginate(query, limit, offset, ExpenseRead, sum_column=Expense.amount, sum_where=sum_where)
 
 
 @router.get("/export")

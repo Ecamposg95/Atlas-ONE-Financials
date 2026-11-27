@@ -116,7 +116,8 @@ def test_income_list_pagination_envelope(client):
     # Las cuatro llaves canónicas Atlas siempre están; las listas de dinero
     # añaden total_amount (suma de TODO el filtro, no sólo de la página).
     assert {"items", "total", "limit", "offset"} <= set(body.keys())
-    assert set(body.keys()) - {"items", "total", "limit", "offset"} == {"total_amount"}
+    # y avisan que esa suma deja fuera lo cancelado (R2·HU-20).
+    assert set(body.keys()) - {"items", "total", "limit", "offset"} == {"total_amount", "sum_excludes_cancelled"}
 
 
 def test_income_total_amount_covers_whole_filter(client):
