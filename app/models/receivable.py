@@ -21,6 +21,8 @@ class Receivable(Base, UUIDPKMixin, TenantMixin, AuditMixin, BusinessUnitDimensi
     subtotal = Column(Numeric(14, 2), nullable=False, default=0)  # base gravable
     tax_rate = Column(Numeric(5, 4), nullable=False, default=0)  # 0.1600 = 16%
     tax_amount = Column(Numeric(14, 2), nullable=False, default=0)
+    # R2·HU-05: por qué lleva o no IVA (TAX_TREATMENTS en app/services/taxes.py).
+    tax_treatment = Column(String(20), nullable=False, default="UNCLASSIFIED", server_default="UNCLASSIFIED")
     amount_paid = Column(Numeric(14, 2), nullable=False, default=0)
     # IVA que ya pasó de 'pendiente de cobro' a 'cobrado'.
     tax_collected = Column(Numeric(14, 2), nullable=False, default=0)

@@ -7,6 +7,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
+from app.schemas.common import TaxTreatment
+
 
 class ExpenseCreate(BaseModel):
     date: date_type
@@ -23,6 +25,11 @@ class ExpenseCreate(BaseModel):
     # Retenciones al proveedor. Se capturan; Atlas Financials sugiere pero no impone.
     retention_isr: Decimal = Field(default=Decimal("0"), ge=0, allow_inf_nan=False)
     retention_iva: Decimal = Field(default=Decimal("0"), ge=0, allow_inf_nan=False)
+    # Con tasa (sobre la base), el importe se calcula: 0.10 = ISR de honorarios.
+    retention_isr_rate: Decimal | None = Field(default=None, ge=0, le=Decimal("0.35"), allow_inf_nan=False)
+    retention_iva_rate: Decimal | None = Field(default=None, ge=0, le=Decimal("0.16"), allow_inf_nan=False)
+    # R2·HU-05. Sin tratamiento: con IVA es gravado; sin IVA, sin clasificar.
+    tax_treatment: TaxTreatment | None = None
     financial_account_id: str | None = None
     payment_method: str | None = Field(default=None, max_length=30)
     reference: str | None = Field(default=None, max_length=100)
@@ -39,6 +46,11 @@ class ExpenseUpdate(BaseModel):
     description: str | None = Field(default=None, min_length=1, max_length=500)
     amount: Decimal | None = Field(default=None, gt=0, allow_inf_nan=False)
     tax_rate: Decimal | None = Field(default=None, ge=0, le=1, allow_inf_nan=False)
+    tax_treatment: TaxTreatment | None = None
+    retention_isr: Decimal | None = Field(default=None, ge=0, allow_inf_nan=False)
+    retention_iva: Decimal | None = Field(default=None, ge=0, allow_inf_nan=False)
+    retention_isr_rate: Decimal | None = Field(default=None, ge=0, le=Decimal("0.35"), allow_inf_nan=False)
+    retention_iva_rate: Decimal | None = Field(default=None, ge=0, le=Decimal("0.16"), allow_inf_nan=False)
     category_id: str | None = None
     project_id: str | None = None
     financial_account_id: str | None = None
@@ -70,8 +82,11 @@ class ExpenseRead(BaseModel):
     subtotal: Decimal
     tax_rate: Decimal
     tax_amount: Decimal
+    tax_treatment: str = "UNCLASSIFIED"
     retention_isr: Decimal
     retention_iva: Decimal
+    retention_isr_rate: Decimal | None = None
+    retention_iva_rate: Decimal | None = None
     category_id: str
     project_id: str | None = None
     business_unit_id: str | None = None

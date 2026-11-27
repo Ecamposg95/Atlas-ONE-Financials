@@ -272,7 +272,17 @@ export interface Contact {
 
 export type OperationStatus = 'PENDING' | 'PAID' | 'CANCELLED'
 
-export interface Income extends Dimensioned, CfdiOperationFields {
+/** R2·HU-05: por qué lleva o no IVA. */
+export type TaxTreatment = 'TAXED' | 'ZERO_RATED' | 'EXEMPT' | 'NOT_OBJECT' | 'UNCLASSIFIED'
+
+export interface TaxFields {
+  subtotal: string
+  tax_rate: string
+  tax_amount: string
+  tax_treatment: TaxTreatment
+}
+
+export interface Income extends Dimensioned, CfdiOperationFields, TaxFields {
   id: string
   date: string
   customer_id: string | null
@@ -286,7 +296,7 @@ export interface Income extends Dimensioned, CfdiOperationFields {
   created_at: string
 }
 
-export interface Expense extends Dimensioned {
+export interface Expense extends Dimensioned, TaxFields {
   id: string
   date: string
   vendor_id: string | null
@@ -298,6 +308,8 @@ export interface Expense extends Dimensioned {
   reference: string | null
   retention_isr: string
   retention_iva: string
+  retention_isr_rate: string | null
+  retention_iva_rate: string | null
   /** Aviso fiscal calculado en el backend (LISR 27-III). */
   deductibility_warning: string | null
   status: OperationStatus
@@ -376,7 +388,7 @@ export interface ApprovalSettings {
 
 export type DebtDisplayStatus = 'OPEN' | 'PARTIAL' | 'PAID' | 'CANCELLED' | 'OVERDUE'
 
-export interface Debt extends Dimensioned, CfdiOperationFields {
+export interface Debt extends Dimensioned, CfdiOperationFields, TaxFields {
   id: string
   customer_id?: string
   vendor_id?: string
@@ -694,6 +706,18 @@ export interface VatReport {
   in_favor: number
   vat_pending_collection: number
   vat_pending_payment: number
+  isr_withheld: number
+  vat_withheld: number
+  by_treatment: { expenses: VatTreatmentRow[]; income: VatTreatmentRow[] }
+  unclassified_count: number
+}
+
+export interface VatTreatmentRow {
+  treatment: TaxTreatment
+  rate: number
+  operations: number
+  base: number
+  tax: number
 }
 
 export interface CashProjection {
@@ -912,7 +936,7 @@ export interface HistoryFieldChange {
   field: string
   /** Nombre amigable en español ("Monto", "Categoría"). */
   label: string
-  kind: 'money' | 'date' | 'text' | 'status' | 'bool' | 'rate' | 'ref' | 'role'
+  kind: 'money' | 'date' | 'text' | 'status' | 'bool' | 'rate' | 'ref' | 'role' | 'treatment'
   old: string | number | boolean | null
   new: string | number | boolean | null
   /** Referencias (categoría, cuenta…) ya resueltas a su nombre por el backend. */

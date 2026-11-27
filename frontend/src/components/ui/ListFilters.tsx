@@ -9,6 +9,8 @@ import { FilterChip } from '@/components/ui/TableTools'
 import { downloadErrorMessage, downloadFile } from '@/lib/download'
 import { useAccounts, useMembers } from '@/lib/hooks'
 import { toast } from '@/stores/toastStore'
+import { TREATMENT_LABELS } from '@/lib/taxes'
+import type { TaxTreatment } from '@/types/api'
 
 /** Todas las formas de pago que conoce el backend: filtrar por "Tarjeta"
  *  debe encontrar lo que importó Toronja aunque el formulario no la ofrezca. */
@@ -32,6 +34,8 @@ export interface FineFilterValues {
   contact: string
   min_amount: string
   max_amount: string
+  /** R2·HU-05: sólo Gastos e Ingresos lo ofrecen. */
+  tax_treatment: string
 }
 
 export const EMPTY_FINE_FILTERS: FineFilterValues = {
@@ -42,6 +46,7 @@ export const EMPTY_FINE_FILTERS: FineFilterValues = {
   contact: '',
   min_amount: '',
   max_amount: '',
+  tax_treatment: '',
 }
 
 export function countFineFilters(value: FineFilterValues): number {
@@ -51,7 +56,8 @@ export function countFineFilters(value: FineFilterValues): number {
     Number(Boolean(value.payment_method)) +
     Number(Boolean(value.created_by)) +
     Number(Boolean(value.contact)) +
-    Number(Boolean(value.min_amount || value.max_amount))
+    Number(Boolean(value.min_amount || value.max_amount)) +
+    Number(Boolean(value.tax_treatment))
   )
 }
 
@@ -78,6 +84,7 @@ export function FineFilterSelects({
   contacts,
   contactPlaceholder = 'Todos los contactos',
   accounts: showAccounts = true,
+  treatments = false,
 }: {
   value: FineFilterValues
   onChange: (next: Partial<FineFilterValues>) => void
@@ -85,6 +92,7 @@ export function FineFilterSelects({
   contacts?: Option[]
   contactPlaceholder?: string
   accounts?: boolean
+  treatments?: boolean
 }) {
   const { data: accounts } = useAccounts()
   const { data: members } = useMembers()
@@ -116,6 +124,21 @@ export function FineFilterSelects({
           {(accounts ?? []).map((account) => (
             <option key={account.id} value={account.id}>
               {account.name}
+            </option>
+          ))}
+        </select>
+      ) : null}
+      {treatments ? (
+        <select
+          aria-label="Tratamiento de IVA"
+          value={value.tax_treatment}
+          onChange={(event) => onChange({ tax_treatment: event.target.value })}
+          className={selectClass}
+        >
+          <option value="">Cualquier IVA</option>
+          {(Object.keys(TREATMENT_LABELS) as TaxTreatment[]).map((treatment) => (
+            <option key={treatment} value={treatment}>
+              {TREATMENT_LABELS[treatment]}
             </option>
           ))}
         </select>
@@ -232,6 +255,12 @@ export function FineFilterChips({
       ) : null}
       {value.contact ? (
         <FilterChip label={nameOf(contacts, value.contact)} onRemove={() => onChange({ contact: '' })} />
+      ) : null}
+      {value.tax_treatment ? (
+        <FilterChip
+          label={`IVA: ${TREATMENT_LABELS[value.tax_treatment as TaxTreatment] ?? value.tax_treatment}`}
+          onRemove={() => onChange({ tax_treatment: '' })}
+        />
       ) : null}
       {value.created_by ? (
         <FilterChip

@@ -68,6 +68,8 @@ def filter_incomes(db: Session, org_id: str, filters: OperationFilters):
         query = query.filter(Income.fiscal_entity_id == filters.fiscal_entity_id)
     if filters.financial_account_id:
         query = query.filter(Income.financial_account_id == filters.financial_account_id)
+    if filters.tax_treatment:
+        query = query.filter(Income.tax_treatment == filters.tax_treatment)
     if filters.payment_method:
         query = query.filter(
             exists().where(

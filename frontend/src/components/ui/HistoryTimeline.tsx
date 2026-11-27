@@ -9,7 +9,8 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { formatMoney } from '@/lib/format'
 import { roleLabel } from '@/lib/permissions'
-import type { HistoryAction, HistoryEvent, HistoryFieldChange, Page } from '@/types/api'
+import { TREATMENT_LABELS } from '@/lib/taxes'
+import type { HistoryAction, HistoryEvent, HistoryFieldChange, Page, TaxTreatment } from '@/types/api'
 
 export const ACTION_LABELS: Record<HistoryAction, string> = {
   CREATE: 'Registró',
@@ -108,6 +109,8 @@ function formatValue(change: HistoryFieldChange, side: 'old' | 'new'): string {
       return 'Registro no disponible'
     case 'role':
       return roleLabel(String(value))
+    case 'treatment':
+      return TREATMENT_LABELS[String(value) as TaxTreatment] ?? String(value)
     default:
       if (change.field === 'payment_method') return PAYMENT_LABELS[String(value)] ?? String(value)
       return String(value)

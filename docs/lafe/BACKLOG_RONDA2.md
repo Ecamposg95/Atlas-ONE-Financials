@@ -88,12 +88,16 @@ Como responsable contable, quiero cerrar periodos y controlar sus modificaciones
 
 - Criterios: subtotal, trasladados, retenciones y total; retenciones con tipo, tasa o importe; tratamientos exento y no objeto; "sin clasificar" como pendiente de revisión; desglose en detalle y salidas contables; casos aprobados por contabilidad.
 - Existe: en gastos, tasa 16/8/0 % y retenciones ISR e IVA como importes; las pólizas las registran bien (`rules.py`).
+- Hecho (27-nov):
+  - Tratamiento de IVA en gastos, ingresos y cuentas por pagar y por cobrar: gravado, tasa 0, exento, no objeto o sin clasificar. Lo que estaba en 0 % quedó **sin clasificar** (la migración no decide que algo es exento).
+  - Lo pagado se clasifica desde el detalle sin cancelarlo, porque no cambia el IVA; un gasto pide motivo y el mes debe estar abierto.
+  - Retenciones de gasto por tasa sobre la base (ISR 10 % y 1.25 %; IVA 2/3, 4 % y 6 %) o por importe; si vienen ambos y no coinciden, se rechaza.
+  - Desglose en el detalle (base, IVA, tratamiento y retenciones) y en el historial.
+  - Reporte de IVA: retenciones del periodo, base por tratamiento y aviso con liga a lo sin clasificar; filtro "IVA" en Gastos e Ingresos.
 - Falta:
-  - Tratamiento fiscal: hoy todo cae en "Sin IVA / exento".
-  - Tipo y tasa de la retención.
-  - Retenciones en ingresos y en cuentas por pagar: las columnas existen pero nunca se llenan.
-  - Desglose en el detalle de la operación.
-  - Retenciones en la exportación y en el reporte de IVA.
+  - Retenciones en ingresos (lo que el cliente nos retiene) y en cuentas por pagar: requieren cuentas y pólizas que valida Jessica.
+  - Retenciones y tratamiento en la exportación a Excel.
+  - Que Jessica clasifique los gastos e ingresos sin clasificar.
 - Importaciones de Toronja: fijan IVA 0. Muchos servicios médicos podrían ser exentos; lo confirma Jessica, no el sistema.
 - Decisión: la historia pide capturar el subtotal; el sistema pide el total y calcula el desglose.
 - Por validar: no deducibles y efectivo. No inferir impuestos por el medio de pago (hoy no se infiere).

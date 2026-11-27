@@ -69,6 +69,7 @@ class OperationFilters:
     contact: str | None = None
     min_amount: Decimal | None = None
     max_amount: Decimal | None = None
+    tax_treatment: str | None = None
 
 
 def operation_filters(
@@ -86,6 +87,9 @@ def operation_filters(
     contact: str | None = Query(default=None, max_length=36, description="Proveedor o cliente (id)."),
     min_amount: Decimal | None = Query(default=None, ge=0, allow_inf_nan=False),
     max_amount: Decimal | None = Query(default=None, ge=0, allow_inf_nan=False),
+    tax_treatment: str | None = Query(
+        default=None, pattern="^(TAXED|ZERO_RATED|EXEMPT|NOT_OBJECT|UNCLASSIFIED)$", description="R2·HU-05."
+    ),
 ) -> OperationFilters:
     """Dependencia de FastAPI: los mismos parámetros para lista y descarga."""
     return OperationFilters(
@@ -103,6 +107,7 @@ def operation_filters(
         contact=contact,
         min_amount=min_amount,
         max_amount=max_amount,
+        tax_treatment=tax_treatment,
     )
 
 

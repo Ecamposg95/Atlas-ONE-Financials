@@ -17,8 +17,10 @@ import { Money } from '@/components/ui/Money'
 import { Segmented } from '@/components/ui/Segmented'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { CfdiFields, EMPTY_CFDI, cfdiChanges, cfdiFrom } from '@/features/fiscal/CfdiOperationFields'
-import { formatDate } from '@/lib/format'
-import type { CfdiOperationFields, Contact } from '@/types/api'
+import { formatDate, formatMoney } from '@/lib/format'
+import { TaxSelect } from '@/components/ui/TaxSelect'
+import { TREATMENT_LABELS, defaultTreatment } from '@/lib/taxes'
+import type { CfdiOperationFields, Contact, TaxTreatment } from '@/types/api'
 
 interface Operation extends CfdiOperationFields {
   id: string
@@ -30,9 +32,24 @@ interface Operation extends CfdiOperationFields {
   status: string
   notes: string | null
   customer_id?: string | null
+  subtotal?: string
+  tax_rate?: string
+  tax_amount?: string
+  tax_treatment?: TaxTreatment
+  retention_isr?: string
+  retention_iva?: string
 }
 
+const UNTAXED_OPTIONS = (['UNCLASSIFIED', 'ZERO_RATED', 'EXEMPT', 'NOT_OBJECT'] as TaxTreatment[]).map((value) => ({
+  value,
+  label: TREATMENT_LABELS[value],
+}))
+
 type Tab = 'detail' | 'history'
+
+function formatRate(rate: string | undefined): string {
+  return `${(Number(rate ?? 0) * 100).toLocaleString('es-MX', { maximumFractionDigits: 2 })}%`
+}
 
 export function OperationDetailModal({
   operation,
@@ -75,6 +92,8 @@ export function OperationDetailModal({
     category_id: '',
     financial_account_id: '',
     notes: '',
+    tax_rate: '0',
+    tax_treatment: 'UNCLASSIFIED' as TaxTreatment,
   })
   const [reason, setReason] = useState('')
   const [cfdi, setCfdi] = useState(EMPTY_CFDI)
@@ -95,6 +114,8 @@ export function OperationDetailModal({
       category_id: operation.category_id,
       financial_account_id: operation.financial_account_id ?? '',
       notes: operation.notes ?? '',
+      tax_rate: operation.tax_rate ?? '0',
+      tax_treatment: operation.tax_treatment ?? defaultTreatment(operation.tax_rate ?? '0'),
     })
     setCfdi(cfdiFrom(operation))
   }, [operation])
@@ -104,8 +125,10 @@ export function OperationDetailModal({
       if (!operation) return
       // Sólo lo que cambió: el historial registra exactamente lo que se tocó.
       const payload: Record<string, unknown> = customers ? cfdiChanges(cfdi, operation) : {}
+      const treatmentChanged = operation.tax_treatment !== undefined && form.tax_treatment !== operation.tax_treatment
       if (operation.status === 'PAID' && paidCorrections) {
         if (form.category_id !== operation.category_id) payload.category_id = form.category_id
+        if (treatmentChanged) payload.tax_treatment = form.tax_treatment
         if (form.notes !== (operation.notes ?? '')) payload.notes = form.notes || null
         if (Object.keys(payload).length === 0) return
         await api.patch(`${endpoint}/${operation.id}`, { ...payload, reason: reason.trim() })
@@ -113,13 +136,17 @@ export function OperationDetailModal({
         return
       }
       if (operation.status !== 'PENDING') {
-        // Cobrado o cancelado: sólo los datos para la factura, que no tocan el libro.
+        // Cobrado o cancelado: sólo los datos para la factura y el tratamiento
+        // de IVA sin tasa, que no tocan el libro.
+        if (treatmentChanged) payload.tax_treatment = form.tax_treatment
         if (Object.keys(payload).length > 0) await api.patch(`${endpoint}/${operation.id}`, payload)
         return
       }
       if (form.date !== operation.date) payload.date = form.date
       if (form.description.trim() !== operation.description) payload.description = form.description.trim()
       if (Number(form.amount) !== Number(operation.amount)) payload.amount = form.amount
+      if (Number(form.tax_rate) !== Number(operation.tax_rate ?? 0)) payload.tax_rate = form.tax_rate
+      if (treatmentChanged) payload.tax_treatment = form.tax_treatment
       if (form.category_id !== operation.category_id) payload.category_id = form.category_id
       if (form.financial_account_id !== (operation.financial_account_id ?? ''))
         payload.financial_account_id = form.financial_account_id || null
@@ -189,6 +216,15 @@ export function OperationDetailModal({
               onChange={(event) => setForm({ ...form, date: event.target.value })}
             />
           </div>
+          {operation.tax_rate !== undefined ? (
+            <TaxSelect
+              total={form.amount}
+              rate={form.tax_rate}
+              treatment={form.tax_treatment}
+              onRateChange={(rate) => setForm({ ...form, tax_rate: rate })}
+              onTaxChange={(rate, treatment) => setForm({ ...form, tax_rate: rate, tax_treatment: treatment })}
+            />
+          ) : null}
           <SelectInput
             label="Categoría"
             required
@@ -238,6 +274,32 @@ export function OperationDetailModal({
             <dd>
               <Money value={operation.amount} tone="ink" />
             </dd>
+            {operation.tax_rate !== undefined ? (
+              <>
+                <dt className="text-muted">Desglose</dt>
+                <dd className="figures">
+                  Base {formatMoney(operation.subtotal ?? operation.amount)}
+                  {Number(operation.tax_amount ?? 0) > 0
+                    ? ` · IVA ${formatRate(operation.tax_rate)} ${formatMoney(operation.tax_amount ?? 0)}`
+                    : ''}
+                </dd>
+                <dt className="text-muted">IVA</dt>
+                <dd>
+                  {operation.tax_treatment ? TREATMENT_LABELS[operation.tax_treatment] : '—'}
+                  {operation.tax_treatment === 'UNCLASSIFIED' ? (
+                    <span className="ml-1 text-xs text-warn">pendiente de revisar</span>
+                  ) : null}
+                </dd>
+              </>
+            ) : null}
+            {Number(operation.retention_isr ?? 0) + Number(operation.retention_iva ?? 0) > 0 ? (
+              <>
+                <dt className="text-muted">Retenciones</dt>
+                <dd className="figures">
+                  ISR {formatMoney(operation.retention_isr ?? 0)} · IVA {formatMoney(operation.retention_iva ?? 0)}
+                </dd>
+              </>
+            ) : null}
             <dt className="text-muted">Fecha</dt>
             <dd>{formatDate(operation.date)}</dd>
             <dt className="text-muted">Categoría</dt>
@@ -282,6 +344,15 @@ export function OperationDetailModal({
                 value={form.category_id}
                 onChange={(event) => setForm({ ...form, category_id: event.target.value })}
               />
+              {Number(operation.tax_rate ?? 0) === 0 && operation.tax_treatment ? (
+                <SelectInput
+                  label="Tratamiento de IVA"
+                  hint="Sin IVA puede ser tasa 0, exento o no objeto; lo confirma contabilidad."
+                  options={UNTAXED_OPTIONS}
+                  value={form.tax_treatment}
+                  onChange={(event) => setForm({ ...form, tax_treatment: event.target.value as TaxTreatment })}
+                />
+              ) : null}
               <TextInput
                 label="Notas (opcional)"
                 value={form.notes}
@@ -317,6 +388,15 @@ export function OperationDetailModal({
                 <p className="text-xs text-muted">Se pueden corregir siempre: no cambian tus números.</p>
               </div>
               <CfdiFields collapsible={false} value={cfdi} onChange={setCfdi} customer={customer} />
+              {Number(operation.tax_rate ?? 0) === 0 && operation.tax_treatment ? (
+                <SelectInput
+                  label="Tratamiento de IVA"
+                  hint="Sin IVA puede ser tasa 0, exento o no objeto; lo confirma contabilidad."
+                  options={UNTAXED_OPTIONS}
+                  value={form.tax_treatment}
+                  onChange={(event) => setForm({ ...form, tax_treatment: event.target.value as TaxTreatment })}
+                />
+              ) : null}
               {error ? <p className="text-sm text-neg">{error}</p> : null}
               <div className="flex justify-end">
                 <Button type="submit" disabled={saveMutation.isPending}>

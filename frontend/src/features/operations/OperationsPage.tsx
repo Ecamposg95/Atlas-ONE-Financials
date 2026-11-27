@@ -16,6 +16,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { Table } from '@/components/ui/Table'
 import { TaxSelect } from '@/components/ui/TaxSelect'
+import { ISR_RETENTION_RATES, IVA_RETENTION_RATES, defaultTreatment, splitTotal } from '@/lib/taxes'
 import { JournalEntryModal } from '@/components/ui/JournalEntryModal'
 import { OperationDetailModal } from '@/features/operations/OperationDetailModal'
 import { TableFooter } from '@/components/ui/Pagination'
@@ -59,7 +60,7 @@ import {
   cfdiCreatePayload,
   withCustomerDefault,
 } from '@/features/fiscal/CfdiOperationFields'
-import type { Expense, Income, Page } from '@/types/api'
+import type { Expense, Income, Page, TaxTreatment } from '@/types/api'
 
 type Operation = Income & Expense
 
@@ -152,6 +153,9 @@ export function OperationsPage({ config }: { config: Config }) {
     project_id: '',
     retention_isr: '',
     retention_iva: '',
+    retention_isr_rate: '',
+    retention_iva_rate: '',
+    tax_treatment: defaultTreatment(defaultTaxRate) as TaxTreatment,
     contact_id: '',
     financial_account_id: '',
     payment_method: '',
@@ -174,6 +178,8 @@ export function OperationsPage({ config }: { config: Config }) {
     ...EMPTY_FINE_FILTERS,
     // `?business_unit_id=` llega desde Inicio (Sucursales): la lista de esa unidad.
     business_unit_id: searchParams.get('business_unit_id') ?? '',
+    // `?iva=UNCLASSIFIED` llega desde el reporte de IVA: lo que falta clasificar.
+    tax_treatment: searchParams.get('iva') ?? '',
   })
   const emptyFilters = {
     q: '',
@@ -218,7 +224,13 @@ export function OperationsPage({ config }: { config: Config }) {
   const [batchProjectOpen, setBatchProjectOpen] = useState(false)
   const [batchAccountId, setBatchAccountId] = useState('')
   const [batchProjectId, setBatchProjectId] = useState('')
-  const retentionTotal = Number(form.retention_isr || 0) + Number(form.retention_iva || 0)
+  // Con tasa, la retención es sobre la base sin IVA (como la calcula el servidor).
+  const retentionBase = splitTotal(form.amount, form.tax_rate).subtotal
+  const retentionOf = (rate: string, amount: string) =>
+    rate ? Math.round(retentionBase * Number(rate) * 100) / 100 : Number(amount || 0)
+  const retentionIsr = retentionOf(form.retention_isr_rate, form.retention_isr)
+  const retentionIva = retentionOf(form.retention_iva_rate, form.retention_iva)
+  const retentionTotal = retentionIsr + retentionIva
 
   const { data: accounts } = useAccounts()
   const { hasUnits } = useDimensions()
@@ -283,13 +295,17 @@ export function OperationsPage({ config }: { config: Config }) {
         description: form.description,
         amount: form.amount,
         tax_rate: form.tax_rate,
+        tax_treatment: form.tax_treatment,
         category_id: form.category_id,
         status: form.paid ? 'PAID' : 'PENDING',
       }
       if (form.contact_id) payload[config.contactField] = form.contact_id
       if (form.project_id) payload.project_id = form.project_id
-      if (form.retention_isr) payload.retention_isr = form.retention_isr
-      if (form.retention_iva) payload.retention_iva = form.retention_iva
+      // Con tasa, el servidor calcula el importe sobre la base.
+      if (form.retention_isr_rate) payload.retention_isr_rate = form.retention_isr_rate
+      else if (form.retention_isr) payload.retention_isr = form.retention_isr
+      if (form.retention_iva_rate) payload.retention_iva_rate = form.retention_iva_rate
+      else if (form.retention_iva) payload.retention_iva = form.retention_iva
       if (form.financial_account_id) payload.financial_account_id = form.financial_account_id
       if (form.payment_method) payload.payment_method = form.payment_method
       if (form.business_unit_id) payload.business_unit_id = form.business_unit_id
@@ -371,6 +387,9 @@ export function OperationsPage({ config }: { config: Config }) {
       project_id: '',
       retention_isr: '',
       retention_iva: '',
+      retention_isr_rate: '',
+      retention_iva_rate: '',
+      tax_treatment: defaultTreatment(defaultTaxRate),
       contact_id: '',
       financial_account_id: '',
       payment_method: '',
@@ -615,6 +634,7 @@ export function OperationsPage({ config }: { config: Config }) {
                   contactPlaceholder={
                     config.kind === 'income' ? 'Todos los clientes' : 'Todos los proveedores'
                   }
+                  treatments
                 />
               </div>
             ) : null}
@@ -1021,7 +1041,9 @@ export function OperationsPage({ config }: { config: Config }) {
           <TaxSelect
             total={form.amount}
             rate={form.tax_rate}
+            treatment={form.tax_treatment}
             onRateChange={(rate) => setForm({ ...form, tax_rate: rate })}
+            onTaxChange={(rate, treatment) => setForm({ ...form, tax_rate: rate, tax_treatment: treatment })}
           />
           <TextInput
             label="Concepto"
@@ -1066,22 +1088,52 @@ export function OperationsPage({ config }: { config: Config }) {
                 se le paga al proveedor: se lo entregas al SAT.
               </p>
               <div className="mt-2 grid gap-3 sm:grid-cols-2">
-                <TextInput
-                  label="ISR retenido"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={form.retention_isr}
-                  onChange={(event) => setForm({ ...form, retention_isr: event.target.value })}
-                />
-                <TextInput
-                  label="IVA retenido"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={form.retention_iva}
-                  onChange={(event) => setForm({ ...form, retention_iva: event.target.value })}
-                />
+                <div className="space-y-2">
+                  <SelectInput
+                    label="ISR retenido"
+                    placeholder="Capturar importe"
+                    options={ISR_RETENTION_RATES}
+                    value={form.retention_isr_rate}
+                    onChange={(event) => setForm({ ...form, retention_isr_rate: event.target.value })}
+                  />
+                  {form.retention_isr_rate ? (
+                    <p className="text-xs text-muted">
+                      <span className="figures text-ink">{formatMoney(retentionIsr)}</span> sobre la base
+                    </p>
+                  ) : (
+                    <TextInput
+                      label="Importe de ISR"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={form.retention_isr}
+                      onChange={(event) => setForm({ ...form, retention_isr: event.target.value })}
+                    />
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <SelectInput
+                    label="IVA retenido"
+                    placeholder="Capturar importe"
+                    options={IVA_RETENTION_RATES}
+                    value={form.retention_iva_rate}
+                    onChange={(event) => setForm({ ...form, retention_iva_rate: event.target.value })}
+                  />
+                  {form.retention_iva_rate ? (
+                    <p className="text-xs text-muted">
+                      <span className="figures text-ink">{formatMoney(retentionIva)}</span> sobre la base
+                    </p>
+                  ) : (
+                    <TextInput
+                      label="Importe de IVA"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={form.retention_iva}
+                      onChange={(event) => setForm({ ...form, retention_iva: event.target.value })}
+                    />
+                  )}
+                </div>
               </div>
               {retentionTotal > 0 ? (
                 <p className="mt-2 text-xs">
