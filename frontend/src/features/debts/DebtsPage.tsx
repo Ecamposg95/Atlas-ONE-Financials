@@ -382,11 +382,10 @@ export function DebtsPage({ config }: { config: Config }) {
       ]),
     )
   }
-  const openItems = items.filter((debt) => ['OPEN', 'PARTIAL', 'OVERDUE'].includes(debt.display_status))
-  const totalOutstanding = openItems.reduce((sum, debt) => sum + Number(debt.balance), 0)
-  const totalOverdue = openItems
-    .filter((debt) => debt.is_overdue)
-    .reduce((sum, debt) => sum + Number(debt.balance), 0)
+  // R2·HU-20: totales de TODO lo filtrado (el servidor suma todas las páginas).
+  const totalOutstanding = Number(data?.total_balance ?? 0)
+  const totalOverdue = Number(data?.total_overdue ?? 0)
+  const filtered = Boolean(statusFilter || search || dimensions.business_unit_id || dimensions.fiscal_entity_id)
 
   return (
     <div>
@@ -439,10 +438,13 @@ export function DebtsPage({ config }: { config: Config }) {
         ) : null}
       </PageHeader>
 
-      {statusFilter === '' && items.length > 0 ? (
+      {items.length > 0 && statusFilter !== 'CANCELLED' ? (
         <div className="mb-4 grid grid-cols-2 gap-4 sm:max-w-md">
           <Card>
-            <div className="text-xs font-medium uppercase tracking-wide text-muted">{config.totalLabel}</div>
+            <div className="text-xs font-medium uppercase tracking-wide text-muted">
+              {config.totalLabel}
+              {filtered ? ' · filtrado' : ''}
+            </div>
             <div className="mt-1.5">
               <Money value={totalOutstanding} size="lg" />
             </div>
@@ -473,7 +475,12 @@ export function DebtsPage({ config }: { config: Config }) {
           noun={config.kind === 'receivables' ? 'cobradas' : 'pagadas'}
           onClose={() => setBatchOutcome(null)}
         />
-        <BatchBar count={selection.selected.size} onClear={selection.clear}>
+        <BatchBar
+          count={selection.selected.size}
+          onClear={selection.clear}
+          total={selection.sumSelected((debt) => (debt.display_status === 'CANCELLED' ? 0 : debt.balance))}
+          totalLabel="saldo"
+        >
           {canWrite && selectedOpen.length > 0 ? (
             <Button
               variant="secondary"

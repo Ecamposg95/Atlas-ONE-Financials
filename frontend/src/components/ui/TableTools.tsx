@@ -2,8 +2,9 @@
  *  acciones en lote. Compartidas por las cuatro listas grandes para que todas
  *  se comporten igual. */
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { formatMoney } from '@/lib/format'
 import { Button } from '@/components/ui/Button'
 
 /* ---------- Orden por columna ---------- */
@@ -51,6 +52,10 @@ export function SortableHeader({
 
 export function useRowSelection<T extends { id: string }>(items: T[]) {
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set())
+  // Lo seleccionado puede estar en otra página: se recuerda cada fila vista
+  // para poder sumar la selección completa (R2·HU-20).
+  const seen = useRef(new Map<string, T>())
+  for (const item of items) seen.current.set(item.id, item)
 
   const toggle = useCallback((id: string) => {
     setSelected((previous) => {
@@ -74,10 +79,23 @@ export function useRowSelection<T extends { id: string }>(items: T[]) {
   }, [pageIds])
 
   const clear = useCallback(() => setSelected(new Set()), [])
-  /** Agrega ids aunque no estén en la página (todos los que coinciden con el filtro). */
-  const selectIds = useCallback(
-    (ids: string[]) => setSelected((previous) => new Set([...previous, ...ids])),
-    [],
+  /** Agrega filas aunque no estén en la página (todos los que coinciden con el filtro). */
+  const selectItems = useCallback((rows: T[]) => {
+    for (const row of rows) seen.current.set(row.id, row)
+    setSelected((previous) => new Set([...previous, ...rows.map((row) => row.id)]))
+  }, [])
+
+  /** Suma de toda la selección, esté o no en la página visible. */
+  const sumSelected = useCallback(
+    (amount: (item: T) => string | number) => {
+      let total = 0
+      for (const id of selected) {
+        const item = seen.current.get(id)
+        if (item) total += Number(amount(item)) || 0
+      }
+      return Math.round(total * 100) / 100
+    },
+    [selected],
   )
 
   const selectedItems = useMemo(
@@ -85,7 +103,7 @@ export function useRowSelection<T extends { id: string }>(items: T[]) {
     [items, selected],
   )
 
-  return { selected, selectedItems, toggle, togglePage, allOnPage, clear, selectIds }
+  return { selected, selectedItems, toggle, togglePage, allOnPage, clear, selectItems, sumSelected }
 }
 
 export function RowCheckbox({
@@ -116,16 +134,26 @@ export function BatchBar({
   count,
   onClear,
   children,
+  total,
+  totalLabel = 'suma',
 }: {
   count: number
   onClear: () => void
   children: ReactNode
+  /** R2·HU-20: la suma de lo seleccionado (en todas las páginas). */
+  total?: number
+  totalLabel?: string
 }) {
   if (count === 0) return null
   return (
     <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-accent/40 bg-accent-soft px-4 py-2.5">
       <span className="figures text-sm font-semibold">{count}</span>
       <span className="text-sm">seleccionada{count === 1 ? '' : 's'}</span>
+      {total !== undefined ? (
+        <span className="text-sm">
+          · {totalLabel} <span className="figures font-semibold">{formatMoney(total)}</span>
+        </span>
+      ) : null}
       <div className="mx-1 h-4 w-px bg-border-strong" aria-hidden />
       {children}
       <Button variant="ghost" className="!px-2 !py-1 text-xs" onClick={onClear}>

@@ -2,6 +2,7 @@ from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
+from sqlalchemy import and_, case
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -67,7 +68,21 @@ def list_payables(
         {"due_date": Payable.due_date, "date": Payable.date, "amount": Payable.amount},
         (Payable.due_date.asc(), Payable.created_at.desc()),
     )
-    return paginate(query, limit, offset, PayableRead)
+    # R2·HU-20: totales de TODO lo filtrado, no de la página.
+    sum_where = None if status == "CANCELLED" else Payable.status != "CANCELLED"
+    open_balance = Payable.amount - Payable.amount_paid
+    overdue = case(
+        (and_(Payable.status.in_(("OPEN", "PARTIAL")), Payable.due_date < date.today()), open_balance), else_=0
+    )
+    return paginate(
+        query,
+        limit,
+        offset,
+        PayableRead,
+        sum_column=Payable.amount,
+        sum_where=sum_where,
+        sums={"total_balance": open_balance, "total_overdue": overdue},
+    )
 
 
 @router.post("", response_model=PayableRead, status_code=201)

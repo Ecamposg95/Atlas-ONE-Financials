@@ -1,6 +1,7 @@
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import and_, case
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -66,7 +67,21 @@ def list_receivables(
         {"due_date": Receivable.due_date, "date": Receivable.date, "amount": Receivable.amount},
         (Receivable.due_date.asc(), Receivable.created_at.desc()),
     )
-    return paginate(query, limit, offset, ReceivableRead)
+    # R2·HU-20: totales de TODO lo filtrado, no de la página.
+    sum_where = None if status == "CANCELLED" else Receivable.status != "CANCELLED"
+    open_balance = Receivable.amount - Receivable.amount_paid
+    overdue = case(
+        (and_(Receivable.status.in_(("OPEN", "PARTIAL")), Receivable.due_date < date.today()), open_balance), else_=0
+    )
+    return paginate(
+        query,
+        limit,
+        offset,
+        ReceivableRead,
+        sum_column=Receivable.amount,
+        sum_where=sum_where,
+        sums={"total_balance": open_balance, "total_overdue": overdue},
+    )
 
 
 @router.post("", response_model=ReceivableRead, status_code=201)

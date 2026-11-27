@@ -3,10 +3,17 @@
  *  Sin librería: son dos listas estáticas (navegar y crear) con filtro por
  *  subcadena insensible a acentos. La robustez aquí es que no depende de la
  *  red: si la API está caída, la paleta sigue navegando.
+ *
+ *  R2·HU-21: con dos letras o más, además busca en los datos (ingresos,
+ *  gastos, cuentas por pagar y cobrar, clientes y proveedores) y lo muestra
+ *  debajo de los comandos.
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
+import { api } from '@/api/client'
+import { formatDate, formatMoney } from '@/lib/format'
 import { usePermissions } from '@/lib/permissions'
 
 export interface Command {
@@ -16,6 +23,29 @@ export interface Command {
   keywords?: string
   /** Qué permiso exige: los comandos que el API rechazaría no se ofrecen. */
   requires?: 'write' | 'accounting'
+  /** Resultado de búsqueda: fecha y monto bajo el título. */
+  detail?: string
+}
+
+interface SearchHit {
+  kind: string
+  id: string
+  title: string
+  noun: string
+  date: string | null
+  amount: string | null
+  status: string
+  to: string
+}
+
+/** Espera a que el usuario deje de teclear antes de pedir al servidor. */
+function useDebounced(value: string, delay = 250): string {
+  const [debounced, setDebounced] = useState(value)
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(value), delay)
+    return () => window.clearTimeout(timer)
+  }, [value, delay])
+  return debounced
 }
 
 const NAVIGATE: Command[] = [
@@ -74,7 +104,33 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
-  const results = useMemo(() => {
+  const term = useDebounced(query.trim())
+  const { data: hits, isFetching: searching } = useQuery({
+    queryKey: ['search', term],
+    queryFn: async () => (await api.get<{ items: SearchHit[] }>('/search', { params: { q: term } })).data.items,
+    enabled: open && term.length >= 2,
+    staleTime: 15_000,
+  })
+  const found: Command[] = useMemo(
+    () =>
+      term.length >= 2
+        ? (hits ?? []).map((hit) => ({
+            label: hit.title,
+            hint: hit.noun,
+            to: hit.to,
+            detail: [
+              hit.date ? formatDate(hit.date) : null,
+              hit.amount !== null ? formatMoney(hit.amount) : null,
+              hit.status === 'CANCELLED' ? 'cancelado' : null,
+            ]
+              .filter(Boolean)
+              .join(' · '),
+          }))
+        : [],
+    [hits, term],
+  )
+
+  const commands = useMemo(() => {
     const q = normalize(query.trim())
     const all = [...CREATE, ...NAVIGATE].filter(
       (command) =>
@@ -97,6 +153,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       .sort((a, b) => a.rank - b.rank)
       .map((item) => item.command)
   }, [query])
+  const results = useMemo(() => [...commands, ...found], [commands, found])
 
   // Al abrir: foco al input y selección al principio.
   useEffect(() => {
@@ -154,37 +211,51 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
               onClose()
             }
           }}
-          placeholder="Escribe a dónde ir o qué crear…"
+          placeholder="Busca una operación, un contacto, a dónde ir o qué crear…"
           className="w-full border-b border-border bg-transparent px-4 py-3.5 text-sm outline-none placeholder:text-muted"
         />
         <div ref={listRef} className="max-h-80 overflow-y-auto py-1.5">
           {results.length === 0 ? (
             <p className="px-4 py-6 text-center text-sm text-muted">
-              Nada se llama así. Prueba "gasto", "cierre" o "cartera".
+              {searching ? 'Buscando…' : 'Nada coincide. Prueba un concepto, un proveedor, un RFC o un monto.'}
             </p>
           ) : (
             results.map((command, index) => (
-              <button
-                key={command.to + command.label}
-                type="button"
-                data-index={index}
-                onClick={() => run(command)}
-                onMouseEnter={() => setActive(index)}
-                className={`flex w-full items-center justify-between px-4 py-2 text-left text-sm ${
-                  index === active ? 'bg-accent-soft text-accent' : 'text-ink'
-                }`}
-              >
-                <span>{command.label}</span>
-                <span
-                  className={`text-[11px] uppercase tracking-wider ${
-                    index === active ? 'text-accent/70' : 'text-muted'
+              <div key={command.to + command.label + index}>
+                {index === commands.length && found.length > 0 ? (
+                  <p className="border-t border-border px-4 pb-1 pt-2 text-[11px] uppercase tracking-wider text-muted">
+                    En tus datos
+                  </p>
+                ) : null}
+                <button
+                  type="button"
+                  data-index={index}
+                  onClick={() => run(command)}
+                  onMouseEnter={() => setActive(index)}
+                  className={`flex w-full items-center justify-between px-4 py-2 text-left text-sm ${
+                    index === active ? 'bg-accent-soft text-accent' : 'text-ink'
                   }`}
                 >
-                  {command.hint}
-                </span>
-              </button>
+                  <span className="min-w-0">
+                    <span className="block truncate">{command.label}</span>
+                    {command.detail ? (
+                      <span className="figures block text-xs text-muted">{command.detail}</span>
+                    ) : null}
+                  </span>
+                  <span
+                    className={`ml-3 shrink-0 text-[11px] uppercase tracking-wider ${
+                      index === active ? 'text-accent/70' : 'text-muted'
+                    }`}
+                  >
+                    {command.hint}
+                  </span>
+                </button>
+              </div>
             ))
           )}
+          {searching && results.length > 0 ? (
+            <p className="px-4 py-1.5 text-xs text-muted">Buscando en tus datos…</p>
+          ) : null}
         </div>
         <div className="border-t border-border px-4 py-2 text-[11px] text-muted">
           <span className="figures">↑↓</span> moverse · <span className="figures">Enter</span>{' '}
