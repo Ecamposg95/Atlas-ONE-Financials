@@ -2,6 +2,8 @@
 
 _Fuente: análisis de la transcripción con Laboratorios La Fe, entregado por Emmanuel el 2026-11-02. Estado: propuesta inicial para refinamiento y validación. La comparación contra la plataforma (HAB-01) vive en `HAB-01_matriz.md`._
 
+> **Ronda 2 (2026-11-27):** feedback de Liza y Abraham, comentarios con capturas y cotejo contra código y datos en [`BACKLOG_RONDA2.md`](BACKLOG_RONDA2.md).
+
 ## 1. Objetivo
 
 Construir una única fuente de información financiera para:
