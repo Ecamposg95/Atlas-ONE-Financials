@@ -1,10 +1,14 @@
-/** Misión en vivo — el teatro agéntico de Atlas Financials, al estilo Mission Control de
+/** Misión de ejemplo — el teatro agéntico de Atlas Financials, al estilo Mission Control de
  *  Atlas Cortex: roster con estados que brillan, feed con timestamps, compuerta
  *  de aprobación humana y brief ejecutivo final.
  *
  *  La diferencia con el teatro puro de Cortex: aquí el guion INTERPOLA los
  *  números reales de los cinco briefs del backend. La coreografía es fija y
  *  determinista (nada de Math.random en el orden); las cifras son del libro.
+ *
+ *  Es una demostración: aprobar o rechazar no crea nada (no hay propuesta ni
+ *  llamada de cobranza). Por eso el copy habla en condicional y se rotula
+ *  "Ejemplo": la UI no debe prometer una acción que el producto no hace.
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -166,7 +170,8 @@ const POST_APPROVAL: Step[] = [
     agentId: 'cfo',
     type: 'ACTÚA',
     status: 'ACTUANDO',
-    message: () => 'Aprobado. La propuesta de cobranza queda lista para la bandeja — la decisión fue tuya, no mía.',
+    message: () =>
+      'Aprobado (ejemplo). En una misión real, la propuesta de cobranza llegaría a tu bandeja de Propuestas — la decisión sería tuya, no mía.',
   },
   {
     atMs: 1900,
@@ -174,14 +179,15 @@ const POST_APPROVAL: Step[] = [
     type: 'ACTÚA',
     status: 'ACTUANDO',
     message: (b) =>
-      `Preparando la llamada de cobranza con el desglose por tramo y el DSO (${metric(b.collections, 'DSO')}).`,
+      `Así se prepararía la llamada de cobranza: desglose por tramo y DSO (${metric(b.collections, 'DSO')}).`,
   },
   {
     atMs: 3400,
     agentId: 'cfo',
     type: 'HANDOFF',
     status: 'LISTO',
-    message: () => 'Brief semanal publicado. Handoff al dueño: cinco preguntas respondidas, una acción esperando tu clic.',
+    message: () =>
+      'Fin del ejemplo: así se vería el brief semanal. No se creó ninguna propuesta ni se registró nada.',
     also: [{ agentId: 'collections', status: 'LISTO' }],
     final: true,
   },
@@ -310,15 +316,17 @@ export function MissionPanel() {
       {/* ── Barra de misión ── */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface px-4 py-3 shadow-card">
         <div>
-          <p className="figures text-[10px] font-semibold uppercase tracking-[0.16em] text-accent">
+          <p className="figures flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-accent">
             Misión · revisión semanal de finanzas
+            <span className="rounded-full bg-surface-2 px-2 py-0.5 tracking-normal text-muted">Ejemplo</span>
           </p>
           <p className="text-sm text-muted">
-            Cinco agentes leen el libro real, se pasan la estafeta y UNA acción espera tu aprobación.
+            Un recorrido de ejemplo con tus números reales: así trabajarían los cinco agentes. Aprobar
+            o rechazar aquí no crea ni registra nada.
           </p>
         </div>
         <Button onClick={launch} disabled={!ready || phase === 'running' || phase === 'executing'}>
-          {phase === 'idle' ? '▶ Lanzar misión' : phase === 'complete' ? '↻ Repetir misión' : 'En curso…'}
+          {phase === 'idle' ? '▶ Ver ejemplo' : phase === 'complete' ? '↻ Repetir ejemplo' : 'En curso…'}
         </Button>
       </div>
 
@@ -379,7 +387,7 @@ export function MissionPanel() {
             {feed.length === 0 ? (
               <p className="py-8 text-center text-sm text-muted">
                 {ready
-                  ? 'Lanza la misión: verás a los cinco agentes trabajar sobre TU empresa.'
+                  ? 'Lanza el ejemplo: verás cómo trabajarían los cinco agentes sobre los números de TU empresa.'
                   : 'Cargando los briefs del equipo…'}
               </p>
             ) : (
@@ -412,7 +420,7 @@ export function MissionPanel() {
           {phase === 'awaiting' && cfoBrief ? (
             <div className="mission-feed-in mt-3 rounded-xl border-2 p-3" style={{ borderColor: 'hsl(var(--warn))' }}>
               <p className="figures text-[10px] font-semibold uppercase tracking-[0.16em] text-warn">
-                Requiere aprobación humana
+                Aquí pedirían tu aprobación · ejemplo
               </p>
               <p className="mt-1 text-sm font-semibold">
                 Activar la cobranza del vencido y publicar el brief semanal
@@ -423,7 +431,7 @@ export function MissionPanel() {
               </p>
               <div className="mt-2.5 flex gap-2">
                 <Button onClick={approve} className="!px-4 !py-1.5 text-sm">
-                  Aprobar
+                  Aprobar (ejemplo)
                 </Button>
                 <Button
                   variant="ghost"
@@ -438,12 +446,13 @@ export function MissionPanel() {
                         time: stamp(),
                         agentId: 'cfo',
                         type: 'HANDOFF',
-                        message: 'Rechazado por el humano. La propuesta no toca los libros — así se ve la gobernanza.',
+                        message:
+                          'Rechazado (ejemplo). Una propuesta rechazada no toca los libros — así se ve la gobernanza.',
                       },
                     ])
                   }}
                 >
-                  Rechazar
+                  Rechazar (ejemplo)
                 </Button>
               </div>
             </div>

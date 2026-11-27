@@ -26,7 +26,8 @@ import {
 } from 'lucide-react'
 import { usePendingCount } from '@/lib/approvals'
 import { useApplyBrand, useBrand } from '@/lib/brand'
-import { useActiveRole, useCompanies } from '@/lib/companies'
+import { useCompanies } from '@/lib/companies'
+import { usePermissions } from '@/lib/permissions'
 import { BrandMark } from '@/components/ui/BrandMark'
 import { CommandPalette } from '@/components/ui/CommandPalette'
 import { Toasts } from '@/components/ui/Toasts'
@@ -37,7 +38,8 @@ interface NavItem {
   to: string
   label: string
   icon: LucideIcon
-  roles?: string[]
+  /** Sólo se enseña a quien lleva la contabilidad (el API la reserva). */
+  accounting?: boolean
 }
 
 const NAV_SECTIONS: { label: string | null; items: NavItem[] }[] = [
@@ -87,7 +89,7 @@ const NAV_SECTIONS: { label: string | null; items: NavItem[] }[] = [
         to: '/contabilidad',
         label: 'Contabilidad',
         icon: BookOpen,
-        roles: ['OWNER', 'ADMIN', 'ACCOUNTANT'],
+        accounting: true,
       },
       { to: '/propuestas', label: 'Propuestas', icon: Inbox },
     ],
@@ -127,7 +129,7 @@ export function AppLayout() {
   // Mantiene al día las empresas y el rol del usuario. La autoridad siempre es
   // el backend: el rol aquí sólo decide qué navegación se enseña.
   useCompanies()
-  const role = useActiveRole()
+  const { canWrite, canAccounting } = usePermissions()
   const brand = useBrand()
   useApplyBrand()
 
@@ -180,7 +182,7 @@ export function AppLayout() {
                 </div>
               ) : null}
               {section.items
-                .filter((item) => !item.roles || (role !== null && item.roles.includes(role)))
+                .filter((item) => !item.accounting || canAccounting)
                 .map((item) => {
                   const Icon = item.icon
                   return (
@@ -225,7 +227,7 @@ export function AppLayout() {
       {/* Encabezado y pie fijos; sólo el contenido central se desplaza. */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <AppHeader
-          quickActions={QUICK_ACTIONS}
+          quickActions={canWrite ? QUICK_ACTIONS : []}
           onOpenNav={() => setNavOpen(true)}
           onOpenPalette={() => setPaletteOpen(true)}
         />

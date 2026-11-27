@@ -32,6 +32,7 @@ def to_csv(headers: list[str], rows: list[list]) -> str:
     return "﻿" + buffer.getvalue()
 
 
+XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 MONEY_FORMAT = '"$"#,##0.00;-"$"#,##0.00'
 DATE_FORMAT = "dd/mm/yyyy"
 

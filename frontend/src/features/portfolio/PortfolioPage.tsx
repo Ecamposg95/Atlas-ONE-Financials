@@ -13,6 +13,7 @@ import { Money } from '@/components/ui/Money'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Table } from '@/components/ui/Table'
 import { loadCompanies, switchCompany } from '@/lib/companies'
+import { roleLabel } from '@/lib/permissions'
 import { useAuthStore } from '@/stores/authStore'
 import type { Organization, Page, PortfolioItem, PortfolioStatus } from '@/types/api'
 
@@ -20,14 +21,6 @@ const STATUS: Record<PortfolioStatus, { label: string; dot: string; text: string
   red: { label: 'Urgente', dot: 'bg-neg', text: 'text-neg' },
   amber: { label: 'Por atender', dot: 'bg-warn', text: 'text-warn' },
   green: { label: 'Al corriente', dot: 'bg-pos', text: 'text-pos' },
-}
-
-const ROLE_LABELS: Record<string, string> = {
-  OWNER: 'Dueño',
-  ADMIN: 'Administrador',
-  ACCOUNTANT: 'Contador',
-  MEMBER: 'Captura',
-  VIEWER: 'Consulta',
 }
 
 const EMPTY_FORM = { business_name: '', tax_id: '', initial_cash: '' }
@@ -166,7 +159,7 @@ export function PortfolioPage() {
                   <div className="mt-0.5 text-xs text-muted">
                     <span className="figures">{item.tax_id ?? 'Sin RFC'}</span>
                     {' · '}
-                    {ROLE_LABELS[item.role] ?? item.role}
+                    {roleLabel(item.role)}
                     {item.organization_id === active?.id ? ' · abierta' : null}
                   </div>
                 </td>

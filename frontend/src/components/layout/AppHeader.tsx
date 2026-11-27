@@ -82,6 +82,8 @@ export function AppHeader({
         <span className="hidden sm:inline">Asistente</span>
       </button>
 
+      {/* Sin permiso de captura no hay menú "Nuevo": el API rechazaría todo. */}
+      {quickActions.length > 0 ? (
       <div className="relative" ref={quickRef}>
         <Button className="shrink-0 !px-3 !py-1.5" onClick={() => setQuickOpen((open) => !open)}>
           <Plus className="h-4 w-4" />
@@ -105,6 +107,7 @@ export function AppHeader({
           </div>
         ) : null}
       </div>
+      ) : null}
 
       <div className="relative" ref={userRef}>
         <button

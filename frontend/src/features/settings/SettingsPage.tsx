@@ -15,13 +15,13 @@ import { FiscalDataCard } from '@/features/settings/FiscalDataCard'
 import { HistoryCard } from '@/features/settings/HistoryCard'
 import { ImportSettingsCard } from '@/features/settings/ImportSettingsCard'
 import { TeamCard } from '@/features/settings/TeamCard'
-import { useActiveRole } from '@/lib/companies'
+import { NO_PERMISSION, usePermissions } from '@/lib/permissions'
 import { useAuthStore } from '@/stores/authStore'
 import type { AgentKey, Organization } from '@/types/api'
 
 export function SettingsPage() {
   const { organization, user } = useAuthStore()
-  const role = useActiveRole()
+  const { canAdmin, canAccounting } = usePermissions()
   const [form, setForm] = useState({
     name: organization?.name ?? '',
     default_tax_rate: organization?.default_tax_rate ?? '0.16',
@@ -64,6 +64,9 @@ export function SettingsPage() {
           }}
           className="space-y-4"
         >
+          {/* Los datos de la empresa sólo los cambia el dueño o un administrador:
+              los demás los ven, sin un botón que el servidor rechazaría. */}
+          <fieldset disabled={!canAdmin} className="space-y-4">
           <TextInput
             label="Nombre del negocio"
             required
@@ -79,22 +82,29 @@ export function SettingsPage() {
           <div className="text-xs text-muted">
             Moneda: {organization?.currency} · País: {organization?.country} · Usuario: {user?.email}
           </div>
+          </fieldset>
           {message ? <p className="text-sm text-pos">{message}</p> : null}
           {error ? <p className="text-sm text-neg">{error}</p> : null}
-          <Button type="submit" disabled={saveMutation.isPending}>
-            Guardar cambios
-          </Button>
+          {canAdmin ? (
+            <Button type="submit" disabled={saveMutation.isPending}>
+              Guardar cambios
+            </Button>
+          ) : (
+            <p className="text-xs text-muted">{NO_PERMISSION.admin}</p>
+          )}
         </form>
       </Card>
 
       <FiscalDataCard />
-      {role === 'OWNER' || role === 'ADMIN' || role === 'ACCOUNTANT' ? <OpeningCard /> : null}
-      <DimensionsCard />
-      <ImportSettingsCard />
-      {role === 'OWNER' || role === 'ADMIN' ? <ApprovalsCard /> : null}
+      {canAccounting ? <OpeningCard /> : null}
+      {/* Catálogos, importación, autorizaciones y llaves: el API los reserva
+          al dueño y a los administradores. */}
+      {canAdmin ? <DimensionsCard /> : null}
+      {canAdmin ? <ImportSettingsCard /> : null}
+      {canAdmin ? <ApprovalsCard /> : null}
       <TeamCard />
       <HistoryCard />
-      <AgentKeysSection />
+      {canAdmin ? <AgentKeysSection /> : null}
       <AssistantCard />
     </div>
   )

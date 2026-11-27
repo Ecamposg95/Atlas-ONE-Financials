@@ -20,12 +20,10 @@ import { Money } from '@/components/ui/Money'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Card, Table } from '@/components/ui/Table'
 import { formatDate, monthStart } from '@/lib/format'
-import { useActiveRole } from '@/lib/companies'
+import { usePermissions } from '@/lib/permissions'
 import type { OpeningAccountRow, OpeningOtherRow, OpeningStatus, OpeningSummary } from '@/types/api'
 
 const QUERY_KEY = ['opening']
-const ADMIN_ROLES = ['OWNER', 'ADMIN']
-const ADJUST_ROLES = ['OWNER', 'ADMIN', 'ACCOUNTANT']
 
 const STATUS_OPTIONS = [
   { value: 'PROVISIONAL', label: 'Provisional' },
@@ -58,9 +56,7 @@ function StatusChip({ status }: { status: OpeningStatus | null }) {
 }
 
 export function OpeningPage() {
-  const role = useActiveRole()
-  const canAdmin = ADMIN_ROLES.includes(role ?? '')
-  const canAdjust = ADJUST_ROLES.includes(role ?? '')
+  const { canAdmin, canAccounting: canAdjust } = usePermissions()
   const [cutoffOpen, setCutoffOpen] = useState(false)
   const [adjusting, setAdjusting] = useState<OpeningAccountRow | null>(null)
   const [other, setOther] = useState<OpeningOtherRow | 'new' | null>(null)

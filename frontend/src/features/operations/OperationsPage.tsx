@@ -48,6 +48,7 @@ import {
 } from '@/components/ui/ListFilters'
 import { formatDate, formatMoney, today } from '@/lib/format'
 import { useAccounts, useCategories, useContacts, useDimensions } from '@/lib/hooks'
+import { usePermissions } from '@/lib/permissions'
 import { useAuthStore } from '@/stores/authStore'
 import { toast } from '@/stores/toastStore'
 import { AttachmentsPanel, PendingAttachments, uploadAttachment } from './Attachments'
@@ -126,6 +127,8 @@ export const EXPENSE_CONFIG: Config = {
 
 export function OperationsPage({ config }: { config: Config }) {
   const queryClient = useQueryClient()
+  // Mismas reglas que el API: capturar/pagar/cancelar (WRITE_ROLES) y ver pólizas (ACCOUNTING_ROLES).
+  const { canWrite, canAccounting } = usePermissions()
   const defaultTaxRate = useAuthStore((state) => state.organization?.default_tax_rate ?? '0.16')
   const [searchParams, setSearchParams] = useSearchParams()
   const [modalOpen, setModalOpen] = useState(searchParams.has('nuevo'))
@@ -135,6 +138,8 @@ export function OperationsPage({ config }: { config: Config }) {
   const [attachmentsFor, setAttachmentsFor] = useState<Operation | null>(null)
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [detailFor, setDetailFor] = useState<Operation | null>(null)
+  const [cancelFor, setCancelFor] = useState<Operation | null>(null)
+  const [cancelReason, setCancelReason] = useState('')
   const [error, setError] = useState<string | null>(null)
   // Datos para la factura: sólo en ingresos, opcionales.
   const [cfdi, setCfdi] = useState(EMPTY_CFDI)
@@ -333,9 +338,24 @@ export function OperationsPage({ config }: { config: Config }) {
     mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
       await api.post(`${config.endpoint}/${id}/cancel`, { reason: reason.trim() || null })
     },
-    onSuccess: invalidate,
-    onError: (err) => window.alert(errorMessage(err)),
+    onSuccess: () => {
+      invalidate()
+      closeCancel()
+    },
+    onError: (err) => setError(errorMessage(err)),
   })
+
+  function openCancel(item: Operation) {
+    setError(null)
+    setCancelReason('')
+    setCancelFor(item)
+  }
+
+  function closeCancel() {
+    setCancelFor(null)
+    setCancelReason('')
+    setError(null)
+  }
 
   function closeModal() {
     setModalOpen(false)
@@ -441,7 +461,9 @@ export function OperationsPage({ config }: { config: Config }) {
               params={listParams}
               fallbackName={`${config.noun}.xlsx`}
             />
-            <Button onClick={() => setModalOpen(true)}>+ {config.newLabel}</Button>
+            {canWrite ? (
+              <Button onClick={() => setModalOpen(true)}>+ {config.newLabel}</Button>
+            ) : null}
           </>
         }
       >
@@ -622,14 +644,16 @@ export function OperationsPage({ config }: { config: Config }) {
           <EmptyState
             title={config.emptyTitle}
             message={config.emptyMessage}
-            action={<Button onClick={() => setModalOpen(true)}>{config.newLabel}</Button>}
+            action={
+              canWrite ? <Button onClick={() => setModalOpen(true)}>{config.newLabel}</Button> : undefined
+            }
           />
         )
       ) : (
         <>
         <BatchNotice outcome={batchOutcome} noun={batchNoun} onClose={() => setBatchOutcome(null)} />
         <BatchBar count={selection.selected.size} onClear={selection.clear}>
-          {selectedPending.length > 0 ? (
+          {canWrite && selectedPending.length > 0 ? (
             <Button
               variant="secondary"
               className="!px-2.5 !py-1 text-xs"
@@ -641,7 +665,7 @@ export function OperationsPage({ config }: { config: Config }) {
               {config.payAction} ({selectedPending.length})
             </Button>
           ) : null}
-          {(projects ?? []).length > 0 ? (
+          {canWrite && (projects ?? []).length > 0 ? (
             <Button
               variant="secondary"
               className="!px-2.5 !py-1 text-xs"
@@ -748,9 +772,10 @@ export function OperationsPage({ config }: { config: Config }) {
                     className="!px-2 !py-1 text-xs"
                     onClick={() => setDetailFor(item)}
                   >
-                    {item.status === 'PENDING' ? 'Editar' : 'Detalle'}
+                    {item.status === 'PENDING' && canWrite ? 'Editar' : 'Detalle'}
                   </Button>
-                  {item.status === 'PAID' ? (
+                  {/* La póliza vive en Contabilidad: Captura y Consulta no la ven (403). */}
+                  {item.status === 'PAID' && canAccounting ? (
                     <Button
                       variant="ghost"
                       className="!px-2 !py-1 text-xs"
@@ -759,7 +784,7 @@ export function OperationsPage({ config }: { config: Config }) {
                       Póliza
                     </Button>
                   ) : null}
-                {item.status === 'PENDING' ? (
+                {canWrite && item.status === 'PENDING' ? (
                   <>
                     <Button
                       variant="secondary"
@@ -776,18 +801,17 @@ export function OperationsPage({ config }: { config: Config }) {
                     >
                       {config.payAction}
                     </Button>
-                    <Button
-                      variant="ghost"
-                      className="!px-2 !py-1 text-xs"
-                      onClick={() => {
-                        // El motivo queda en el historial: quien revise sabrá por qué.
-                        const reason = window.prompt('¿Por qué cancelas esta operación? (queda en el historial)')
-                        if (reason !== null) cancelMutation.mutate({ id: item.id, reason })
-                      }}
-                    >
-                      Cancelar
-                    </Button>
                   </>
+                ) : null}
+                {/* Pendiente o ya pagada: el API cancela las dos; la pagada con reverso. */}
+                {canWrite && item.status !== 'CANCELLED' ? (
+                  <Button
+                    variant="ghost"
+                    className="!px-2 !py-1 text-xs"
+                    onClick={() => openCancel(item)}
+                  >
+                    Cancelar
+                  </Button>
                 ) : null}
                 </div>
               </td>
@@ -876,8 +900,70 @@ export function OperationsPage({ config }: { config: Config }) {
       >
         {attachmentsFor ? <AttachmentsPanel expenseId={attachmentsFor.id} /> : null}
       </Modal>
+      <Modal
+        title={`Cancelar ${config.kind === 'income' ? 'ingreso' : 'gasto'} · ${cancelFor?.description ?? ''}`}
+        open={cancelFor !== null}
+        onClose={closeCancel}
+      >
+        {cancelFor ? (
+          <form
+            onSubmit={(event) => {
+              event.preventDefault()
+              setError(null)
+              cancelMutation.mutate({ id: cancelFor.id, reason: cancelReason })
+            }}
+            className="space-y-3"
+          >
+            {cancelFor.status === 'PAID' ? (
+              <div className="rounded-lg border border-warn/40 bg-warn/10 px-3 py-2.5 text-sm">
+                <p className="font-medium">Ya movió dinero: se registra un reverso con fecha de hoy.</p>
+                <p className="mt-1 text-muted">
+                  {config.kind === 'income' ? (
+                    <>
+                      Los <span className="figures">{formatMoney(cancelFor.amount)}</span> salen de{' '}
+                      {accountLabel(cancelFor.financial_account_id)}: el saldo queda como si este cobro no
+                      hubiera entrado.
+                    </>
+                  ) : (
+                    <>
+                      Los <span className="figures">{formatMoney(cancelFor.amount)}</span> regresan a{' '}
+                      {accountLabel(cancelFor.financial_account_id)}: el saldo queda como si este pago no
+                      hubiera salido.
+                    </>
+                  )}{' '}
+                  Nada se borra: la operación original y su reverso quedan en el historial.
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-muted">
+                Todavía no movió dinero: sólo deja de estar pendiente. Queda en el historial.
+              </p>
+            )}
+            <TextInput
+              label="¿Por qué la cancelas? (opcional, queda en el historial)"
+              value={cancelReason}
+              onChange={(event) => setCancelReason(event.target.value)}
+            />
+            {error ? <p className="text-sm text-neg">{error}</p> : null}
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={closeCancel}>
+                No cancelar
+              </Button>
+              <Button type="submit" disabled={cancelMutation.isPending}>
+                {cancelMutation.isPending
+                  ? 'Cancelando…'
+                  : cancelFor.status === 'PAID'
+                    ? 'Cancelar y revertir'
+                    : 'Cancelar operación'}
+              </Button>
+            </div>
+          </form>
+        ) : null}
+      </Modal>
+
       <OperationDetailModal
         operation={detailFor ? (items.find((item) => item.id === detailFor.id) ?? detailFor) : null}
+        canWrite={canWrite}
         endpoint={config.endpoint}
         paidLabel={config.paidLabel}
         accountLabel={config.kind === 'income' ? 'Cuenta donde entra' : 'Cuenta con la que se paga'}
@@ -1074,7 +1160,7 @@ export function OperationsPage({ config }: { config: Config }) {
           />
           {config.kind === 'income' ? (
             <CfdiFields
-              title="¿Vas a facturar este ingreso?"
+              title="Datos para la factura (opcional)"
               value={cfdi}
               onChange={setCfdi}
               customer={(contacts ?? []).find((contact) => contact.id === form.contact_id)}

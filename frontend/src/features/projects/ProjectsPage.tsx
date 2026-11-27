@@ -18,8 +18,10 @@ import { Card, Table } from '@/components/ui/Table'
 import { formatMoney } from '@/lib/format'
 import { useContacts } from '@/lib/hooks'
 import type { ProjectsResponse } from '@/types/api'
+import { usePermissions } from '@/lib/permissions'
 
 export function ProjectsPage() {
+  const { canWrite } = usePermissions()
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const [modalOpen, setModalOpen] = useState(searchParams.has('nuevo'))
@@ -76,7 +78,7 @@ export function ProjectsPage() {
       <PageHeader
         title="Proyectos"
         description="Qué trabajo deja dinero y cuál se lo come."
-        actions={<Button onClick={() => setModalOpen(true)}>+ Nuevo proyecto</Button>}
+        actions={canWrite ? <Button onClick={() => setModalOpen(true)}>+ Nuevo proyecto</Button> : undefined}
       />
 
       {isLoading ? (
@@ -85,7 +87,7 @@ export function ProjectsPage() {
         <EmptyState
           title="Sin proyectos todavía"
           message="Marca tus ingresos y gastos con un proyecto para saber cuál te deja dinero. No cambia tu contabilidad: es una etiqueta para entender el negocio."
-          action={<Button onClick={() => setModalOpen(true)}>Nuevo proyecto</Button>}
+          action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nuevo proyecto</Button> : undefined}
         />
       ) : (
         <div className="space-y-4">

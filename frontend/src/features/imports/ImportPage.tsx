@@ -18,6 +18,7 @@ import { Card, Table } from '@/components/ui/Table'
 import { formatDate, formatMoney } from '@/lib/format'
 import { useAccounts, useCategories, useDimensions } from '@/lib/hooks'
 import type { ImportBatch, ImportBatchDetail, ImportKind, ImportRow, ImportRowStatus, Page } from '@/types/api'
+import { NO_PERMISSION, usePermissions } from '@/lib/permissions'
 
 const PAGE_SIZE = 50
 
@@ -81,6 +82,7 @@ function money(value: unknown): string {
 }
 
 export function ImportPage() {
+  const { canWrite } = usePermissions()
   const queryClient = useQueryClient()
   const fileInput = useRef<HTMLInputElement>(null)
   const [kind, setKind] = useState<ImportKind>('TORONJA')
@@ -235,9 +237,13 @@ export function ImportPage() {
                 title={hasHistory ? `Suelta aquí ${selectedKind.label.toLowerCase()}` : 'Tu primera importación'}
                 message="Sube el reporte de ventas de Toronja o un Excel de gastos; antes de registrar nada vas a ver qué entra."
                 action={
-                  <Button onClick={() => fileInput.current?.click()}>
-                    <Upload className="h-4 w-4" /> Elegir archivo
-                  </Button>
+                  canWrite ? (
+                    <Button onClick={() => fileInput.current?.click()}>
+                      <Upload className="h-4 w-4" /> Elegir archivo
+                    </Button>
+                  ) : (
+                    <p className="text-xs text-muted">{NO_PERMISSION.write}</p>
+                  )
                 }
               />
             )}

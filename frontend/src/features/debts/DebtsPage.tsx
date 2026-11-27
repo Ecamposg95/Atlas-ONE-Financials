@@ -42,6 +42,7 @@ import {
 } from '@/components/ui/DimensionFields'
 import { formatDate, formatMoney, today } from '@/lib/format'
 import { useAccounts, useCategories, useContacts, useDimensions } from '@/lib/hooks'
+import { usePermissions } from '@/lib/permissions'
 import { useAuthStore } from '@/stores/authStore'
 import type { Debt, Page } from '@/types/api'
 
@@ -133,6 +134,7 @@ function DebtStatusBadge({ debt }: { debt: Debt }) {
 
 export function DebtsPage({ config }: { config: Config }) {
   const queryClient = useQueryClient()
+  const { canWrite, canAccounting } = usePermissions()
   const defaultTaxRate = useAuthStore((state) => state.organization?.default_tax_rate ?? '0.16')
   const [searchParams, setSearchParams] = useSearchParams()
   const [modalOpen, setModalOpen] = useState(searchParams.has('nueva'))
@@ -372,7 +374,9 @@ export function DebtsPage({ config }: { config: Config }) {
       <PageHeader
         title={config.title}
         description={config.description}
-        actions={<Button onClick={() => setModalOpen(true)}>+ {config.newLabel}</Button>}
+        actions={
+          canWrite ? <Button onClick={() => setModalOpen(true)}>+ {config.newLabel}</Button> : undefined
+        }
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex gap-2">
@@ -438,7 +442,9 @@ export function DebtsPage({ config }: { config: Config }) {
         <EmptyState
           title={config.emptyTitle}
           message={config.emptyMessage}
-          action={<Button onClick={() => setModalOpen(true)}>{config.newLabel}</Button>}
+          action={
+            canWrite ? <Button onClick={() => setModalOpen(true)}>{config.newLabel}</Button> : undefined
+          }
         />
       ) : (
         <>
@@ -448,7 +454,7 @@ export function DebtsPage({ config }: { config: Config }) {
           onClose={() => setBatchOutcome(null)}
         />
         <BatchBar count={selection.selected.size} onClear={selection.clear}>
-          {selectedOpen.length > 0 ? (
+          {canWrite && selectedOpen.length > 0 ? (
             <Button
               variant="secondary"
               className="!px-2.5 !py-1 text-xs"
@@ -524,14 +530,17 @@ export function DebtsPage({ config }: { config: Config }) {
               </td>
               <td className="px-4 py-2.5 text-right">
                 <div className="flex justify-end gap-1.5">
-                  <Button
-                    variant="ghost"
-                    className="!px-2 !py-1 text-xs"
-                    onClick={() => setEntryFor(debt)}
-                  >
-                    Póliza
-                  </Button>
-                  {['OPEN', 'PARTIAL', 'OVERDUE'].includes(debt.display_status) ? (
+                  {/* La póliza vive en Contabilidad: Captura y Consulta no la ven (403). */}
+                  {canAccounting ? (
+                    <Button
+                      variant="ghost"
+                      className="!px-2 !py-1 text-xs"
+                      onClick={() => setEntryFor(debt)}
+                    >
+                      Póliza
+                    </Button>
+                  ) : null}
+                  {canWrite && ['OPEN', 'PARTIAL', 'OVERDUE'].includes(debt.display_status) ? (
                     <>
                     <Button variant="secondary" className="!px-2.5 !py-1 text-xs" onClick={() => openPayModal(debt)}>
                       {config.payAction}
@@ -604,6 +613,8 @@ export function DebtsPage({ config }: { config: Config }) {
           customer={(contacts ?? []).find((contact) => contact.id === detailFor.customer_id)}
           onSaved={invalidate}
           payLabel={config.payAction}
+          canWrite={canWrite}
+          canAccounting={canAccounting}
           onClose={() => setDetailFor(null)}
           onPay={() => {
             openPayModal(detailFor)
@@ -690,7 +701,7 @@ export function DebtsPage({ config }: { config: Config }) {
           />
           {config.kind === 'receivables' ? (
             <CfdiFields
-              title="¿Vas a facturar esta venta?"
+              title="Datos para la factura (opcional)"
               value={cfdi}
               onChange={setCfdi}
               customer={(contacts ?? []).find((contact) => contact.id === form.contact_id)}

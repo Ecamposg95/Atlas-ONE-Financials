@@ -35,6 +35,7 @@ type Tab = 'detail' | 'history'
 
 export function OperationDetailModal({
   operation,
+  canWrite,
   endpoint,
   paidLabel,
   accountLabel,
@@ -47,6 +48,8 @@ export function OperationDetailModal({
   customers,
 }: {
   operation: Operation | null
+  /** Captura en adelante: Consulta sólo ve (el API rechaza sus cambios). */
+  canWrite: boolean
   endpoint: string
   paidLabel: string
   accountLabel: string
@@ -119,7 +122,7 @@ export function OperationDetailModal({
   })
 
   if (!operation) return null
-  const editable = operation.status === 'PENDING'
+  const editable = operation.status === 'PENDING' && canWrite
   const customer = customers?.find((item) => item.id === operation.customer_id)
 
   return (
@@ -194,7 +197,7 @@ export function OperationDetailModal({
           />
           {customers ? (
             <CfdiFields
-              title="¿Vas a facturar este ingreso?"
+              title="Datos para la factura (opcional)"
               value={cfdi}
               onChange={setCfdi}
               customer={customer}
@@ -234,11 +237,13 @@ export function OperationDetailModal({
             ) : null}
           </dl>
           <p className="text-xs text-muted">
-            {operation.status === 'CANCELLED'
-              ? 'Está cancelada: ya no se puede modificar.'
-              : 'Ya movió dinero: para corregirla, cancélala y regístrala de nuevo. Así la contabilidad conserva el rastro.'}
+            {!canWrite
+              ? 'Tu permiso es de consulta: puedes verla, no modificarla.'
+              : operation.status === 'CANCELLED'
+                ? 'Está cancelada: ya no se puede modificar.'
+                : 'Ya movió dinero: para corregirla, cancélala con el botón Cancelar de la lista (se registra un reverso que deshace el movimiento de dinero) y regístrala de nuevo. Así la contabilidad conserva el rastro.'}
           </p>
-          {customers ? (
+          {customers && canWrite ? (
             <form
               className="space-y-3 border-t border-border pt-4"
               onSubmit={(event) => {

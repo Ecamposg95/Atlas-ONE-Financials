@@ -33,6 +33,8 @@ export function DebtDetailPanel({
   payLabel,
   customer,
   onSaved,
+  canWrite,
+  canAccounting,
 }: {
   debt: Debt
   kind: 'receivables' | 'payables'
@@ -43,6 +45,10 @@ export function DebtDetailPanel({
   /** Cuentas por cobrar: el cliente filtra los usos de CFDI. */
   customer?: Contact
   onSaved?: () => void
+  /** Cobrar/pagar y guardar datos: Captura en adelante (el API rechaza a Consulta). */
+  canWrite: boolean
+  /** Las pólizas son de Contabilidad: dueño, administrador y contador. */
+  canAccounting: boolean
 }) {
   const sourceType = kind === 'receivables' ? 'receivable' : 'payable'
 
@@ -64,10 +70,12 @@ export function DebtDetailPanel({
           params: { source_type: sourceType, source_id: debt.id },
         })
       ).data,
+    enabled: canAccounting,
   })
   const { data: ledgerAccounts } = useQuery({
     queryKey: ['accounting', 'accounts'],
     queryFn: async () => (await api.get<LedgerAccount[]>('/accounting/accounts')).data,
+    enabled: canAccounting,
   })
 
   const accountName = useMemo(() => {
@@ -181,6 +189,7 @@ export function DebtDetailPanel({
             )}
           </section>
 
+          {canAccounting ? (
           <section>
             <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
               Así lo registró Atlas Financials
@@ -217,8 +226,9 @@ export function DebtDetailPanel({
               </div>
             )}
           </section>
+          ) : null}
 
-          {kind === 'receivables' ? (
+          {kind === 'receivables' && canWrite ? (
             <section>
               <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
                 Datos para la factura
@@ -265,7 +275,7 @@ export function DebtDetailPanel({
           </section>
         </div>
 
-        {open ? (
+        {open && canWrite ? (
           <div className="border-t border-border px-5 py-3">
             <Button className="w-full" onClick={onPay}>
               {payLabel}

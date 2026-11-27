@@ -178,7 +178,7 @@ export function AgentTeamPage() {
         <div className="flex gap-2">
           {[
             { key: 'equipo' as const, label: 'El equipo' },
-            { key: 'mision' as const, label: '▶ Misión en vivo' },
+            { key: 'mision' as const, label: '▶ Misión de ejemplo' },
           ].map((item) => (
             <button
               key={item.key}

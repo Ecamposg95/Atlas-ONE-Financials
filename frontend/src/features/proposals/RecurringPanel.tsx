@@ -17,6 +17,7 @@ import { TaxSelect } from '@/components/ui/TaxSelect'
 import { formatMoney } from '@/lib/format'
 import { useAccounts, useCategories, useContacts } from '@/lib/hooks'
 import { useAuthStore } from '@/stores/authStore'
+import { usePermissions } from '@/lib/permissions'
 
 interface RecurringRule {
   id: string
@@ -56,6 +57,7 @@ export function usePendingRecurring() {
 }
 
 export function RecurringPanel() {
+  const { canWrite } = usePermissions()
   const queryClient = useQueryClient()
   const defaultTaxRate = useAuthStore((state) => state.organization?.default_tax_rate ?? '0.16')
   const period = currentPeriod()
@@ -158,7 +160,7 @@ export function RecurringPanel() {
         description="Lo que se repite cada mes: Atlas Financials lo propone solo y tú apruebas."
         actions={
           <div className="flex gap-2">
-            {rules.length > 0 ? (
+            {canWrite && rules.length > 0 ? (
               <Button
                 variant="secondary"
                 disabled={generate.isPending || pending === 0}
@@ -169,7 +171,7 @@ export function RecurringPanel() {
                   : `${period.label} ya generado`}
               </Button>
             ) : null}
-            <Button onClick={() => setModalOpen(true)}>+ Nueva regla</Button>
+            {canWrite ? <Button onClick={() => setModalOpen(true)}>+ Nueva regla</Button> : null}
           </div>
         }
       />
@@ -193,7 +195,7 @@ export function RecurringPanel() {
         <EmptyState
           title="Nada se repite todavía"
           message="La renta, la nómina, las igualas: registra una vez lo que se paga igual cada mes y Atlas Financials te lo propondrá solo. Tú nada más apruebas."
-          action={<Button onClick={() => setModalOpen(true)}>Nueva regla</Button>}
+          action={canWrite ? <Button onClick={() => setModalOpen(true)}>Nueva regla</Button> : undefined}
         />
       ) : (
         <Table
@@ -231,13 +233,15 @@ export function RecurringPanel() {
                 </span>
               </td>
               <td className="px-4 py-2.5 text-right">
-                <Button
-                  variant="ghost"
-                  className="!px-2 !py-1 text-xs"
-                  onClick={() => toggleRule.mutate(rule)}
-                >
-                  {rule.status === 'ACTIVE' ? 'Pausar' : 'Reactivar'}
-                </Button>
+                {canWrite ? (
+                  <Button
+                    variant="ghost"
+                    className="!px-2 !py-1 text-xs"
+                    onClick={() => toggleRule.mutate(rule)}
+                  >
+                    {rule.status === 'ACTIVE' ? 'Pausar' : 'Reactivar'}
+                  </Button>
+                ) : null}
               </td>
             </tr>
           ))}

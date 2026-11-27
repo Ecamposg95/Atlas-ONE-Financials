@@ -119,7 +119,8 @@ export function FiscalFields({
   )
 }
 
-/** Indicador de "listo para facturar": dice qué falta y qué conviene revisar. */
+/** Indicador de datos fiscales completos: dice qué falta y qué conviene revisar.
+ *  No promete emitir: la facturación todavía no está disponible. */
 export function ReadinessPanel({ readiness, subject }: { readiness?: FiscalReadiness; subject: string }) {
   if (!readiness) return null
   return (
@@ -127,7 +128,7 @@ export function ReadinessPanel({ readiness, subject }: { readiness?: FiscalReadi
       <div className="flex items-center gap-2">
         <ReadinessBadge readiness={readiness} />
         <span className="text-muted">
-          {readiness.listo ? `${subject} tiene lo necesario para facturar.` : `A ${subject.toLowerCase()} le falta:`}
+          {readiness.listo ? `${subject} tiene sus datos fiscales completos.` : `A ${subject.toLowerCase()} le falta:`}
         </span>
       </div>
       {readiness.faltantes.length > 0 ? (
@@ -159,10 +160,10 @@ export function ReadinessBadge({ readiness }: { readiness?: FiscalReadiness }) {
       title={ready ? undefined : readiness.faltantes.join(' · ')}
     >
       {ready
-        ? 'Listo para facturar'
+        ? 'Datos fiscales completos'
         : readiness.faltantes.length === 1
-          ? 'Falta 1 dato para facturar'
-          : `Faltan ${readiness.faltantes.length} datos para facturar`}
+          ? 'Falta 1 dato fiscal'
+          : `Faltan ${readiness.faltantes.length} datos fiscales`}
     </span>
   )
 }

@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, MessageSquarePlus, PanelLeft, Send, Sparkles, Trash2, X } from 'lucide-react'
 import { api, errorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
-import { useActiveRole } from '@/lib/companies'
+import { usePermissions } from '@/lib/permissions'
 import { formatDate } from '@/lib/format'
 import { LightMarkdown } from '@/features/assistant/LightMarkdown'
 import type {
@@ -22,7 +22,6 @@ const EXAMPLES = [
   'Registra un gasto de $1,200 de papelería pagado de caja',
 ]
 
-const WRITE_ROLES = ['OWNER', 'ADMIN', 'ACCOUNTANT', 'MEMBER']
 
 const KIND_LABELS: Record<string, string> = {
   INCOME: 'Ingreso',
@@ -31,10 +30,24 @@ const KIND_LABELS: Record<string, string> = {
   PAYABLE: 'Cuenta por pagar',
 }
 
-const UNAVAILABLE_COPY: Record<string, string> = {
-  sin_llave: 'El asistente se activa cuando se conecte la llave de Claude.',
-  deshabilitado: 'El asistente está desactivado en esta empresa. El dueño puede encenderlo en Configuración.',
-  sin_presupuesto: 'Se agotó el presupuesto del asistente de este mes. Pídele a Atlas que lo amplíe.',
+/** Por qué el asistente no está disponible. El tope y el encendido sólo los
+ *  cambia el dueño (el API rechaza a los demás): a él se le dice dónde, al
+ *  resto se le pide que hable con él. */
+function unavailableCopy(reason: string, isOwner: boolean): string | null {
+  switch (reason) {
+    case 'sin_llave':
+      return 'El asistente se activa cuando se conecte la llave de Claude.'
+    case 'deshabilitado':
+      return isOwner
+        ? 'El asistente está desactivado en esta empresa. Enciéndelo en Configuración, tarjeta «Asistente de Claude».'
+        : 'El asistente está desactivado en esta empresa. Pídele al dueño que lo encienda.'
+    case 'sin_presupuesto':
+      return isOwner
+        ? 'Se agotó el presupuesto del asistente de este mes. Sube el «Tope mensual (USD)» en Configuración, tarjeta «Asistente de Claude».'
+        : 'Se agotó el presupuesto del asistente de este mes. Pídele al dueño de la empresa que suba el tope mensual.'
+    default:
+      return null
+  }
 }
 
 export function useAssistantStatus() {
@@ -47,7 +60,7 @@ export function useAssistantStatus() {
 
 export function AssistantPage() {
   const queryClient = useQueryClient()
-  const role = useActiveRole()
+  const { canWrite, isOwner } = usePermissions()
   const [searchParams, setSearchParams] = useSearchParams()
   const selectedId = searchParams.get('c')
   const [draft, setDraft] = useState('')
@@ -132,7 +145,8 @@ export function AssistantPage() {
   const messages = conversation.data?.messages ?? []
   const busy = sendMutation.isPending || (conversation.data?.busy ?? false)
   const available = status.data?.available ?? false
-  const unavailableCopy = status.data && !status.data.available ? UNAVAILABLE_COPY[status.data.reason ?? ''] : null
+  const unavailableText =
+    status.data && !status.data.available ? unavailableCopy(status.data.reason ?? '', isOwner) : null
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: 'end' })
@@ -249,9 +263,9 @@ export function AssistantPage() {
         ) : null}
 
         <section className="flex min-w-0 flex-1 flex-col">
-          {unavailableCopy ? (
+          {unavailableText ? (
             <div className="mx-4 mt-4 rounded-lg border border-warn/40 bg-warn/10 px-4 py-2.5 text-sm">
-              {unavailableCopy}
+              {unavailableText}
             </div>
           ) : null}
 
@@ -266,7 +280,7 @@ export function AssistantPage() {
                   <MessageBubble
                     key={message.id}
                     message={message}
-                    canResolve={role !== null && WRITE_ROLES.includes(role)}
+                    canResolve={canWrite}
                     resolving={resolveMutation.isPending}
                     onResolve={(id, approve) => resolveMutation.mutate({ id, approve })}
                   />

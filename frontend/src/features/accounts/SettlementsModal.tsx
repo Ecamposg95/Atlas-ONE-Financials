@@ -4,11 +4,10 @@ import { api, errorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { SelectInput, TextInput } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
-import { useActiveRole } from '@/lib/companies'
+import { usePermissions } from '@/lib/permissions'
 import { formatDate, formatMoney, today } from '@/lib/format'
 import type { FinancialAccount, Page, Settlement } from '@/types/api'
 
-const ADMIN_ROLES = ['OWNER', 'ADMIN']
 
 /** Registrar una liquidación del procesador (NetPay → banco) y ver su historial.
  *  El bruto sale del procesador, el neto llega al banco y la comisión es gasto. */
@@ -22,8 +21,7 @@ export function SettlementsModal({
   onClose: () => void
 }) {
   const queryClient = useQueryClient()
-  const role = useActiveRole()
-  const canSettle = role !== null && ADMIN_ROLES.includes(role)
+  const { canAdmin: canSettle } = usePermissions()
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState(() => emptyForm(processor))
 
