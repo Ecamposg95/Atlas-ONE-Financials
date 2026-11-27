@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { formatMoney } from '@/lib/format'
+import { roleLabel } from '@/lib/permissions'
 import type { HistoryAction, HistoryEvent, HistoryFieldChange, Page } from '@/types/api'
 
 export const ACTION_LABELS: Record<HistoryAction, string> = {
@@ -18,6 +19,8 @@ export const ACTION_LABELS: Record<HistoryAction, string> = {
   APPROVE: 'Autorizó',
   REJECT: 'Rechazó',
   DELETE: 'Eliminó',
+  CLOSE: 'Cerró',
+  REOPEN: 'Reabrió',
 }
 
 const ACTION_DOT: Record<HistoryAction, string> = {
@@ -28,6 +31,8 @@ const ACTION_DOT: Record<HistoryAction, string> = {
   APPROVE: 'bg-pos',
   REJECT: 'bg-neg',
   DELETE: 'bg-neg',
+  CLOSE: 'bg-accent',
+  REOPEN: 'bg-warn',
 }
 
 export const SOURCE_LABELS: Record<HistoryEvent['source'], string> = {
@@ -50,6 +55,8 @@ const STATUS_LABELS: Record<string, string> = {
   REJECTED: 'Rechazada',
   PROVISIONAL: 'Provisional',
   CONFIRMED: 'Confirmado',
+  ACTIVE: 'Activo',
+  INACTIVE: 'Inactivo',
 }
 
 const PAYMENT_LABELS: Record<string, string> = {
@@ -99,6 +106,8 @@ function formatValue(change: HistoryFieldChange, side: 'old' | 'new'): string {
       return `${(Number(value) * 100).toLocaleString('es-MX', { maximumFractionDigits: 2 })}%`
     case 'ref':
       return 'Registro no disponible'
+    case 'role':
+      return roleLabel(String(value))
     default:
       if (change.field === 'payment_method') return PAYMENT_LABELS[String(value)] ?? String(value)
       return String(value)

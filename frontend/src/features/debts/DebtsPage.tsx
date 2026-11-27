@@ -1,6 +1,6 @@
 /** Página compartida de CxC / CxP: misma mecánica, conceptos explícitos. */
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { api, errorMessage } from '@/api/client'
@@ -20,7 +20,7 @@ import { JournalEntryModal } from '@/components/ui/JournalEntryModal'
 import { Modal } from '@/components/ui/Modal'
 import { Money } from '@/components/ui/Money'
 import { PageHeader } from '@/components/ui/PageHeader'
-import { Table, Card } from '@/components/ui/Table'
+import { Table, Card, STICKY_CELL } from '@/components/ui/Table'
 import { TaxSelect } from '@/components/ui/TaxSelect'
 import { TableFooter } from '@/components/ui/Pagination'
 import {
@@ -165,6 +165,9 @@ export function DebtsPage({ config }: { config: Config }) {
 
   const [batchOutcome, setBatchOutcome] = useState<BatchOutcome | null>(null)
   const [batchPayOpen, setBatchPayOpen] = useState(false)
+  const [batchRunning, setBatchRunning] = useState(false)
+  // El estado tarda un render; el ref frena el doble clic en el mismo instante.
+  const batchLock = useRef(false)
   const [batchAccountId, setBatchAccountId] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [payError, setPayError] = useState<string | null>(null)
@@ -244,8 +247,14 @@ export function DebtsPage({ config }: { config: Config }) {
         await api.post(`${config.endpoint}/${payTarget.id}/${config.payEndpoint}`, payForm),
       )
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       invalidate()
+      // El detalle abierto se vuelve a pedir: con la copia vieja, el siguiente
+      // pago propondría el saldo anterior y el servidor lo rechazaría.
+      if (detailFor && payTarget && detailFor.id === payTarget.id) {
+        const fresh = await api.get<Debt>(`${config.endpoint}/${detailFor.id}`).catch(() => null)
+        if (fresh) setDetailFor(fresh.data)
+      }
       closePayModal()
     },
     onError: (err) => setPayError(errorMessage(err)),
@@ -318,12 +327,17 @@ export function DebtsPage({ config }: { config: Config }) {
       .catch(() => undefined)
       .finally(clear)
   }, [openId, data])
+  // La versión de la lista gana a la copia con que se abrió el detalle: trae el saldo al día.
+  const currentDetail = detailFor ? (items.find((item) => item.id === detailFor.id) ?? detailFor) : null
   const selection = useRowSelection(items)
   const selectedOpen = selection.selectedItems.filter((debt) =>
     ['OPEN', 'PARTIAL', 'OVERDUE'].includes(debt.display_status),
   )
 
   async function batchPay() {
+    if (batchLock.current) return
+    batchLock.current = true
+    setBatchRunning(true)
     // Un pago que alcanza el umbral responde 202: espera autorización, no se pagó.
     const approvals = pendingApprovalCollector()
     const outcome = await runBatch(
@@ -341,6 +355,8 @@ export function DebtsPage({ config }: { config: Config }) {
       errorMessage,
     )
     approvals.notify()
+    batchLock.current = false
+    setBatchRunning(false)
     setBatchOutcome(outcome)
     setBatchPayOpen(false)
     selection.clear()
@@ -490,6 +506,7 @@ export function DebtsPage({ config }: { config: Config }) {
             '',
           ]}
           secondary={hasUnits ? [5, 6, 7] : [5, 6]}
+          stickyLast
           footer={<TableFooter page={data!} onOffsetChange={setOffset} noun="cuentas" />}
         >
           {items.map((debt) => (
@@ -510,8 +527,10 @@ export function DebtsPage({ config }: { config: Config }) {
               >
                 {contactName(debt)}
               </td>
-              <td className="cursor-pointer px-4 py-2.5" onClick={() => setDetailFor(debt)}>
-                <span className="underline-offset-2 hover:underline">{debt.description}</span>
+              <td className="max-w-[18rem] cursor-pointer px-4 py-2.5" onClick={() => setDetailFor(debt)}>
+                <span className="line-clamp-2 underline-offset-2 hover:underline" title={debt.description}>
+                  {debt.description}
+                </span>
               </td>
               <td className={`whitespace-nowrap px-4 py-2.5 ${debt.is_overdue ? 'font-medium text-neg' : 'text-muted'}`}>
                 {formatDate(debt.due_date)}
@@ -528,8 +547,8 @@ export function DebtsPage({ config }: { config: Config }) {
               <td className="px-4 py-2.5 text-right">
                 <Money value={debt.balance} tone={debt.display_status === 'CANCELLED' ? 'muted' : 'ink'} />
               </td>
-              <td className="px-4 py-2.5 text-right">
-                <div className="flex justify-end gap-1.5">
+              <td className={`px-4 py-2.5 text-right ${STICKY_CELL}`}>
+                <div className="flex justify-end gap-1.5 whitespace-nowrap">
                   {/* La póliza vive en Contabilidad: Captura y Consulta no la ven (403). */}
                   {canAccounting ? (
                     <Button
@@ -572,7 +591,9 @@ export function DebtsPage({ config }: { config: Config }) {
       <Modal
         title={`${config.payAction} en lote`}
         open={batchPayOpen}
-        onClose={() => setBatchPayOpen(false)}
+        onClose={() => {
+          if (!batchRunning) setBatchPayOpen(false)
+        }}
       >
         <form
           onSubmit={(event) => {
@@ -597,27 +618,29 @@ export function DebtsPage({ config }: { config: Config }) {
             onChange={(event) => setBatchAccountId(event.target.value)}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setBatchPayOpen(false)}>
+            <Button variant="ghost" onClick={() => setBatchPayOpen(false)} disabled={batchRunning}>
               Cancelar
             </Button>
-            <Button type="submit">{config.payAction}</Button>
+            <Button type="submit" disabled={batchRunning}>
+              {batchRunning ? 'Registrando…' : config.payAction}
+            </Button>
           </div>
         </form>
       </Modal>
 
-      {detailFor ? (
+      {currentDetail ? (
         <DebtDetailPanel
-          debt={items.find((item) => item.id === detailFor.id) ?? detailFor}
+          debt={currentDetail}
           kind={config.kind}
-          contactName={contactName(detailFor)}
-          customer={(contacts ?? []).find((contact) => contact.id === detailFor.customer_id)}
+          contactName={contactName(currentDetail)}
+          customer={(contacts ?? []).find((contact) => contact.id === currentDetail.customer_id)}
           onSaved={invalidate}
           payLabel={config.payAction}
           canWrite={canWrite}
           canAccounting={canAccounting}
           onClose={() => setDetailFor(null)}
           onPay={() => {
-            openPayModal(detailFor)
+            openPayModal(currentDetail)
           }}
         />
       ) : null}

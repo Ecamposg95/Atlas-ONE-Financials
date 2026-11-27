@@ -98,6 +98,24 @@ TRACKED_FIELDS: dict[str, tuple[str, ...]] = {
     ),
     "category": ("name", "kind", "account_code", "active"),
     "proposal": ("status", "kind", "summary"),
+    "customer": (
+        "name",
+        "legal_name",
+        "tax_id",
+        "email",
+        "phone",
+        "notes",
+        "status",
+        "fiscal_regime",
+        "fiscal_postal_code",
+        "default_cfdi_use",
+    ),
+    "vendor": ("name", "legal_name", "tax_id", "email", "phone", "notes", "status"),
+    # Permiso de cada persona del equipo y su facultad de autorizar.
+    "member": ("role", "can_authorize"),
+    # Reglas de autorización de la empresa.
+    "organization": ("approval_threshold", "member_capture_limit"),
+    "transfer": ("amount", "date", "description", "from_account_id", "to_account_id"),
 }
 
 # Al crear sólo importan los datos que identifican la operación.
@@ -107,6 +125,8 @@ CREATE_FIELDS: dict[str, tuple[str, ...]] = {
     "payable": ("amount", "date", "due_date", "description", "category_id", "vendor_id", "status"),
     "receivable": ("amount", "date", "due_date", "description", "category_id", "customer_id", "status"),
     "financial_account": ("name", "type", "opening_balance", "institution", "credit_limit"),
+    "customer": ("name", "legal_name", "tax_id"),
+    "vendor": ("name", "legal_name", "tax_id"),
 }
 
 _TABLE_TO_TYPE = {
@@ -118,6 +138,12 @@ _TABLE_TO_TYPE = {
     "financial_accounts": "financial_account",
     "categories": "category",
     "agent_proposals": "proposal",
+    "customers": "customer",
+    "vendors": "vendor",
+    "organization_members": "member",
+    "organizations": "organization",
+    "period_locks": "period",
+    "fiscal_year_locks": "fiscal_year",
 }
 
 _source: ContextVar[str] = ContextVar("change_source", default="web")
@@ -196,12 +222,16 @@ def record_change(
     reason: str | None = None,
     source: str | None = None,
     entity_type: str | None = None,
+    entity_id: str | None = None,
 ) -> ChangeLog | None:
     """Agrega un evento a la bitácora sin hacer commit (va con la operación).
 
     Un UPDATE sin cambios reales no deja rastro: guardar "nada cambió" sólo
     ensucia el historial. CREATE, CANCEL, PAY y las revisiones sí se guardan
     siempre: el hecho en sí es lo relevante.
+
+    `entity_id` sirve para lo que no es una fila propia (un traspaso es un
+    grupo de movimientos); por defecto es `entity.id`.
     """
     entity_type = entity_type or entity_type_of(entity)
     if action == "CREATE" and after is None:
@@ -212,7 +242,7 @@ def record_change(
     event = ChangeLog(
         organization_id=org_id,
         entity_type=entity_type,
-        entity_id=entity.id,
+        entity_id=entity_id or entity.id,
         action=action,
         changes=changes,
         reason=(reason or "").strip() or None,

@@ -31,8 +31,10 @@ def _get_payable(db: Session, org_id: str, payable_id: str) -> Payable:
 
 @router.get("")
 def list_payables(
-    status: str | None = Query(default=None, pattern="^(OPEN|PARTIAL|PAID|CANCELLED|OVERDUE)$"),
+    # UNPAID: con saldo (abiertas y parciales), vencidas o no.
+    status: str | None = Query(default=None, pattern="^(OPEN|PARTIAL|PAID|CANCELLED|OVERDUE|UNPAID)$"),
     q: str | None = Query(default=None, max_length=200),
+    vendor_id: str | None = Query(default=None, max_length=36),
     business_unit_id: str | None = None,
     fiscal_entity_id: str | None = None,
     sort: str | None = Query(default=None, max_length=30),
@@ -46,7 +48,11 @@ def list_payables(
         query = query.filter(Payable.business_unit_id == business_unit_id)
     if fiscal_entity_id:
         query = query.filter(Payable.fiscal_entity_id == fiscal_entity_id)
-    if status == "OVERDUE":
+    if vendor_id:
+        query = query.filter(Payable.vendor_id == vendor_id)
+    if status == "UNPAID":
+        query = query.filter(Payable.status.in_(("OPEN", "PARTIAL")))
+    elif status == "OVERDUE":
         query = query.filter(
             Payable.status.in_(("OPEN", "PARTIAL")),
             Payable.due_date < date.today(),
@@ -95,6 +101,9 @@ def pay_payable(
     membership=Depends(require_role(WRITE_ROLES)),
 ):
     payable = _get_payable(db, org_id, payable_id)
+    # Antes de la bandeja: una autorización que no cabe en el saldo sólo
+    # fallaría al aprobarse.
+    service.ensure_payment_fits(db, org_id, payable, payload.amount)
     waiting = approvals.gate(
         db,
         membership=membership,

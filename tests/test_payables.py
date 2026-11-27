@@ -99,3 +99,19 @@ def test_payment_cannot_exceed_balance(client):
         json={"amount": "4000.01", "financial_account_id": account["id"]},
     )
     assert response.status_code == 400
+
+
+def test_list_filters_unpaid_by_vendor(client):
+    headers, account, renta, vendor = _setup(client)
+    other = client.post("/api/vendors", headers=headers, json={"name": "Otro"}).json()
+    paid = _create(client, headers, renta, vendor, amount="100")
+    client.post(f"/api/payables/{paid['id']}/pay", headers=headers, json={"amount": "100", "financial_account_id": account["id"]})
+    partial = _create(client, headers, renta, vendor, amount="500")
+    client.post(f"/api/payables/{partial['id']}/pay", headers=headers, json={"amount": "50", "financial_account_id": account["id"]})
+    open_one = _create(client, headers, renta, vendor, amount="300")
+    _create(client, headers, renta, other, amount="300")
+
+    items = client.get(
+        "/api/payables", headers=headers, params={"vendor_id": vendor["id"], "status": "UNPAID"}
+    ).json()["items"]
+    assert {item["id"] for item in items} == {partial["id"], open_one["id"]}

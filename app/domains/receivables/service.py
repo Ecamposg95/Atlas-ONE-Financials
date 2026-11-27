@@ -121,6 +121,18 @@ def collect_receivable(
     collection_date: date_type | None,
     user_id: str,
 ) -> Receivable:
+    # Bloquea la fila y la relee: dos cobros simultáneos no pasan ambos la
+    # validación de saldo con la misma foto vieja.
+    locked = (
+        db.query(Receivable)
+        .filter(Receivable.id == receivable.id, Receivable.organization_id == org_id)
+        .populate_existing()
+        .with_for_update()
+        .first()
+    )
+    if locked is None:
+        raise ValueError("La cuenta por cobrar ya no existe.")
+    receivable = locked
     if receivable.status == "CANCELLED":
         raise ValueError("No puedes cobrar una cuenta cancelada.")
     if receivable.status == "PAID":

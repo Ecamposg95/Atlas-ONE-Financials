@@ -20,6 +20,7 @@ from app.models.fiscal_year import FiscalYearLock
 from app.models.period import PeriodLock
 from app.services.accounting.engine import TWO_PLACES, account_type_balance, lock_organization
 from app.services.accounting.rules import reversal_of, year_close_entry
+from app.services.change_log import record_change
 
 
 def _month_bounds(year: int, month: int) -> tuple[date_type, date_type]:
@@ -76,6 +77,8 @@ def close_period(
         lock.reopened_by = None
         lock.reopen_reason = None
     lock.closed_by = user_id
+    db.flush()
+    record_change(db, organization_id, lock, "CLOSE", user_id, reason=notes)
     db.commit()
     db.refresh(lock)
     return lock
@@ -105,6 +108,7 @@ def reopen_period(
     lock.reopened_at = datetime.now(timezone.utc)
     lock.reopened_by = user_id
     lock.reopen_reason = reason
+    record_change(db, organization_id, lock, "REOPEN", user_id, reason=reason)
     db.commit()
     db.refresh(lock)
     return lock
@@ -236,6 +240,8 @@ def close_year(
         lock.reopen_reason = None
     lock.closed_by = user_id
     lock.closing_entry_id = entry.id if entry is not None else None
+    db.flush()
+    record_change(db, organization_id, lock, "CLOSE", user_id, reason=notes)
     db.commit()
     db.refresh(lock)
     return lock
@@ -276,6 +282,7 @@ def reopen_year(
             created_by=user_id,
             bypass_period_lock=True,
         )
+    record_change(db, organization_id, lock, "REOPEN", user_id, reason=reason)
     db.commit()
     db.refresh(lock)
     return lock

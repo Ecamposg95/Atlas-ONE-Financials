@@ -418,3 +418,98 @@ def test_me_exposes_can_authorize_and_the_owner_keeps_it(client):
     )
     assert revoked.status_code == 200 and revoked.json()["can_authorize"] is False
     assert revoked.json()["role"] == "ADMIN"
+
+
+# --- R2·HU-01: lo que espera autorización aparta saldo ------------------------
+
+
+def _big_payable(client, owner, admin, renta, amount="300000"):
+    vendor = client.post("/api/vendors", headers=owner, json={"name": "SEILAB"}).json()
+    return client.post(
+        "/api/payables",
+        headers=admin,
+        json={
+            "vendor_id": vendor["id"],
+            "description": "Reactivos 1876",
+            "amount": amount,
+            "due_date": "2026-10-10",
+            "category_id": renta["id"],
+        },
+    ).json()
+
+
+def test_pending_payment_reserves_the_balance(client):
+    _, owner, account, renta = _company(client)
+    _, admin = _teammate(client, owner, "abraham@lafe.mx", "ADMIN")
+    payable = _big_payable(client, owner, admin, renta)
+
+    first = client.post(
+        f"/api/payables/{payable['id']}/pay",
+        headers=admin,
+        json={"amount": "200000", "financial_account_id": account["id"]},
+    )
+    assert first.status_code == 202, first.text
+
+    # Una segunda propuesta que, sumada a la primera, pasa del saldo, ni siquiera llega a la bandeja.
+    second = client.post(
+        f"/api/payables/{payable['id']}/pay",
+        headers=admin,
+        json={"amount": "150000", "financial_account_id": account["id"]},
+    )
+    assert second.status_code == 400
+    assert "esperando autorización" in second.json()["detail"]
+    assert "$100,000.00" in second.json()["detail"]
+    assert _pending(client, owner, source="approval")["total"] == 1
+
+    # Quien autoriza tampoco paga encima de lo apartado.
+    direct = client.post(
+        f"/api/payables/{payable['id']}/pay",
+        headers=owner,
+        json={"amount": "100000.01", "financial_account_id": account["id"]},
+    )
+    assert direct.status_code == 400
+    fits = client.post(
+        f"/api/payables/{payable['id']}/pay",
+        headers=owner,
+        json={"amount": "100000", "financial_account_id": account["id"]},
+    )
+    assert fits.status_code == 200, fits.text
+
+    approved = client.post(f"/api/proposals/{first.json()['proposal_id']}/approve", headers=owner)
+    assert approved.status_code == 200, approved.text
+    assert client.get(f"/api/payables/{payable['id']}", headers=owner).json()["status"] == "PAID"
+
+
+def test_rejected_payment_frees_the_reserved_balance(client):
+    _, owner, account, renta = _company(client)
+    _, admin = _teammate(client, owner, "abraham@lafe.mx", "ADMIN")
+    payable = _big_payable(client, owner, admin, renta)
+    first = client.post(
+        f"/api/payables/{payable['id']}/pay",
+        headers=admin,
+        json={"amount": "300000", "financial_account_id": account["id"]},
+    )
+    assert first.status_code == 202
+    rejected = client.post(
+        f"/api/proposals/{first.json()['proposal_id']}/reject", headers=owner, json={"reason": "Monto equivocado"}
+    )
+    assert rejected.status_code == 200, rejected.text
+    again = client.post(
+        f"/api/payables/{payable['id']}/pay",
+        headers=admin,
+        json={"amount": "250000", "financial_account_id": account["id"]},
+    )
+    assert again.status_code == 202, again.text
+
+
+def test_payment_above_balance_never_reaches_the_inbox(client):
+    _, owner, account, renta = _company(client)
+    _, admin = _teammate(client, owner, "abraham@lafe.mx", "ADMIN")
+    payable = _big_payable(client, owner, admin, renta)
+    response = client.post(
+        f"/api/payables/{payable['id']}/pay",
+        headers=admin,
+        json={"amount": "300000.01", "financial_account_id": account["id"]},
+    )
+    assert response.status_code == 400
+    assert _pending(client, owner, source="approval")["total"] == 0

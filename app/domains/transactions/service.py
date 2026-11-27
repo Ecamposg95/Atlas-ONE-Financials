@@ -19,6 +19,7 @@ from app.models.financial_account import FinancialAccount, is_liability
 from app.models.transaction import FinancialTransaction
 from app.services.accounting.coa import ledger_code_for
 from app.services.accounting.rules import transfer_entry
+from app.services.change_log import record_change
 from app.services.dimensions import tag_entry, validate_dimensions
 from app.services.reversals import reverse_operation
 from app.services.transactions import get_locked_account, record_transaction
@@ -149,6 +150,22 @@ def create_transfer_from_payload(db: Session, organization_id: str, payload, use
         user_id=user_id,
         business_unit_id=payload.business_unit_id,
         fiscal_entity_id=payload.fiscal_entity_id,
+    )
+    record_change(
+        db,
+        organization_id,
+        None,
+        "CREATE",
+        user_id,
+        entity_type="transfer",
+        entity_id=transfer.group_id,
+        after={
+            "amount": payload.amount,
+            "date": payload.date,
+            "description": transfer.outgoing.description,
+            "from_account_id": payload.from_account_id,
+            "to_account_id": payload.to_account_id,
+        },
     )
     db.commit()
     db.refresh(transfer.outgoing)

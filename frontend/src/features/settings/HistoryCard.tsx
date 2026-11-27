@@ -15,7 +15,14 @@ const ENTITY_OPTIONS = [
   { value: 'payable', label: 'Cuentas por pagar' },
   { value: 'receivable', label: 'Cuentas por cobrar' },
   { value: 'financial_account', label: 'Cuentas de dinero' },
+  { value: 'transfer', label: 'Traspasos' },
+  { value: 'customer', label: 'Clientes' },
+  { value: 'vendor', label: 'Proveedores' },
+  { value: 'period', label: 'Cierres de mes' },
+  { value: 'fiscal_year', label: 'Cierres de ejercicio' },
   { value: 'proposal', label: 'Autorizaciones y propuestas' },
+  { value: 'member', label: 'Equipo y permisos' },
+  { value: 'organization', label: 'Reglas de autorización' },
 ]
 
 const ENTITY_NOUN: Record<string, string> = {
@@ -26,6 +33,14 @@ const ENTITY_NOUN: Record<string, string> = {
   financial_account: 'Cuenta',
   category: 'Categoría',
   proposal: 'Propuesta',
+  transfer: 'Traspaso',
+  customer: 'Cliente',
+  vendor: 'Proveedor',
+  period: 'Cierre',
+  fiscal_year: 'Ejercicio',
+  member: 'Equipo',
+  organization: 'Autorizaciones',
+  opening_balance: 'Apertura',
 }
 
 export function HistoryCard() {
@@ -64,7 +79,7 @@ export function HistoryCard() {
     <Card className="mt-6">
       <h2 className="font-display text-lg font-semibold">Historial de cambios</h2>
       <p className="mt-1 text-sm text-muted">
-        Quién registró, editó, pagó o canceló cada operación, y cuáles eran los valores anteriores.
+        Quién registró, editó, pagó o canceló cada operación, quién cerró o reabrió un mes y quién cambió permisos, con los valores anteriores.
       </p>
 
       <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">

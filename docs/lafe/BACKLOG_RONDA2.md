@@ -39,13 +39,13 @@ Como responsable de cuentas por pagar, quiero registrar claramente que una oblig
 
 - Criterios: acción visible para pagar; fecha, importe y cuenta de origen; estado y saldo actualizados en detalle y listados; pago vinculado a la obligación; sin pagos duplicados.
 - Existe: "Registrar pago" en la fila y en el detalle (`DebtsPage.tsx`, `DebtDetailPanel.tsx`), pagos parciales, estados PARCIAL/PAGADA, saldo calculado, historial de pagos, pago por lote. Backend `POST /payables/{id}/pay` rechaza pagos mayores al saldo.
-- Errores a corregir:
-  - La tabla se desborda y la columna de acciones queda cortada.
-  - Desde el detalle, tras un pago parcial, el formulario trae el saldo viejo y el servidor lo rechaza.
-  - Sin bloqueo de fila: dos pagos simultáneos pueden pasar la validación de saldo.
-  - Las autorizaciones pendientes no apartan saldo; puede haber varias propuestas para la misma cuenta.
-  - El botón del pago por lote no se desactiva mientras corre.
-- Riesgo de duplicado: si los pagos se capturan como gastos sueltos, el gasto cuenta dos veces y la cuenta sigue abierta. Agregar aviso cuando un gasto nuevo coincide en proveedor y monto con una cuenta por pagar abierta.
+- Errores corregidos (R2·REQ-02):
+  - La columna de acciones queda fija a la derecha; el concepto largo se corta a dos líneas.
+  - El detalle se vuelve a pedir tras un pago y el formulario propone el saldo al día.
+  - El pago bloquea la fila de la cuenta (también el cobro en Por cobrar).
+  - Lo que espera autorización aparta saldo: una propuesta que no cabe se rechaza antes de llegar a la bandeja, y quien autoriza tampoco paga encima de lo apartado.
+  - El botón del pago por lote se desactiva mientras corre.
+- Riesgo de duplicado: si los pagos se capturan como gastos sueltos, el gasto cuenta dos veces y la cuenta sigue abierta. Ya hay aviso en el formulario de gasto cuando proveedor y monto coinciden con una cuenta por pagar abierta, con liga a la cuenta.
 - Por validar: pagos parciales y el caso concreto (TEC-01: revisar SEILAB 1876 con Liza).
 
 **R2·HU-02 · Corregir o revertir un gasto pagado con autorización** — P0 · Abraham y Liza · **Parcial.** Depende de R2·HU-03.
@@ -71,7 +71,7 @@ Como responsable contable, quiero cerrar periodos y controlar sus modificaciones
 - Huecos:
   - Los gastos pendientes se crean y editan en un mes cerrado, porque no generan póliza.
   - Cancelar algo de un mes cerrado registra la reversa con fecha de hoy. Puede ser justo el mecanismo compensatorio; confirmarlo con Jessica.
-  - Cierre y reapertura no quedan en la bitácora.
+  - ~~Cierre y reapertura no quedan en la bitácora.~~ Resuelto en R2·REQ-03.
   - El bloqueo de comprobantes solo revisa el ejercicio, no el mes.
 - Por validar con Jessica: reglas del periodo abierto, fechas de aplicación y pólizas inversas. Cambiar de mes no equivale a cerrar.
 
@@ -224,8 +224,8 @@ Como responsable administrativo, quiero que un activo comprado a crédito (por e
 | ID | Prioridad | Trabajo | Por qué |
 |---|---|---|---|
 | R2·REQ-01 | P0 | Saldos confiables: confirmar aperturas, registrar liquidaciones de NetPay al banco y conciliar bancos | Sin esto, ningún tablero ni indicador es confiable |
-| R2·REQ-02 | P0 | Corregir los errores de cuentas por pagar listados en R2·HU-01 | Es probable que sean parte del problema que reporta Liza |
-| R2·REQ-03 | P0 | Bitácora completa: cierres y reaperturas, cambios de autorizaciones, comprobantes, traspasos, categorías y contactos | Requisito del criterio de terminado y de TEC-02 |
+| R2·REQ-02 | P0 | Corregir los errores de cuentas por pagar listados en R2·HU-01 | **Hecho.** Falta validar con Liza (TEC-01) |
+| R2·REQ-03 | P0 | Bitácora completa: cierres y reaperturas, cambios de autorizaciones, comprobantes, traspasos, categorías y contactos | **Hecho**, salvo categorías: hoy no se crean ni editan desde la app (llega con R2·HU-15). Faltan las cancelaciones con autorización (R2·HU-02) |
 | R2·REQ-04 | P1 | Revisar las operaciones con fecha futura y validar fechas al capturar | Distorsionan saldos y reportes |
 | R2·REQ-05 | P1 | IVA de lo importado desde Toronja según el tratamiento aprobado | Hoy entra siempre en 0 |
 

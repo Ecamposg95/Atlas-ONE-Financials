@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.events import event_bus
 from app.models.accounting import JournalEntry
+from app.models.agent import AgentProposal
 from app.models.category import Category
 from app.models.contact import Vendor
 from app.models.payable import Payable
@@ -102,6 +103,58 @@ def create_payable(db: Session, org_id: str, payload, created_by: str) -> Payabl
     return payable
 
 
+def lock_payable(db: Session, org_id: str, payable_id: str) -> Payable:
+    """La cuenta con su fila bloqueada hasta el commit, con los valores de la base."""
+    payable = (
+        db.query(Payable)
+        .filter(Payable.id == payable_id, Payable.organization_id == org_id)
+        .populate_existing()
+        .with_for_update()
+        .first()
+    )
+    if payable is None:
+        raise ValueError("La cuenta por pagar ya no existe.")
+    return payable
+
+
+def reserved_for_approval(db: Session, org_id: str, payable_id: str) -> Decimal:
+    """Lo que ya espera autorización para pagar esta cuenta."""
+    proposals = (
+        db.query(AgentProposal.payload)
+        .filter(
+            AgentProposal.organization_id == org_id,
+            AgentProposal.kind == "PAYABLE_PAYMENT",
+            AgentProposal.status == "PROPOSED",
+        )
+        .all()
+    )
+    total = Decimal("0")
+    for (payload,) in proposals:
+        if (payload or {}).get("payable_id") == payable_id:
+            total += Decimal(str(payload.get("amount") or 0))
+    return total
+
+
+def ensure_payment_fits(db: Session, org_id: str, payable: Payable, amount: Decimal) -> None:
+    """Antes de registrar o de mandar a autorización: el pago cabe en el saldo
+    que no está apartado por otra autorización pendiente."""
+    if payable.status == "CANCELLED":
+        raise ValueError("No puedes pagar una cuenta cancelada.")
+    if payable.status == "PAID":
+        raise ValueError("Esta cuenta ya está pagada por completo.")
+    balance = Decimal(payable.amount) - Decimal(payable.amount_paid)
+    reserved = reserved_for_approval(db, org_id, payable.id)
+    available = balance - reserved
+    if _quantize(amount) <= available:
+        return
+    if reserved > 0:
+        raise ValueError(
+            f"Ya hay ${reserved:,.2f} de esta cuenta esperando autorización; "
+            f"lo disponible para pagar es ${max(available, Decimal('0')):,.2f}."
+        )
+    raise ValueError(f"El pago excede el saldo pendiente (${balance:,.2f}).")
+
+
 def pay_payable(
     db: Session,
     org_id: str,
@@ -111,6 +164,9 @@ def pay_payable(
     payment_date: date_type | None,
     user_id: str,
 ) -> Payable:
+    # Bloquea la fila y la relee: dos pagos simultáneos no pasan ambos la
+    # validación de saldo con la misma foto vieja.
+    payable = lock_payable(db, org_id, payable.id)
     if payable.status == "CANCELLED":
         raise ValueError("No puedes pagar una cuenta cancelada.")
     if payable.status == "PAID":

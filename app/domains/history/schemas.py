@@ -9,7 +9,7 @@ from pydantic import BaseModel
 class FieldChange(BaseModel):
     field: str
     label: str  # nombre amigable en español ("Monto", "Categoría")
-    kind: str  # money | date | text | status | bool | rate | ref
+    kind: str  # money | date | text | status | bool | rate | ref | role
     old: Any = None
     new: Any = None
     # Para referencias (categoría, cuenta, proveedor…): el nombre, resuelto en el backend.
