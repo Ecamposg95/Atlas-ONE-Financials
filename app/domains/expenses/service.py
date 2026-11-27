@@ -275,6 +275,16 @@ def update_expense(
     db: Session, org_id: str, expense: Expense, changes: dict, user_id: str, reason: str | None = None
 ) -> Expense:
     """Aplica una edición y la deja en la bitácora con sus valores anteriores."""
+    apply_expense_update(db, org_id, expense, changes, user_id, reason)
+    db.commit()
+    db.refresh(expense)
+    return expense
+
+
+def apply_expense_update(
+    db: Session, org_id: str, expense: Expense, changes: dict, user_id: str, reason: str | None = None
+) -> Expense:
+    """La edición sin commit: la usan la corrección individual y la masiva."""
     reason = (reason or "").strip() or None
     touched = [field for field in changes if field in PENDING_EDITABLE]
     if expense.status == "CANCELLED" and touched:
@@ -345,6 +355,82 @@ def update_expense(
     if expense.status == "PAID" and expense.category_id != old_category_id:
         _reclassify(db, org_id, expense, old_category_id, user_id)
     record_change(db, org_id, expense, "UPDATE", user_id, before=before, after=snapshot(expense), reason=reason)
-    db.commit()
-    db.refresh(expense)
     return expense
+
+
+# R2·HU-04: lo que se corrige de varios gastos a la vez. Nada que mueva dinero.
+BULK_FIELDS = ("category_id", "tax_treatment", "vendor_id", "project_id")
+BULK_MAX = 500
+
+
+def bulk_update_expenses(
+    db: Session,
+    org_id: str,
+    ids: list[str],
+    changes: dict,
+    user_id: str,
+    reason: str,
+    dry_run: bool,
+) -> dict:
+    """Aplica la misma corrección a varios gastos, cada uno con las reglas de
+    la corrección individual (estado, mes cerrado, motivo, reclasificación).
+
+    Cada gasto va en su propio punto de guardado: el que no pasa se informa
+    con su motivo y no detiene a los demás. Con `dry_run` todo se deshace al
+    final y la respuesta es la vista previa exacta de lo que pasaría.
+    """
+    unknown = [field for field in changes if field not in BULK_FIELDS]
+    if unknown:
+        raise ValueError("En lote sólo se corrigen categoría, tratamiento de IVA, proveedor y proyecto.")
+    if not changes:
+        raise ValueError("Elige qué corregir.")
+    reason = (reason or "").strip()
+    if len(reason) < 3:
+        raise ValueError("Explica el motivo de la corrección: queda en el historial de cada gasto.")
+    unique_ids = list(dict.fromkeys(ids))
+    if not unique_ids:
+        raise ValueError("Selecciona al menos un gasto.")
+    if len(unique_ids) > BULK_MAX:
+        raise ValueError(f"Son {len(unique_ids)} gastos; el máximo por lote es {BULK_MAX}.")
+
+    found = {
+        expense.id: expense
+        for expense in db.query(Expense)
+        .filter(Expense.organization_id == org_id, Expense.id.in_(unique_ids))
+        .all()
+    }
+    items: list[dict] = []
+    for expense_id in unique_ids:
+        expense = found.get(expense_id)
+        if expense is None:
+            items.append({"id": expense_id, "outcome": "rejected", "detail": "El gasto no existe."})
+            continue
+        row = {
+            "id": expense.id,
+            "date": expense.date,
+            "description": expense.description,
+            "amount": expense.amount,
+            "status": expense.status,
+        }
+        savepoint = db.begin_nested()
+        try:
+            before = snapshot(expense)
+            apply_expense_update(db, org_id, expense, dict(changes), user_id, reason)
+            changed = snapshot(expense) != before
+            db.flush()
+        except ValueError as error:
+            savepoint.rollback()
+            items.append({**row, "outcome": "rejected", "detail": str(error)})
+            continue
+        if dry_run:
+            savepoint.rollback()
+        else:
+            savepoint.commit()
+        items.append({**row, "outcome": "updated" if changed else "unchanged", "detail": None})
+
+    if dry_run:
+        db.rollback()
+    else:
+        db.commit()
+    counts = {outcome: sum(1 for item in items if item["outcome"] == outcome) for outcome in ("updated", "unchanged", "rejected")}
+    return {"dry_run": dry_run, **counts, "items": items}

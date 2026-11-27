@@ -61,6 +61,26 @@ class ExpenseUpdate(BaseModel):
     reason: str | None = Field(default=None, max_length=500)
 
 
+class ExpenseBulkChanges(BaseModel):
+    # Un campo que no está aquí (monto, fecha…) es un error, no algo a ignorar.
+    model_config = ConfigDict(extra="forbid")
+
+    category_id: str | None = None
+    tax_treatment: TaxTreatment | None = None
+    vendor_id: str | None = None
+    project_id: str | None = None
+
+
+class ExpenseBulkUpdate(BaseModel):
+    """R2·HU-04: la misma corrección a varios gastos, con vista previa."""
+
+    ids: list[str] = Field(min_length=1, max_length=500)
+    # Sólo los campos enviados se cambian; `null` en proveedor o proyecto lo quita.
+    changes: ExpenseBulkChanges
+    reason: str = Field(min_length=3, max_length=500)
+    dry_run: bool = True
+
+
 class ExpensePay(BaseModel):
     financial_account_id: str | None = None
     date: date_type | None = None

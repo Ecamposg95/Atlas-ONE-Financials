@@ -54,6 +54,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { toast } from '@/stores/toastStore'
 import { AttachmentsPanel, PendingAttachments, uploadAttachment } from './Attachments'
 import { PayableMatchNotice } from './PayableMatchNotice'
+import { BulkCorrectionModal } from './BulkCorrectionModal'
 import {
   CfdiFields,
   EMPTY_CFDI,
@@ -222,6 +223,8 @@ export function OperationsPage({ config }: { config: Config }) {
   const [batchNoun, setBatchNoun] = useState('aplicadas')
   const [batchPayOpen, setBatchPayOpen] = useState(false)
   const [batchProjectOpen, setBatchProjectOpen] = useState(false)
+  const [bulkOpen, setBulkOpen] = useState(false)
+  const [selectingAll, setSelectingAll] = useState(false)
   const [batchAccountId, setBatchAccountId] = useState('')
   const [batchProjectId, setBatchProjectId] = useState('')
   // Con tasa, la retención es sobre la base sin IVA (como la calcula el servidor).
@@ -429,6 +432,29 @@ export function OperationsPage({ config }: { config: Config }) {
     setBatchPayOpen(false)
     selection.clear()
     invalidate()
+  }
+
+  // R2·HU-04: el lote puede ir más allá de la página: todos los que coinciden
+  // con el filtro, hasta el máximo que acepta el servidor.
+  const BULK_MAX = 500
+  const total = data?.total ?? 0
+  async function selectAllMatching() {
+    setSelectingAll(true)
+    try {
+      const ids: string[] = []
+      for (let start = 0; start < Math.min(total, BULK_MAX); start += 200) {
+        const page = (
+          await api.get<Page<Operation>>(config.endpoint, { params: { ...listParams, limit: 200, offset: start } })
+        ).data
+        ids.push(...page.items.map((item) => item.id))
+        if (page.items.length < 200) break
+      }
+      selection.selectIds(ids.slice(0, BULK_MAX))
+    } catch (err) {
+      toast(errorMessage(err), 'neg')
+    } finally {
+      setSelectingAll(false)
+    }
   }
 
   async function batchAssignProject() {
@@ -693,6 +719,25 @@ export function OperationsPage({ config }: { config: Config }) {
               onClick={() => setBatchProjectOpen(true)}
             >
               Asignar proyecto
+            </Button>
+          ) : null}
+          {canWrite && config.kind === 'expense' ? (
+            <Button variant="secondary" className="!px-2.5 !py-1 text-xs" onClick={() => setBulkOpen(true)}>
+              Corregir en lote
+            </Button>
+          ) : null}
+          {config.kind === 'expense' && selection.allOnPage && total > selection.selected.size ? (
+            <Button
+              variant="ghost"
+              className="!px-2 !py-1 text-xs"
+              disabled={selectingAll}
+              onClick={() => void selectAllMatching()}
+            >
+              {selectingAll
+                ? 'Seleccionando…'
+                : total > BULK_MAX
+                  ? `Seleccionar los primeros ${BULK_MAX} de ${total}`
+                  : `Seleccionar los ${total} que coinciden`}
             </Button>
           ) : null}
           <Button variant="secondary" className="!px-2.5 !py-1 text-xs" onClick={exportSelection}>
@@ -985,6 +1030,21 @@ export function OperationsPage({ config }: { config: Config }) {
           </form>
         ) : null}
       </Modal>
+
+      {config.kind === 'expense' ? (
+        <BulkCorrectionModal
+          open={bulkOpen}
+          ids={[...selection.selected]}
+          categories={categories ?? []}
+          vendors={contacts ?? []}
+          projects={projects ?? []}
+          onClose={() => setBulkOpen(false)}
+          onApplied={() => {
+            selection.clear()
+            invalidate()
+          }}
+        />
+      ) : null}
 
       <OperationDetailModal
         operation={detailFor ? (items.find((item) => item.id === detailFor.id) ?? detailFor) : null}

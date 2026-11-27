@@ -74,13 +74,18 @@ export function useRowSelection<T extends { id: string }>(items: T[]) {
   }, [pageIds])
 
   const clear = useCallback(() => setSelected(new Set()), [])
+  /** Agrega ids aunque no estén en la página (todos los que coinciden con el filtro). */
+  const selectIds = useCallback(
+    (ids: string[]) => setSelected((previous) => new Set([...previous, ...ids])),
+    [],
+  )
 
   const selectedItems = useMemo(
     () => items.filter((item) => selected.has(item.id)),
     [items, selected],
   )
 
-  return { selected, selectedItems, toggle, togglePage, allOnPage, clear }
+  return { selected, selectedItems, toggle, togglePage, allOnPage, clear, selectIds }
 }
 
 export function RowCheckbox({
