@@ -20,8 +20,10 @@ services:
     env_file: ${FINANCIALS_APP_DIR:-/srv/apps/financials}/.env
     environment:
       # Uvicorn sólo cree en X-Forwarded-For/Proto si la petición llega de aquí: Caddy entra por la red `edge`.
-      # Con '*' cualquier contenedor de esa red podía fingir la IP del cliente y saltarse el límite de login.
-      FORWARDED_ALLOW_IPS: ${FINANCIALS_FORWARDED_ALLOW_IPS:-172.18.0.0/16}
+      # Por omisión, los rangos privados de las redes de Docker: sirve sea cual sea la subred de `edge`, y deja
+      # fuera cualquier origen público (antes era '*'). Con la subred confirmada en el servidor, acotarlo a ella
+      # con FINANCIALS_FORWARDED_ALLOW_IPS.
+      FORWARDED_ALLOW_IPS: ${FINANCIALS_FORWARDED_ALLOW_IPS:-172.16.0.0/12,192.168.0.0/16,10.0.0.0/8}
       # deploy.sh migra antes de cambiar el contenedor y pone 0.
       MIGRAR_AL_ARRANCAR: ${MIGRAR_AL_ARRANCAR:-1}
     expose: ["8000"]

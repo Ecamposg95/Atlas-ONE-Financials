@@ -29,8 +29,8 @@ a la base y los secretos de Financials. `main` debe tener reglas de rama (el rep
 ## Instalación (una vez, como root)
 
 Los nombres de contenedores y la subred de `edge` hay que confirmarlos antes (`docker ps`,
-`docker network inspect edge`). Si la subred no es `172.18.0.0/16`, poner `FINANCIALS_FORWARDED_ALLOW_IPS` en el
-entorno de `deploy.sh`.
+`docker network inspect edge`). Con la subred confirmada, acotar los proxies de confianza a ella con
+`FINANCIALS_FORWARDED_ALLOW_IPS` (por omisión se confía en los rangos privados de Docker).
 
 1. Usuario `deploy` (si no existe ya por Cortex): sin contraseña, en el grupo `docker`.
 
