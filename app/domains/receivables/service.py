@@ -127,7 +127,8 @@ def collect_receivable(
         db.query(Receivable)
         .filter(Receivable.id == receivable.id, Receivable.organization_id == org_id)
         .populate_existing()
-        .with_for_update()
+        # Sólo su fila: el modelo carga relaciones con outer join y PostgreSQL no bloquea ese lado.
+        .with_for_update(of=Receivable)
         .first()
     )
     if locked is None:

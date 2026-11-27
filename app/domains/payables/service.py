@@ -109,7 +109,8 @@ def lock_payable(db: Session, org_id: str, payable_id: str) -> Payable:
         db.query(Payable)
         .filter(Payable.id == payable_id, Payable.organization_id == org_id)
         .populate_existing()
-        .with_for_update()
+        # Sólo su fila: el modelo carga relaciones con outer join y PostgreSQL no bloquea ese lado.
+        .with_for_update(of=Payable)
         .first()
     )
     if payable is None:
