@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/comunes.schema.json",
+  "$id": "https://financials.atlasone.com.mx/contratos/eventos/v1/comunes.schema.json",
   "title": "Definiciones comunes del contrato de eventos v1",
   "description": "Tipos compartidos por todos los eventos. Ningún monto, cantidad ni tasa viaja como número JSON: siempre como cadena decimal, para que nadie pase por punto flotante.",
   "$defs": {

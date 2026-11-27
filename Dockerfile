@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.6
 #
 # Imagen de producción de Atlas ONE Financials (VPS de IONOS, detrás de Caddy).
-# Hace lo mismo que railpack.json hacía en Railway:
+# Hace lo mismo que hacía Railway (Railpack):
 #   1. npm ci && npm run build  -> frontend/dist
 #   2. pip install -r requirements.txt
 #   3. alembic upgrade head && uvicorn app.main:app (sirve la SPA desde frontend/dist)

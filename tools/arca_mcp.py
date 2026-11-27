@@ -11,7 +11,7 @@ ocurre en la bandeja de Propuestas.
 Uso con Claude Code:
 
     claude mcp add arca \\
-        --env ARCA_URL=https://atlas-one-financials.up.railway.app \\
+        --env ARCA_URL=https://financials.atlasone.com.mx \\
         --env ARCA_API_KEY=ak_... \\
         -- python tools/arca_mcp.py
 

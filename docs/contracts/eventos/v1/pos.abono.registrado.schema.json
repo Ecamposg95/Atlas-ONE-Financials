@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/pos.abono.registrado.schema.json",
+  "$id": "https://financials.atlasone.com.mx/contratos/eventos/v1/pos.abono.registrado.schema.json",
   "title": "pos.abono.registrado",
   "description": "Un cliente abonó a ventas a crédito. Cobra la cartera en Financials y, si la venta tiene factura PPD, dispara el complemento de pagos. Atlas ONE admite abonos a la cuenta global del cliente: el evento exige que el abono ya venga repartido por venta.",
   "allOf": [

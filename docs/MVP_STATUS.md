@@ -12,7 +12,7 @@ _Actualizado: 2026-11-24 (conciliación bancaria y marca Atlas Tech en el tema b
 - Frontend completo (React+TS+Vite+Tailwind+TanStack): onboarding, dashboard con gráficos, ingresos, gastos, movimientos, cuentas, contactos, contabilidad (diario/balanza/catálogo), reportes, configuración.
 - Tests: 39 (tenant isolation, partida doble, efectos en saldos, reportes vs ledger, RBAC, paginación, auth).
 - CI GitHub Actions (postgres:16 + ruff + pytest + typecheck/build frontend).
-- Railway: PostgreSQL + servicio `Atlas-ONE-Financials` conectado al repo GitHub (`Ecamposg95/Atlas-ONE-Financials`, auto-deploy en push a main), dominio https://atlas-one-financials.up.railway.app
+- Railway: PostgreSQL + servicio `Atlas-ONE-Financials` conectado al repo GitHub (`Ecamposg95/Atlas-ONE-Financials`, auto-deploy en push a main), dominio https://financials.atlasone.com.mx
 - Deployment productivo validado end-to-end (registro real → ingreso → gasto → dashboard/balance/balanza correctos vía HTTPS).
 
 - **C-1 Pólizas manuales y catálogo editable** (spec 2026-10-12): `POST /api/accounting/journal-entries` (sólo Diario, cuentas de detalle, nunca las cuentas con saldo espejo: 1100/1200/2100/2200/1400/1490/2300), reverso único por `/reverse`, alta de cuentas de detalle bajo una mayor (`POST /api/accounting/accounts`), renombrar y desactivar sin movimientos; UI con formulario de póliza, reverso desde el diario y catálogo editable.

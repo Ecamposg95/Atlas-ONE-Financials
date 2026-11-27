@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/acuse.schema.json",
+  "$id": "https://financials.atlasone.com.mx/contratos/eventos/v1/acuse.schema.json",
   "title": "Acuse síncrono de recepción",
   "description": "Cuerpo de la respuesta HTTP de quien recibe un evento. Dice si el evento se guardó, no si el CFDI se timbró: eso llega después como evento financials.*. Conserva la convención de errores {\"detail\": \"...\"} de Financials.",
   "type": "object",

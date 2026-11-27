@@ -1,6 +1,6 @@
 # Atlas ONE Financials
 
-> **Atlas ONE Financials** (nombre corto: Atlas Financials) es la suite financiera del ecosistema Atlas ONE. **ARCA** es su nombre anterior y queda como alias histórico del motor contable; todavía aparece en el servicio y el dominio de Railway. Estrategia, arquitectura y roadmap: `docs/financials/`.
+> **Atlas ONE Financials** (nombre corto: Atlas Financials) es la suite financiera del ecosistema Atlas ONE. **ARCA** es su nombre anterior y queda como alias histórico del motor contable; todavía aparece en el servidor MCP y en llaves de `localStorage`. Estrategia, arquitectura y roadmap: `docs/financials/`.
 
 **Plataforma de administración financiera y contable de Atlas Tech**
 
@@ -87,9 +87,9 @@ TEST_DATABASE_URL=postgresql://... pytest     # modo PostgreSQL real (CI)
 ruff check .
 ```
 
-## Deployment (Railway)
+## Deployment (IONOS)
 
-Servicios: PostgreSQL + `Atlas-ONE-Financials` (API + SPA), conectado al repo GitHub: **cada push a `main` despliega automáticamente**. Build con Railpack (`railpack.json`); el arranque ejecuta `alembic upgrade head` antes de uvicorn. Healthcheck: `GET /api/health`. Producción: https://atlas-one-financials.up.railway.app
+VPS de IONOS (`atlas-prod-01`, 74.208.190.44), el mismo de Atlas ONE, HRFlow y RMAZH. Dominio: https://financials.atlasone.com.mx (DNS en Cloudflare, sin proxy; Caddy saca el certificado). **push a main = deploy**: la tarea `Deploy a IONOS` de `.github/workflows/ci.yml` (si backend y frontend pasan y la variable del repo `DESPLIEGUE_IONOS=true`) sube el código a `/srv/apps/financials/src`, construye el `Dockerfile` y levanta `deploy/ionos/docker-compose.yml` (contenedor `financials`, red `edge`), y verifica que el contenedor corre el commit nuevo y que `/api/health/deep` ve la base. El arranque ejecuta `alembic upgrade head`. Base: PostgreSQL 18 compartido del servidor (contenedor `postgres`), base `atlas_financials` con usuario propio; entra en el respaldo nocturno `/srv/backups/pg_backup.sh` (14 días). Variables en `/srv/apps/financials/.env` (`ENV`, `DATABASE_URL`, `SECRET_KEY`). Railway quedó retirado el 2026-11-27 (app sin despliegue ni fuente; su PostgreSQL se conserva unos días como respaldo).
 
 ## Estado del MVP
 

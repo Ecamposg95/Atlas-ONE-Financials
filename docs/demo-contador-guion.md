@@ -14,7 +14,7 @@ La regla del guion: cada afirmación se demuestra en pantalla en los siguientes 
 1. **Sembrar el mismo día**, con su nombre:
 
    ```bash
-   python scripts/demo_despacho.py --url https://atlas-one-financials.up.railway.app --contador "C.P. <su nombre>"
+   python scripts/demo_despacho.py --url https://financials.atlasone.com.mx --contador "C.P. <su nombre>"
    ```
 
    Guarda el correo del contador y el de la dueña; la contraseña es `demodespacho2026`.

@@ -7,7 +7,7 @@ bandeja de ARCA. Es la demo de la tesis agéntica completa sin depender de un
 modelo ni de la red de un tercero: el razonamiento aquí es determinista, como
 los ejecutivos simulados de Cortex, pero los DATOS y la GOBERNANZA son reales.
 
-    python scripts/demo_agentes.py --url https://atlas-one-financials.up.railway.app \
+    python scripts/demo_agentes.py --url https://financials.atlasone.com.mx \
         --email demo08270644@atlas.mx
 
 Correr dos veces duplica propuestas (a propósito: cada corrida es una sesión de

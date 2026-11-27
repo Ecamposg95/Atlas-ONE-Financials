@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://atlas-one-financials.up.railway.app/contratos/eventos/v1/sobre.schema.json",
+  "$id": "https://financials.atlasone.com.mx/contratos/eventos/v1/sobre.schema.json",
   "title": "Sobre común de todo evento",
   "description": "Campos que lleva todo evento, venga de Atlas ONE, de RRHH o de Financials. La firma HMAC y la marca de tiempo viajan en cabeceras HTTP (cabeceras.schema.json) porque firman el cuerpo crudo.",
   "type": "object",
