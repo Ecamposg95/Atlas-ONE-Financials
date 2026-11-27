@@ -11,6 +11,7 @@ from datetime import date
 
 from sqlalchemy.orm import Session
 
+from app.core.company_date import local_date
 from app.domains.dashboard.service import available_cash, outstanding
 from app.domains.periods.service import is_closed
 from app.domains.portfolio.status import STATUS_ORDER, portfolio_status, previous_month
@@ -65,9 +66,6 @@ def _pending_proposals(db: Session, organization_id: str) -> int:
 
 def portfolio(db: Session, user_id: str) -> list[dict]:
     """Una fila por empresa del usuario, lo urgente arriba."""
-    today = date.today()
-    year, month = previous_month(today)
-
     rows = (
         db.query(OrganizationMember, Organization)
         .join(Organization, Organization.id == OrganizationMember.organization_id)
@@ -78,8 +76,11 @@ def portfolio(db: Session, user_id: str) -> list[dict]:
     items: list[dict] = []
     for membership, organization in rows:
         org_id = organization.id
+        # Cada empresa con su propia fecha: la cartera mezcla zonas horarias.
+        today = local_date(organization.timezone)
+        year, month = previous_month(today)
         closed = is_closed(db, org_id, year, month)
-        payable_overdue = outstanding(db, org_id, Payable, overdue_only=True)
+        payable_overdue = outstanding(db, org_id, Payable, overdue_only=True, today=today)
         pending = _pending_proposals(db, org_id)
         status, reasons = portfolio_status(
             today=today,

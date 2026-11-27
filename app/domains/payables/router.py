@@ -1,10 +1,9 @@
-from datetime import date
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy import and_, case
 from sqlalchemy.orm import Session
 
+from app.core.company_date import organization_today
 from app.database import get_db
 from app.domains.payables import service
 from app.domains.payables.schemas import DebtCancel, PayableCreate, PayableRead, PaymentCreate
@@ -51,12 +50,13 @@ def list_payables(
         query = query.filter(Payable.fiscal_entity_id == fiscal_entity_id)
     if vendor_id:
         query = query.filter(Payable.vendor_id == vendor_id)
+    today = organization_today(db, org_id)
     if status == "UNPAID":
         query = query.filter(Payable.status.in_(("OPEN", "PARTIAL")))
     elif status == "OVERDUE":
         query = query.filter(
             Payable.status.in_(("OPEN", "PARTIAL")),
-            Payable.due_date < date.today(),
+            Payable.due_date < today,
         )
     elif status:
         query = query.filter(Payable.status == status)
@@ -72,7 +72,7 @@ def list_payables(
     sum_where = None if status == "CANCELLED" else Payable.status != "CANCELLED"
     open_balance = Payable.amount - Payable.amount_paid
     overdue = case(
-        (and_(Payable.status.in_(("OPEN", "PARTIAL")), Payable.due_date < date.today()), open_balance), else_=0
+        (and_(Payable.status.in_(("OPEN", "PARTIAL")), Payable.due_date < today), open_balance), else_=0
     )
     return paginate(
         query,

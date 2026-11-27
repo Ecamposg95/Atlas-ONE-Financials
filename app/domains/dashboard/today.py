@@ -15,6 +15,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.core.company_date import local_date
 from app.domains.analytics.series import sales_by_unit_day
 from app.models.agent import AgentProposal
 from app.models.business_unit import BusinessUnit
@@ -252,12 +253,7 @@ def approvals_panel(db: Session, organization_id: str, membership: OrganizationM
 def local_today(organization: Organization, now: datetime | None = None) -> date:
     """«Hoy» en la zona de la empresa, no la del servidor (Railway corre en UTC:
     a las 18:00 de México ya sería mañana)."""
-    now = now or datetime.now(timezone.utc)
-    try:
-        zone = ZoneInfo(organization.timezone or "America/Mexico_City")
-    except Exception:
-        zone = ZoneInfo("America/Mexico_City")
-    return now.astimezone(zone).date()
+    return local_date(organization.timezone, now)
 
 
 def today(

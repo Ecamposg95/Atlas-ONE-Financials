@@ -6,6 +6,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
+from app.core.company_date import company_today
 from app.schemas.common import TaxTreatment
 
 from app.domains.fiscal_mx.schemas import CfdiOperationFields
@@ -77,7 +78,8 @@ class ReceivableRead(BaseModel):
     @computed_field
     @property
     def is_overdue(self) -> bool:
-        return self.status in ("OPEN", "PARTIAL") and self.due_date < date_type.today()
+        # Con la fecha de la empresa, no la del servidor (R2·HU-09.b).
+        return self.status in ("OPEN", "PARTIAL") and self.due_date < company_today()
 
     @computed_field
     @property

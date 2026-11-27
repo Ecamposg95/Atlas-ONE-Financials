@@ -19,6 +19,7 @@ from typing import Any, Callable, Literal
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.core.company_date import organization_today
 from app.core.events import event_bus
 from app.domains.dashboard.service import summary as dashboard_summary_service
 from app.domains.expenses.schemas import ExpenseCreate
@@ -217,7 +218,9 @@ def _debt_lister(model, read_schema):
     def _handler(db: Session, org_id: str, params: DebtStatusParams):
         query = db.query(model).filter(model.organization_id == org_id)
         if params.status == "OVERDUE":
-            query = query.filter(model.status.in_(("OPEN", "PARTIAL")), model.due_date < date.today())
+            query = query.filter(
+                model.status.in_(("OPEN", "PARTIAL")), model.due_date < organization_today(db, org_id)
+            )
         elif params.status:
             query = query.filter(model.status == params.status)
         rows = query.order_by(model.due_date.asc()).limit(200).all()
