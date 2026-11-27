@@ -22,6 +22,7 @@ from app.services.accounting.rules import transfer_entry
 from app.services.change_log import record_change
 from app.services.dimensions import tag_entry, validate_dimensions
 from app.services.reversals import reverse_operation
+from app.services.operation_dates import WHEN_IT_HAPPENS_HINT, assert_not_future
 from app.services.transactions import get_locked_account, record_transaction
 
 TRANSFER_SOURCE = "transfer"
@@ -58,6 +59,7 @@ def create_transfer(
     """
     if from_account_id == to_account_id:
         raise ValueError("Elige dos cuentas distintas para el traspaso.")
+    assert_not_future(db, organization_id, date, WHEN_IT_HAPPENS_HINT)
 
     origin = get_locked_account(db, organization_id, from_account_id)
     destination = get_locked_account(db, organization_id, to_account_id)

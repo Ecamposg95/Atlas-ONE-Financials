@@ -47,7 +47,7 @@ import {
   countFineFilters,
   fineFilterParams,
 } from '@/components/ui/ListFilters'
-import { formatDate, formatMoney, today } from '@/lib/format'
+import { formatDate, formatMoney, today, tomorrow } from '@/lib/format'
 import { useAccounts, useCategories, useContacts, useDimensions } from '@/lib/hooks'
 import { usePermissions } from '@/lib/permissions'
 import { useAuthStore } from '@/stores/authStore'
@@ -267,6 +267,21 @@ export function OperationsPage({ config }: { config: Config }) {
     queryFn: async () =>
       (await api.get<Page<Operation>>(config.endpoint, { params: { ...listParams, offset } })).data,
   })
+
+  // R2·REQ-04: lo pagado o cobrado con fecha posterior a hoy infla o adelanta
+  // saldos. Sólo se cuenta (limit=1 trae el total); "Revisar" aplica el filtro.
+  const futureFrom = tomorrow()
+  const { data: futurePaid } = useQuery({
+    queryKey: [config.kind, 'future-paid', futureFrom],
+    queryFn: async () =>
+      (
+        await api.get<Page<Operation>>(config.endpoint, {
+          params: { status: 'PAID', start: futureFrom, limit: 1 },
+        })
+      ).data.total,
+  })
+  const futureCount = futurePaid ?? 0
+  const reviewingFuture = statusFilter === 'PAID' && filters.start === futureFrom && !filters.end
 
   const categoryName = useMemo(() => {
     const map = new Map((categories ?? []).map((category) => [category.id, category.name]))
@@ -516,6 +531,30 @@ export function OperationsPage({ config }: { config: Config }) {
   return (
     <div>
       {config.kind === 'expense' ? <ApprovalNotice /> : null}
+      {futureCount > 0 && !reviewingFuture ? (
+        <div
+          className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-warn/40 bg-warn/10 px-4 py-2.5 text-sm"
+          role="status"
+        >
+          <span>
+            Hay <span className="figures font-semibold">{futureCount}</span>{' '}
+            {futureCount === 1
+              ? `${config.noun.slice(0, -1)} ${config.paidLabel.toLowerCase()}`
+              : `${config.noun} ${config.paidLabel.toLowerCase()}s`}{' '}
+            con fecha futura: lo ya {config.kind === 'income' ? 'cobrado' : 'pagado'} debe llevar la fecha en que ocurrió.
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setStatusFilter('PAID')
+              setFilters({ start: futureFrom, end: '' })
+            }}
+            className="text-xs font-medium text-accent underline"
+          >
+            Revisar
+          </button>
+        </div>
+      ) : null}
       <PageHeader
         title={config.title}
         description={config.description}
@@ -1110,6 +1149,8 @@ export function OperationsPage({ config }: { config: Config }) {
               label="Fecha"
               type="date"
               required
+              // Lo pagado ya ocurrió: no puede tener fecha futura (lo pendiente sí).
+              max={form.paid ? today() : undefined}
               value={form.date}
               onChange={(event) => setForm({ ...form, date: event.target.value })}
             />

@@ -23,6 +23,7 @@ from app.domains.expenses.service import build_expense
 from app.domains.imports.schemas import DEFAULT_FIELDS, MAPPING_FIELDS
 from app.domains.income.schemas import IncomeCreate
 from app.domains.income.service import build_income
+from app.services.operation_dates import company_today
 from app.domains.receivables.schemas import ReceivableCreate
 from app.domains.receivables.service import build_receivable
 from app.models.business_unit import BusinessUnit
@@ -166,6 +167,13 @@ class _PeriodCheck:
         self.db = db
         self.org_id = org_id
         self.cache: dict[tuple[int, int], str | None] = {}
+        self.today = company_today(db, org_id)
+
+    def date_message(self, when: date_type) -> str | None:
+        """Lo importado ya se cobró o pagó: ni fecha futura ni mes cerrado."""
+        if when > self.today:
+            return f"Fecha futura ({when.strftime('%d/%m/%Y')}): lo cobrado o pagado ya ocurrió."
+        return self.closed_message(when)
 
     def closed_message(self, when: date_type) -> str | None:
         key = (when.year, when.month)
@@ -472,7 +480,7 @@ def _classify_toronja_row(item, payload, settings, units, cash_by_unit, created,
     payload["unit_name"] = unit.name
     payload["unit_code"] = unit.code
 
-    closed = periods.closed_message(item["date"])
+    closed = periods.date_message(item["date"])
     if closed:
         return "ERROR", closed
 
@@ -815,7 +823,7 @@ def _classify_generic_row(
     if external_id in created:
         return "DUPLICATE", "Esta operación ya se importó antes."
 
-    closed = periods.closed_message(when)
+    closed = periods.date_message(when)
     if closed:
         return "ERROR", closed
 

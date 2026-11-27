@@ -15,6 +15,7 @@ from app.models.user import User
 from app.schemas.common import apply_sort, paginate
 from app.security.deps import get_current_org_id, get_current_user, require_role
 from app.services import approvals
+from app.services.operation_dates import WHEN_IT_HAPPENS_HINT, assert_not_future
 
 router = APIRouter(prefix="/payables", tags=["payables"])
 
@@ -119,6 +120,7 @@ def pay_payable(
     # Antes de la bandeja: una autorización que no cabe en el saldo sólo
     # fallaría al aprobarse.
     service.ensure_payment_fits(db, org_id, payable, payload.amount)
+    assert_not_future(db, org_id, payload.date, WHEN_IT_HAPPENS_HINT)
     waiting = approvals.gate(
         db,
         membership=membership,
